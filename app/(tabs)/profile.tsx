@@ -143,7 +143,7 @@ export default function ProfileScreen() {
         </View>
 
         {/* Version */}
-        <Text style={styles.version}>JordanElectricity v1.0.0</Text>
+        <Text style={styles.version}>Diaa v1.0.0</Text>
         <Text style={styles.versionSub}>Built for CPA Jordan</Text>
 
         <View style={{ height: 32 }} />

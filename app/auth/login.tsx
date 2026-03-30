@@ -36,8 +36,8 @@ export default function LoginScreen() {
             <View style={styles.logo}>
               <Ionicons name="flash" size={36} color={Colors.white} />
             </View>
-            <Text style={styles.appName}>JordanElectricity</Text>
-            <Text style={styles.tagline}>Understand your electricity bill</Text>
+            <Text style={styles.appName}>Diaa</Text>
+            <Text style={styles.tagline}>Understand your Electricity</Text>
           </View>
 
           {/* Form */}

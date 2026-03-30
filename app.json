@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "JordanElectricity",
-    "slug": "jordan-electricity",
+    "name": "Diaa",
+    "slug": "diaa",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -23,7 +23,11 @@
         "backgroundColor": "#1B4965"
       },
       "edgeToEdgeEnabled": true,
-      "package": "jo.cpa.electricity"
+      "package": "jo.cpa.electricity",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -33,6 +37,13 @@
       "expo-router",
       "expo-font",
       "expo-camera"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "c1487b99-f548-46e4-b9c7-a3466acbafe6"
+      }
+    },
+    "owner": "issadalu"
   }
 }
