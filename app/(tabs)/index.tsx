@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -9,15 +9,16 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useLanguage } from '../../src/i18n/LanguageContext';
 import { LanguageToggle } from '../../src/components/LanguageToggle';
 import { useAuth } from '../../src/contexts/AuthContext';
-import { analyticsApi, notificationApi } from '../../src/services/api';
+import { jepcoApi, notificationApi } from '../../src/services/api';
+import { AnimatedCounter } from '../../src/components/AnimatedCounter';
 
 const { width: SW } = Dimensions.get('window');
 
 const SERVICES = [
   { key: 'chat', icon: 'chat-processing' as const, catKey: 'liveChat' as const, nameKey: 'inquiriesComplaints' as const, color: '#3B82F6', badge: '24/7' },
-  { key: 'bills', icon: 'file-document-edit' as const, catKey: 'billing' as const, nameKey: 'viewPayBills' as const, color: '#059669', badge: null },
   { key: 'outage', icon: 'flash-alert' as const, catKey: 'requests' as const, nameKey: 'reportOutage' as const, color: '#E8930C', badge: 'URGENT' },
   { key: 'report', icon: 'clipboard-text-clock' as const, catKey: 'requests' as const, nameKey: 'reportTrack' as const, color: '#6366F1', badge: null },
+  { key: 'safety', icon: 'shield-account' as const, catKey: 'safety' as const, nameKey: 'energyFriend' as const, color: '#E05A3A', badge: 'NEW' },
 ];
 
 export default function HomeScreen() {
@@ -27,16 +28,42 @@ export default function HomeScreen() {
   const isAr = language === 'ar';
   const sz = (en: number) => isAr ? Math.max(11, en * 0.85) : en;
 
-  const [usage, setUsage] = React.useState<{
-    currentKwh: number;
-    tierProgress: { tier: number; percentage: number; label: string };
-  } | null>(null);
+  const [smartMeter, setSmartMeter] = React.useState<any>(null);
   const [unreadCount, setUnreadCount] = React.useState(0);
+  const barAnim = useRef(new Animated.Value(0)).current;
 
-  React.useEffect(() => {
-    analyticsApi.getCurrentUsage().then(setUsage).catch(() => {});
+  useEffect(() => {
+    // Fetch real JEPCO data
+    jepcoApi.getSmartMeter()
+      .then((res) => {
+        setSmartMeter(res.data);
+        // Animate the tier bar to ACTUAL current usage position
+        const actual = parseInt(res.data?.currentElectricityConsumptionQuntity || '0');
+        const pct = Math.min(100, (actual / Math.max(800, actual + 50)) * 100);
+        Animated.timing(barAnim, {
+          toValue: pct,
+          duration: 1200,
+          useNativeDriver: false,
+        }).start();
+      })
+      .catch(() => {});
     notificationApi.getUnreadCount().then((r) => setUnreadCount(r.count)).catch(() => {});
   }, []);
+
+  // Extract values from JEPCO smart meter
+  const sm = smartMeter || {};
+  const currentKwh = parseInt(sm.currentElectricityConsumptionQuntity || '0');
+  const expectedKwh = parseInt(sm.expectedElectricityConsumptionQuntity || '0');
+  const expectedBillJd = parseFloat(sm.expectedElectricityEndofMonthBillAmount || '0');
+  const daysInCycle = parseInt(sm.numberOfConsumptionDaysSinceLastRead || '0');
+  const currentTier = currentKwh > 600 ? 3 : currentKwh > 300 ? 2 : 1;
+  const tierLabel = currentTier === 1 ? t('stillTier1') : `Tier ${currentTier}`;
+  const barWidth = barAnim.interpolate({ inputRange: [0, 100], outputRange: ['0%', '100%'] });
+  // Actual cost from tier calculation
+  const t1 = Math.min(currentKwh, 300);
+  const t2 = currentKwh > 300 ? Math.min(currentKwh - 300, 300) : 0;
+  const t3 = currentKwh > 600 ? currentKwh - 600 : 0;
+  const actualCostJd = (t1 * 0.050) + (t2 * 0.100) + (t3 * 0.200);
 
   return (
     <View style={styles.screen}>
@@ -63,28 +90,32 @@ export default function HomeScreen() {
               </View>
             </View>
 
-            {/* === USAGE WIDGET === */}
+            {/* === USAGE WIDGET (JEPCO real data + animated bar) === */}
             <View style={styles.usageCard}>
               <View style={styles.usageHeader}>
                 <Text style={[styles.usageTitle, { fontFamily: fonts.medium, fontSize: sz(10) }]}>
                   {t('currentUsage')}
                 </Text>
                 <Text style={[styles.usageDate, { fontFamily: fonts.regular }]}>
-                  1 Mar – {t('today')}
+                  {sm.consumptionDate || `Mar – ${t('today')}`}
                 </Text>
               </View>
               <View style={styles.usageNumRow}>
-                <Text style={[styles.usageVal, { fontFamily: fonts.bold }]}>{usage?.currentKwh ?? 0}</Text>
+                <AnimatedCounter value={currentKwh} duration={1000} style={[styles.usageVal, { fontFamily: fonts.bold }]} />
                 <Text style={[styles.usageUnit, { fontFamily: fonts.medium }]}>kWh</Text>
+                <AnimatedCounter value={actualCostJd} decimals={2} prefix="~" suffix=" JD" duration={1200} style={[styles.usageBill, { fontFamily: fonts.medium, color: 'rgba(255,255,255,0.5)' }]} />
               </View>
-              {/* Tier bar */}
+              {/* Animated tier bar — gradient is full width, clip reveals progress */}
               <View style={styles.barWrap}>
                 <View style={styles.barTrack}>
-                  <LinearGradient
-                    colors={['#10B981', '#FBBF24', '#DC2626']}
-                    start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-                    style={[styles.barFill, { width: `${usage?.tierProgress?.percentage ?? 0}%` }]}
-                  />
+                  <Animated.View style={[styles.barFillAnimated, { width: barWidth }]}>
+                    <LinearGradient
+                      colors={['#10B981', '#10B981', '#FBBF24', '#DC2626']}
+                      locations={[0, 0.375, 0.75, 1]}
+                      start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                      style={{ width: 1000, height: '100%', borderRadius: 2 }}
+                    />
+                  </Animated.View>
                 </View>
                 <View style={styles.barLabels}>
                   <Text style={styles.barLabel}>0</Text>
@@ -93,9 +124,9 @@ export default function HomeScreen() {
                 </View>
               </View>
               <View style={styles.tierTag}>
-                <Ionicons name="checkmark" size={12} color="#10B981" />
-                <Text style={[styles.tierTagText, { fontFamily: fonts.semibold, fontSize: sz(9) }]}>
-                  {usage?.tierProgress?.label || t('stillTier1')}
+                <Ionicons name="checkmark" size={12} color={currentTier === 1 ? '#10B981' : '#D97706'} />
+                <Text style={[styles.tierTagText, { fontFamily: fonts.semibold, fontSize: sz(9), color: currentTier === 1 ? '#10B981' : '#D97706' }]}>
+                  {smartMeter ? tierLabel : 'No data yet'}
                 </Text>
               </View>
             </View>
@@ -114,15 +145,15 @@ export default function HomeScreen() {
                 onPress={() => {
                   switch (svc.key) {
                     case 'chat': router.push('/chat/'); break;
-                    case 'bills': router.push('/bill/'); break;
                     case 'outage': router.push('/outage/'); break;
                     case 'report': router.push('/complaints/'); break;
+                    case 'safety': router.push('/energy-friend/'); break;
                   }
                 }}>
                 {svc.badge && (
-                  <View style={[styles.badge, svc.key === 'outage' && styles.badgeAmber]}>
-                    <Text style={[styles.badgeText, svc.key === 'outage' && styles.badgeTextAmber, { fontFamily: fonts.bold }]}>
-                      {svc.key === 'outage' && isAr ? 'عاجل' : svc.badge}
+                  <View style={[styles.badge, svc.key === 'outage' && styles.badgeAmber, svc.key === 'safety' && styles.badgeNew]}>
+                    <Text style={[styles.badgeText, svc.key === 'outage' && styles.badgeTextAmber, svc.key === 'safety' && styles.badgeTextNew, { fontFamily: fonts.bold }]}>
+                      {svc.key === 'outage' && isAr ? 'عاجل' : svc.key === 'safety' && isAr ? 'جديد' : svc.badge}
                     </Text>
                   </View>
                 )}
@@ -138,28 +169,6 @@ export default function HomeScreen() {
               </TouchableOpacity>
             ))}
 
-            {/* Energy Friend — full width */}
-            <TouchableOpacity style={styles.serviceCardFull} activeOpacity={0.7} onPress={() => router.push('/energy-friend/')}>
-              <View style={styles.iconWrap}>
-                <MaterialCommunityIcons name="shield-account" size={30} color="#E05A3A" />
-              </View>
-              <View style={styles.fullText}>
-                <Text style={[styles.cardCat, { fontFamily: fonts.medium, fontSize: sz(10) }]}>
-                  {t('safety')}
-                </Text>
-                <Text style={[styles.cardName, { fontFamily: fonts.bold, fontSize: sz(14) }]}>
-                  {t('energyFriend')}
-                </Text>
-                <Text style={[styles.fullDesc, { fontFamily: fonts.regular, fontSize: sz(10) }]}>
-                  {t('energyFriendDesc')}
-                </Text>
-              </View>
-              <View style={[styles.badge, styles.badgeNew]}>
-                <Text style={[styles.badgeText, styles.badgeTextNew, { fontFamily: fonts.bold }]}>
-                  {isAr ? 'جديد' : 'NEW'}
-                </Text>
-              </View>
-            </TouchableOpacity>
           </View>
         </View>
 
@@ -225,6 +234,8 @@ const styles = StyleSheet.create({
   barWrap: { marginTop: 10 },
   barTrack: { height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.06)', overflow: 'hidden' },
   barFill: { height: '100%', borderRadius: 2 },
+  barFillAnimated: { height: '100%', borderRadius: 2, overflow: 'hidden' },
+  usageBill: { fontSize: 12, color: 'rgba(255,255,255,0.35)', marginLeft: 8 },
   barLabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 },
   barLabel: { fontSize: 8, color: 'rgba(255,255,255,0.2)' },
   tierTag: {

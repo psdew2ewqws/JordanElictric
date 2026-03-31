@@ -3,6 +3,9 @@ import { JepcoClient } from './jepco.client';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser, JwtPayload } from '../../common/decorators/current-user.decorator';
 import { PrismaService } from '../../prisma/prisma.service';
+import { RedisService } from '../../redis/redis.service';
+
+const CACHE_TTL = 300; // 5 minutes
 
 @Controller('api/jepco')
 @UseGuards(JwtAuthGuard)
@@ -10,6 +13,7 @@ export class JepcoController {
   constructor(
     private readonly jepco: JepcoClient,
     private readonly prisma: PrismaService,
+    private readonly redis: RedisService,
   ) {}
 
   /**
@@ -28,10 +32,17 @@ export class JepcoController {
   @Get('smart-meter')
   async getSmartMeter(@CurrentUser() user: JwtPayload) {
     const fileNumber = await this.getFileNumber(user.sub);
+    // Check Redis cache first
+    const cacheKey = `jepco:sm:${fileNumber}`;
+    const cached = await this.redis.get(cacheKey);
+    if (cached) return { fileNumber, data: JSON.parse(cached), cached: true };
+
     const data = await this.jepco.fetchSmartMeter(fileNumber);
     if (!data) {
       throw new HttpException('Smart meter data not available', HttpStatus.SERVICE_UNAVAILABLE);
     }
+    // Cache for 5 minutes
+    await this.redis.set(cacheKey, JSON.stringify(data), CACHE_TTL);
     return { fileNumber, data };
   }
 
@@ -48,10 +59,15 @@ export class JepcoController {
   @Get('subscriber-info')
   async getSubscriberInfo(@CurrentUser() user: JwtPayload) {
     const fileNumber = await this.getFileNumber(user.sub);
+    const cacheKey = `jepco:sap:${fileNumber}`;
+    const cached = await this.redis.get(cacheKey);
+    if (cached) return { fileNumber, data: JSON.parse(cached), cached: true };
+
     const data = await this.jepco.fetchSapInfo(fileNumber);
     if (!data) {
       throw new HttpException('Subscriber info not available', HttpStatus.SERVICE_UNAVAILABLE);
     }
+    await this.redis.set(cacheKey, JSON.stringify(data), 3600); // Cache 1 hour (rarely changes)
     return { fileNumber, data };
   }
 

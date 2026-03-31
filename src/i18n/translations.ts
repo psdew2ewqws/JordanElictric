@@ -105,7 +105,7 @@ export const translations = {
     insightsTitle: 'Insights',
     insightsSubtitle: 'Understand your electricity like never before',
     costPerKwh: 'Cost per kWh',
-    nationalAvg: 'National avg: 120 fils',
+    nationalAvg: 'National avg: 0.120 JD/kWh',
     projectedNextBill: 'Projected Next Bill',
     fromCurrent: 'from current',
     vsSimilarHomes: 'vs Similar Homes',

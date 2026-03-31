@@ -72,12 +72,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const result = await authApi.login({ email, password });
     await storeTokens(result.accessToken, result.refreshToken);
     setUser(result.user);
-    try {
-      const sub = await subscriptionApi.getMine();
-      setSubscription(sub);
-    } catch {
-      // No subscription yet
-    }
+    // Delay subscription fetch to ensure token is fully persisted
+    setTimeout(async () => {
+      try {
+        const sub = await subscriptionApi.getMine();
+        setSubscription(sub);
+      } catch {
+        // No subscription yet — that's OK
+      }
+    }, 500);
   }, []);
 
   const register = useCallback(async (name: string, email: string, password: string) => {

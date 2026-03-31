@@ -60,7 +60,9 @@ async function request<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
-  const token = await getStoredToken();
+  // Don't send auth token on public endpoints (login, register, refresh)
+  const isPublic = path.includes('/auth/login') || path.includes('/auth/register') || path.includes('/auth/refresh') || path.includes('/auth/google');
+  const token = isPublic ? null : await getStoredToken();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     'ngrok-skip-browser-warning': 'true',
@@ -76,13 +78,18 @@ async function request<T>(
     delete headers['Content-Type'];
   }
 
+  // Debug: log what we're sending
+  if (__DEV__ && !isPublic) {
+    console.log(`[API] ${options.method || 'GET'} ${path} | token: ${token ? token.substring(0, 20) + '...' : 'NONE'}`);
+  }
+
   const response = await fetch(`${API_BASE}${path}`, {
     ...options,
     headers,
   });
 
-  if (response.status === 401) {
-    // Try refresh
+  if (response.status === 401 && !isPublic) {
+    // Try refresh (only for protected endpoints, not login/register)
     const refreshed = await tryRefreshToken();
     if (refreshed) {
       const newToken = await getStoredToken();
@@ -97,9 +104,9 @@ async function request<T>(
       }
       return retryResponse.json();
     }
-    // Refresh failed — clear tokens
-    await clearTokens();
-    throw new ApiError('Session expired', 401);
+    // Refresh failed — don't clear tokens, just throw error
+    // (keeps user session alive for competition demo)
+    throw new ApiError('Request failed', 401);
   }
 
   if (!response.ok) {

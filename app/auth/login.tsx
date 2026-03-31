@@ -56,12 +56,18 @@ export default function LoginScreen() {
     if (!email || !password || isSubmitting) return;
     setIsSubmitting(true);
     setErrorMsg('');
+    // Clear any stale tokens before login attempt
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+      }
+    } catch {}
     try {
       await login(email, password);
       router.replace('/(tabs)');
     } catch (err: any) {
       const msg = err.message || '';
-      // Don't show "Session expired" as a login error — it means login worked but a follow-up call failed
       if (msg.includes('Session expired') || msg.includes('expired')) {
         router.replace('/(tabs)');
         return;
@@ -313,7 +319,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28,
     paddingTop: 10,
     paddingBottom: 30,
-    direction: 'ltr',
+    writingDirection: 'ltr',
   },
 
   // Brand

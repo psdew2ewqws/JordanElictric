@@ -5,7 +5,7 @@ export const appConfig = () => ({
   jwt: {
     secret: process.env.JWT_SECRET || 'change-me',
     refreshSecret: process.env.JWT_REFRESH_SECRET || 'change-me-refresh',
-    accessExpiry: process.env.JWT_ACCESS_EXPIRY || '15m',
+    accessExpiry: process.env.JWT_ACCESS_EXPIRY || '24h',
     refreshExpiry: process.env.JWT_REFRESH_EXPIRY || '30d',
   },
 

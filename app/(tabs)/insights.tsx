@@ -56,8 +56,8 @@ export default function InsightsScreen() {
         <View style={styles.kpiGrid}>
           <KpiCard
             label={t('costPerKwh')}
-            value={String(analytics.costPerKwh)}
-            unit={t('filsUnit')}
+            value={(analytics.costPerKwh / 1000).toFixed(3)}
+            unit="JD"
             subtitle={t('nationalAvg')}
             valueColor={Colors.primary}
           />
