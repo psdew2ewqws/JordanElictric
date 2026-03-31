@@ -1,10 +1,17 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { IsEnum, IsString, IsOptional } from 'class-validator';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ComplaintType } from '@prisma/client';
 
-export interface CreateComplaintDto {
+export class CreateComplaintDto {
+  @IsEnum(ComplaintType)
   complaintType: ComplaintType;
+
+  @IsString()
   description: string;
+
+  @IsOptional()
+  @IsString()
   descriptionAr?: string;
 }
 

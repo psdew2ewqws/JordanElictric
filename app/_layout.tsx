@@ -58,23 +58,23 @@ export default function RootLayout() {
         />
         <Stack.Screen
           name="bill/index"
-          options={{ headerShown: true, title: 'Bills' }}
+          options={{ headerShown: false }}
         />
         <Stack.Screen
           name="chat/index"
-          options={{ headerShown: true, title: 'Live Chat' }}
+          options={{ headerShown: false }}
         />
         <Stack.Screen
           name="outage/index"
-          options={{ headerShown: true, title: 'Report Outage' }}
+          options={{ headerShown: false }}
         />
         <Stack.Screen
           name="complaints/index"
-          options={{ headerShown: true, title: 'Reports' }}
+          options={{ headerShown: false }}
         />
         <Stack.Screen
           name="energy-friend/index"
-          options={{ headerShown: true, title: 'Energy Friend' }}
+          options={{ headerShown: false }}
         />
       </Stack>
     </LanguageProvider>
