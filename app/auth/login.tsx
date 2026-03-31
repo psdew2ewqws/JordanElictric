@@ -49,23 +49,36 @@ export default function LoginScreen() {
   const [introEnded, setIntroEnded] = useState(false);
 
   const formOpacity = useRef(new Animated.Value(0)).current;
+  const formShown = useRef(false);
   const introRef = useRef<Video>(null);
   const loopRef = useRef<Video>(null);
 
+  const showForm = useCallback(() => {
+    if (formShown.current) return;
+    formShown.current = true;
+    Animated.timing(formOpacity, {
+      toValue: 1,
+      duration: 900,
+      useNativeDriver: true,
+    }).start();
+  }, [formOpacity]);
+
+  // Fallback: if video doesn't load within 2 seconds, show form anyway
+  React.useEffect(() => {
+    const timer = setTimeout(showForm, 2000);
+    return () => clearTimeout(timer);
+  }, [showForm]);
+
   const onIntroStatus = useCallback((status: AVPlaybackStatus) => {
     if (!status.isLoaded) return;
-    if (status.positionMillis > 1800 && (formOpacity as any)._value === 0) {
-      Animated.timing(formOpacity, {
-        toValue: 1,
-        duration: 900,
-        useNativeDriver: true,
-      }).start();
+    if (status.positionMillis > 1800) {
+      showForm();
     }
     if (status.didJustFinish && !introEnded) {
       setIntroEnded(true);
       loopRef.current?.playAsync();
     }
-  }, [introEnded, formOpacity]);
+  }, [introEnded, showForm]);
 
   return (
     <View style={styles.screen}>
