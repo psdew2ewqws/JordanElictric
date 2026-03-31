@@ -8,11 +8,14 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Colors, FontSize, Radius, Spacing, Shadows } from '../../src/constants/theme';
+import { billApi } from '../../src/services/api';
 
 export default function ManualEntryScreen() {
   const router = useRouter();
@@ -20,12 +23,66 @@ export default function ManualEntryScreen() {
   const [totalAmount, setTotalAmount] = useState('');
   const [billingStart, setBillingStart] = useState('');
   const [billingEnd, setBillingEnd] = useState('');
+  const [fuelClause, setFuelClause] = useState('');
+  const [previousReading, setPreviousReading] = useState('');
+  const [currentReading, setCurrentReading] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const isValid = totalKwh.length > 0 && totalAmount.length > 0;
+  const isValid = totalKwh.length > 0 && totalAmount.length > 0 && !loading;
 
-  const handleSubmit = () => {
-    // Will connect to backend later
-    router.replace('/bill/1');
+  const parseDateToISO = (input: string): string | undefined => {
+    if (!input.trim()) return undefined;
+    const parts = input.split('/');
+    if (parts.length === 3) {
+      const [dd, mm, yyyy] = parts;
+      return `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
+    }
+    return undefined;
+  };
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const amountJd = parseFloat(totalAmount);
+      const totalAmountFils = Math.round(amountJd * 1000);
+
+      const payload: Parameters<typeof billApi.createManual>[0] = {
+        totalKwh: parseFloat(totalKwh),
+        totalAmountFils,
+      };
+
+      const startISO = parseDateToISO(billingStart);
+      if (startISO) payload.billingPeriodStart = startISO;
+
+      const endISO = parseDateToISO(billingEnd);
+      if (endISO) payload.billingPeriodEnd = endISO;
+
+      if (fuelClause.trim()) {
+        payload.fuelClauseFils = Math.round(parseFloat(fuelClause) * 1000);
+      }
+      if (previousReading.trim()) {
+        payload.previousReading = parseInt(previousReading, 10);
+      }
+      if (currentReading.trim()) {
+        payload.currentReading = parseInt(currentReading, 10);
+      }
+
+      const result = await billApi.createManual(payload) as { id?: string };
+      const billId = result?.id;
+      if (billId) {
+        router.replace(`/bill/${billId}`);
+      } else {
+        throw new Error('No bill ID returned');
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to create bill. Please try again.';
+      setError(message);
+      Alert.alert('Error', message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -112,6 +169,8 @@ export default function ManualEntryScreen() {
                   placeholder="e.g. 12.80"
                   placeholderTextColor={Colors.textMuted}
                   keyboardType="decimal-pad"
+                  value={fuelClause}
+                  onChangeText={setFuelClause}
                 />
               </View>
 
@@ -122,6 +181,8 @@ export default function ManualEntryScreen() {
                   placeholder="e.g. 14520"
                   placeholderTextColor={Colors.textMuted}
                   keyboardType="numeric"
+                  value={previousReading}
+                  onChangeText={setPreviousReading}
                 />
               </View>
 
@@ -132,10 +193,17 @@ export default function ManualEntryScreen() {
                   placeholder="e.g. 14840"
                   placeholderTextColor={Colors.textMuted}
                   keyboardType="numeric"
+                  value={currentReading}
+                  onChangeText={setCurrentReading}
                 />
               </View>
             </View>
           </View>
+
+          {/* Error message */}
+          {error && (
+            <Text style={styles.errorText}>{error}</Text>
+          )}
 
           {/* Submit */}
           <TouchableOpacity
@@ -143,8 +211,14 @@ export default function ManualEntryScreen() {
             onPress={handleSubmit}
             disabled={!isValid}
           >
-            <Ionicons name="analytics" size={20} color={Colors.white} />
-            <Text style={styles.submitBtnText}>Analyze My Bill</Text>
+            {loading ? (
+              <ActivityIndicator size="small" color={Colors.white} />
+            ) : (
+              <Ionicons name="analytics" size={20} color={Colors.white} />
+            )}
+            <Text style={styles.submitBtnText}>
+              {loading ? 'Analyzing...' : 'Analyze My Bill'}
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -265,5 +339,11 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     color: Colors.accent,
     fontWeight: '500',
+  },
+  errorText: {
+    fontSize: FontSize.sm,
+    color: Colors.danger,
+    textAlign: 'center',
+    marginTop: Spacing.lg,
   },
 });

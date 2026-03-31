@@ -20,6 +20,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../../src/constants/theme';
 import { useLanguage } from '../../src/i18n/LanguageContext';
 import { LanguageToggle } from '../../src/components/LanguageToggle';
+import { useAuth } from '../../src/contexts/AuthContext';
 
 const { height: SCREEN_H } = Dimensions.get('window');
 const VIDEO_HEIGHT = SCREEN_H * 0.42;
@@ -39,6 +40,7 @@ export default function LoginScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t, fonts, language } = useLanguage();
+  const { login } = useAuth();
   const isAr = language === 'ar';
   // Arabic font renders larger — scale down but never below 11px for readability
   const sz = (en: number) => isAr ? Math.max(11, en * 0.82) : en;
@@ -47,6 +49,22 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [introEnded, setIntroEnded] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const handleLogin = async () => {
+    if (!email || !password || isSubmitting) return;
+    setIsSubmitting(true);
+    setErrorMsg('');
+    try {
+      await login(email, password);
+      router.replace('/(tabs)');
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Login failed. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const formOpacity = useRef(new Animated.Value(0)).current;
   const formShown = useRef(false);
@@ -184,15 +202,22 @@ export default function LoginScreen() {
               </Text>
             </TouchableOpacity>
 
+            {/* Error message */}
+            {errorMsg ? (
+              <Text style={{ color: '#DC2626', fontSize: 13, textAlign: 'center', marginBottom: 8, fontFamily: fonts.medium }}>
+                {errorMsg}
+              </Text>
+            ) : null}
+
             {/* Log In */}
             <TouchableOpacity
-              style={[styles.primaryBtn, (!email || !password) && styles.btnDisabled, isAr && { paddingVertical: 13 }]}
-              disabled={!email || !password}
-              onPress={() => router.replace('/onboarding')}
+              style={[styles.primaryBtn, (!email || !password || isSubmitting) && styles.btnDisabled, isAr && { paddingVertical: 13 }]}
+              disabled={!email || !password || isSubmitting}
+              onPress={handleLogin}
               activeOpacity={0.85}
             >
               <Text style={[styles.primaryBtnText, { fontFamily: fonts.bold, fontSize: sz(16) }]}>
-                {t('logIn')}
+                {isSubmitting ? '...' : t('logIn')}
               </Text>
             </TouchableOpacity>
 

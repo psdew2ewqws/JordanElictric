@@ -6,19 +6,22 @@ import {
   TouchableOpacity,
   Image,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { Colors, FontSize, Radius, Spacing, Shadows } from '../../src/constants/theme';
+import { billApi } from '../../src/services/api';
 
-type ScanState = 'idle' | 'preview' | 'processing' | 'done';
+type ScanState = 'idle' | 'preview' | 'processing' | 'done' | 'error';
 
 export default function ScanBillScreen() {
   const router = useRouter();
   const [state, setState] = useState<ScanState>('idle');
   const [imageUri, setImageUri] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -46,14 +49,25 @@ export default function ScanBillScreen() {
     }
   };
 
-  const processImage = () => {
+  const processImage = async () => {
+    if (!imageUri) return;
     setState('processing');
-    // Simulate OCR processing
-    setTimeout(() => {
+    setErrorMessage(null);
+    try {
+      const result = await billApi.scanBill(imageUri);
       setState('done');
-      // Navigate to bill detail after processing
-      setTimeout(() => router.replace('/bill/1'), 800);
-    }, 2500);
+      const billId = result.bill?.id;
+      if (billId) {
+        setTimeout(() => router.replace(`/bill/${billId}`), 800);
+      } else {
+        throw new Error('No bill ID returned from scan');
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to scan bill. Please try again.';
+      setState('error');
+      setErrorMessage(message);
+      Alert.alert('Scan Failed', message);
+    }
   };
 
   return (
@@ -127,6 +141,23 @@ export default function ScanBillScreen() {
             <Ionicons name="checkmark-circle" size={64} color={Colors.success} />
             <Text style={styles.processingTitle}>Bill Analyzed!</Text>
             <Text style={styles.processingDesc}>Redirecting to your bill breakdown...</Text>
+          </View>
+        )}
+
+        {state === 'error' && (
+          <View style={styles.processingContainer}>
+            <Ionicons name="alert-circle" size={64} color={Colors.danger} />
+            <Text style={styles.processingTitle}>Scan Failed</Text>
+            <Text style={styles.processingDesc}>
+              {errorMessage || 'Something went wrong. Please try again.'}
+            </Text>
+            <TouchableOpacity
+              style={[styles.primaryBtn, { marginTop: Spacing.xxl }]}
+              onPress={() => { setState('preview'); setErrorMessage(null); }}
+            >
+              <Ionicons name="refresh-outline" size={20} color={Colors.white} />
+              <Text style={styles.primaryBtnText}>Try Again</Text>
+            </TouchableOpacity>
           </View>
         )}
       </View>

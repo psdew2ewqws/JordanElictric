@@ -10,23 +10,41 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors, FontSize, Radius, Spacing, Shadows } from '../../src/constants/theme';
 import { BarChart } from '../../src/components/BarChart';
 import { mockAnalytics } from '../../src/utils/mockData';
+import { analyticsApi } from '../../src/services/api';
 
 type Period = 'monthly' | 'quarterly' | 'yearly';
 
 export default function UsageScreen() {
   const [period, setPeriod] = useState<Period>('monthly');
+  const [apiTrend, setApiTrend] = useState<{ date: string; kwh: number; costJd: number }[] | null>(null);
+
+  React.useEffect(() => {
+    analyticsApi.getUsageTrends(period)
+      .then((r) => setApiTrend(r.trend))
+      .catch(() => setApiTrend(null));
+  }, [period]);
+
   const analytics = mockAnalytics;
 
-  const consumptionData = analytics.monthlyTrend.map((item, idx) => ({
+  // Use API data if available, fallback to mock
+  const trendSource = apiTrend && apiTrend.length > 0
+    ? apiTrend.map((t) => ({
+        month: new Date(t.date).toLocaleString('en', { month: 'short' }),
+        kwh: t.kwh,
+        cost: t.costJd,
+      }))
+    : analytics.monthlyTrend;
+
+  const consumptionData = trendSource.map((item, idx) => ({
     label: item.month,
     value: item.kwh,
-    highlight: idx === analytics.monthlyTrend.length - 1,
+    highlight: idx === trendSource.length - 1,
   }));
 
-  const costData = analytics.monthlyTrend.map((item, idx) => ({
+  const costData = trendSource.map((item, idx) => ({
     label: item.month,
     value: item.cost,
-    highlight: idx === analytics.monthlyTrend.length - 1,
+    highlight: idx === trendSource.length - 1,
   }));
 
   return (

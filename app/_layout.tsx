@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import { ActivityIndicator, View } from 'react-native';
 import { LanguageProvider } from '../src/i18n/LanguageContext';
+import { AuthProvider } from '../src/contexts/AuthContext';
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -26,6 +27,7 @@ export default function RootLayout() {
   }
 
   return (
+    <AuthProvider>
     <LanguageProvider>
       <StatusBar style="light" />
       <Stack
@@ -56,5 +58,6 @@ export default function RootLayout() {
         />
       </Stack>
     </LanguageProvider>
+    </AuthProvider>
   );
 }

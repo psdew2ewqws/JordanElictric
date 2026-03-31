@@ -8,6 +8,8 @@ import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLanguage } from '../../src/i18n/LanguageContext';
 import { LanguageToggle } from '../../src/components/LanguageToggle';
+import { useAuth } from '../../src/contexts/AuthContext';
+import { analyticsApi, notificationApi } from '../../src/services/api';
 
 const { width: SW } = Dimensions.get('window');
 
@@ -21,8 +23,20 @@ const SERVICES = [
 export default function HomeScreen() {
   const router = useRouter();
   const { t, fonts, language } = useLanguage();
+  const { user } = useAuth();
   const isAr = language === 'ar';
   const sz = (en: number) => isAr ? Math.max(11, en * 0.85) : en;
+
+  const [usage, setUsage] = React.useState<{
+    currentKwh: number;
+    tierProgress: { tier: number; percentage: number; label: string };
+  } | null>(null);
+  const [unreadCount, setUnreadCount] = React.useState(0);
+
+  React.useEffect(() => {
+    analyticsApi.getCurrentUsage().then(setUsage).catch(() => {});
+    notificationApi.getUnreadCount().then((r) => setUnreadCount(r.count)).catch(() => {});
+  }, []);
 
   return (
     <View style={styles.screen}>
@@ -37,13 +51,13 @@ export default function HomeScreen() {
                   {t('welcomeBack')}
                 </Text>
                 <Text style={[styles.userName, { fontFamily: fonts.bold, fontSize: sz(21) }]}>
-                  Ahmad Hassan
+                  {user?.name || 'Guest'}
                 </Text>
               </View>
               <View style={styles.topRight}>
                 <TouchableOpacity style={styles.bellBtn}>
                   <Ionicons name="notifications-outline" size={18} color="#fff" />
-                  <View style={styles.bellDot} />
+                  {unreadCount > 0 && <View style={styles.bellDot} />}
                 </TouchableOpacity>
                 <LanguageToggle variant="dark" />
               </View>
@@ -60,7 +74,7 @@ export default function HomeScreen() {
                 </Text>
               </View>
               <View style={styles.usageNumRow}>
-                <Text style={[styles.usageVal, { fontFamily: fonts.bold }]}>267</Text>
+                <Text style={[styles.usageVal, { fontFamily: fonts.bold }]}>{usage?.currentKwh ?? 0}</Text>
                 <Text style={[styles.usageUnit, { fontFamily: fonts.medium }]}>kWh</Text>
               </View>
               {/* Tier bar */}
@@ -69,7 +83,7 @@ export default function HomeScreen() {
                   <LinearGradient
                     colors={['#10B981', '#FBBF24', '#DC2626']}
                     start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-                    style={[styles.barFill, { width: '53%' }]}
+                    style={[styles.barFill, { width: `${usage?.tierProgress?.percentage ?? 0}%` }]}
                   />
                 </View>
                 <View style={styles.barLabels}>
@@ -81,7 +95,7 @@ export default function HomeScreen() {
               <View style={styles.tierTag}>
                 <Ionicons name="checkmark" size={12} color="#10B981" />
                 <Text style={[styles.tierTagText, { fontFamily: fonts.semibold, fontSize: sz(9) }]}>
-                  {t('stillTier1')}
+                  {usage?.tierProgress?.label || t('stillTier1')}
                 </Text>
               </View>
             </View>

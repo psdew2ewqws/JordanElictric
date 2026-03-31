@@ -1,16 +1,17 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import { Colors, FontSize, Radius, Spacing, Shadows } from '../../src/constants/theme';
-import { mockCurrentBill, mockAnalytics } from '../../src/utils/mockData';
+import { billApi } from '../../src/services/api';
 
 const categoryColors: Record<string, string> = {
   energy_tier1: Colors.tierGreen,
@@ -34,12 +35,84 @@ const categoryIcons: Record<string, string> = {
   other: '📋',
 };
 
+interface BillLineItem {
+  id?: string;
+  category: string;
+  label: string;
+  labelAr?: string;
+  amountFils: number;
+  kwh?: number;
+  ratePerKwh?: number;
+}
+
+interface BillData {
+  id: string;
+  totalAmountFils: number;
+  totalKwh: number;
+  billingPeriodStart: string;
+  billingPeriodEnd: string;
+  source: string;
+  lineItems: BillLineItem[];
+}
+
 export default function BillDetailScreen() {
   const { id } = useLocalSearchParams();
-  const bill = mockCurrentBill;
+  const [bill, setBill] = useState<BillData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const energyItems = bill.lineItems.filter(i => i.category.startsWith('energy_'));
-  const otherItems = bill.lineItems.filter(i => !i.category.startsWith('energy_'));
+  useEffect(() => {
+    const fetchBill = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const billId = Array.isArray(id) ? id[0] : id;
+        if (!billId) throw new Error('No bill ID provided');
+        const data = await billApi.getById(billId);
+        setBill(data);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Failed to load bill';
+        setError(message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBill();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.safe} edges={['bottom']}>
+        <View style={styles.centeredContainer}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+          <Text style={styles.loadingText}>Loading bill...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (error || !bill) {
+    return (
+      <SafeAreaView style={styles.safe} edges={['bottom']}>
+        <View style={styles.centeredContainer}>
+          <Ionicons name="alert-circle-outline" size={48} color={Colors.danger} />
+          <Text style={styles.errorTitle}>Unable to load bill</Text>
+          <Text style={styles.errorDesc}>{error || 'Bill not found'}</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const totalAmount = bill.totalAmountFils / 1000;
+
+  const lineItems = bill.lineItems.map((item, idx) => ({
+    ...item,
+    id: item.id || String(idx),
+    amount: item.amountFils / 1000,
+  }));
+
+  const energyItems = lineItems.filter(i => i.category.startsWith('energy_'));
+  const otherItems = lineItems.filter(i => !i.category.startsWith('energy_'));
   const energyTotal = energyItems.reduce((s, i) => s + i.amount, 0);
 
   return (
@@ -51,7 +124,7 @@ export default function BillDetailScreen() {
             <View>
               <Text style={styles.summaryLabel}>Total Bill</Text>
               <Text style={styles.summaryAmount}>
-                {bill.totalAmount.toFixed(2)} <Text style={styles.summaryCurrency}>JD</Text>
+                {totalAmount.toFixed(2)} <Text style={styles.summaryCurrency}>JD</Text>
               </Text>
             </View>
             <View style={styles.summaryBadge}>
@@ -78,7 +151,7 @@ export default function BillDetailScreen() {
             </View>
             <View style={styles.metaItem}>
               <Text style={styles.metaLabel}>Avg Cost</Text>
-              <Text style={styles.metaValue}>{Math.round((bill.totalAmount / bill.totalKwh) * 1000)} fils/kWh</Text>
+              <Text style={styles.metaValue}>{Math.round((totalAmount / bill.totalKwh) * 1000)} fils/kWh</Text>
             </View>
           </View>
         </View>
@@ -172,7 +245,7 @@ export default function BillDetailScreen() {
         {/* Grand Total */}
         <View style={styles.grandTotalCard}>
           <Text style={styles.grandTotalLabel}>Grand Total</Text>
-          <Text style={styles.grandTotalAmount}>{bill.totalAmount.toFixed(2)} JD</Text>
+          <Text style={styles.grandTotalAmount}>{totalAmount.toFixed(2)} JD</Text>
         </View>
 
         {/* Actions */}
@@ -213,6 +286,31 @@ function formatDate(dateStr: string): string {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
   container: { flex: 1, paddingHorizontal: Spacing.xl },
+
+  // Loading / Error
+  centeredContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.xl,
+  },
+  loadingText: {
+    fontSize: FontSize.sm,
+    color: Colors.textMuted,
+    marginTop: Spacing.md,
+  },
+  errorTitle: {
+    fontSize: FontSize.lg,
+    fontWeight: '700',
+    color: Colors.text,
+    marginTop: Spacing.md,
+  },
+  errorDesc: {
+    fontSize: FontSize.sm,
+    color: Colors.textMuted,
+    marginTop: Spacing.sm,
+    textAlign: 'center',
+  },
 
   // Summary
   summaryCard: {

@@ -1,0 +1,327 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Auth & User ──────────────────────────────────────────
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  name         String
+  phone        String   @default("")
+  avatarUrl    String?  @map("avatar_url")
+  isVerified   Boolean  @default(false) @map("is_verified")
+  googleId     String?  @unique @map("google_id")
+  language     Language @default(EN)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  subscription  Subscription?
+  refreshTokens RefreshToken[]
+  notifications Notification[]
+  activities    UserActivity[]
+  conversations ConversationSession[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id         String    @id @default(uuid())
+  token      String    @unique
+  userId     String    @map("user_id")
+  expiresAt  DateTime  @map("expires_at")
+  revokedAt  DateTime? @map("revoked_at")
+  deviceInfo String    @default("") @map("device_info")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+enum Language {
+  AR
+  EN
+}
+
+// ─── Subscription ─────────────────────────────────────────
+
+model Subscription {
+  id                  String              @id @default(uuid())
+  userId              String              @unique @map("user_id")
+  subscriberNumber    String              @unique @map("subscriber_number")
+  distributionCompany DistributionCompany @map("distribution_company")
+  subscriptionType    SubscriptionType    @default(RESIDENTIAL) @map("subscription_type")
+  householdSize       Int                 @default(1) @map("household_size")
+  meterNumber         String              @default("") @map("meter_number")
+  address             String              @default("")
+  district            String              @default("")
+  isActive            Boolean             @default(true) @map("is_active")
+  createdAt           DateTime            @default(now()) @map("created_at")
+  updatedAt           DateTime            @updatedAt @map("updated_at")
+
+  user          User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bills         Bill[]
+  complaints    Complaint[]
+  conversations ConversationSession[]
+
+  @@map("subscriptions")
+}
+
+enum DistributionCompany {
+  JEPCO
+  IDECO
+  EDCO
+}
+
+enum SubscriptionType {
+  RESIDENTIAL
+  COMMERCIAL
+  INDUSTRIAL
+}
+
+// ─── Bill ─────────────────────────────────────────────────
+
+model Bill {
+  id                 String     @id @default(uuid())
+  subscriptionId     String     @map("subscription_id")
+  billingPeriodStart DateTime   @map("billing_period_start")
+  billingPeriodEnd   DateTime   @map("billing_period_end")
+  totalAmountFils    Int        @default(0) @map("total_amount_fils")
+  totalKwh           Decimal    @default(0) @db.Decimal(10, 2) @map("total_kwh")
+  peakKwh            Decimal    @default(0) @db.Decimal(10, 2) @map("peak_kwh")
+  offPeakKwh         Decimal    @default(0) @db.Decimal(10, 2) @map("off_peak_kwh")
+  previousReading    Int        @default(0) @map("previous_reading")
+  currentReading     Int        @default(0) @map("current_reading")
+  dueDate            DateTime   @map("due_date")
+  isPaid             Boolean    @default(false) @map("is_paid")
+  source             BillSource @default(MANUAL)
+  scannedImageUrl    String?    @map("scanned_image_url")
+  rawOcrData         Json?      @map("raw_ocr_data")
+  createdAt          DateTime   @default(now()) @map("created_at")
+  updatedAt          DateTime   @updatedAt @map("updated_at")
+
+  subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  lineItems    BillLineItem[]
+
+  @@index([subscriptionId])
+  @@index([billingPeriodEnd(sort: Desc)])
+  @@map("bills")
+}
+
+model BillLineItem {
+  id         String  @id @default(uuid())
+  billId     String  @map("bill_id")
+  category   String // energy_tier1, energy_tier2, energy_tier3, fuel_clause, rural_fee, subsidy_deduction, tax, other
+  label      String
+  labelAr    String  @default("") @map("label_ar")
+  amountFils Int     @default(0) @map("amount_fils")
+  kwh        Decimal @default(0) @db.Decimal(10, 2)
+  ratePerKwh Int?    @map("rate_per_kwh") // fils
+  tariffTier String  @default("") @map("tariff_tier")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  bill Bill @relation(fields: [billId], references: [id], onDelete: Cascade)
+
+  @@map("bill_line_items")
+}
+
+enum BillSource {
+  SCAN
+  MANUAL
+}
+
+// ─── Tariff ───────────────────────────────────────────────
+
+model TariffTier {
+  id        String  @id @default(uuid())
+  sector    String // residential_subsidized, residential_unsubsidized, commercial, industrial_small, industrial_medium
+  tierNumber Int    @map("tier_number")
+  minKwh    Int     @map("min_kwh")
+  maxKwh    Int     @map("max_kwh") // 999999 for unlimited
+  rateFils  Int     @map("rate_fils")
+  label     String  @default("")
+  labelAr   String  @default("") @map("label_ar")
+  isActive  Boolean @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([sector, tierNumber])
+  @@map("tariff_tiers")
+}
+
+model TariffPeriod {
+  id         String  @id @default(uuid())
+  name       String
+  nameAr     String  @default("") @map("name_ar")
+  startHour  Int     @map("start_hour")
+  endHour    Int     @map("end_hour")
+  multiplier Decimal @default(1.00) @db.Decimal(4, 2)
+  isPeak     Boolean @default(false) @map("is_peak")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("tariff_periods")
+}
+
+// ─── Complaint ────────────────────────────────────────────
+
+model Complaint {
+  id              String          @id @default(uuid())
+  subscriptionId  String          @map("subscription_id")
+  complaintType   ComplaintType   @map("complaint_type")
+  description     String
+  descriptionAr   String          @default("") @map("description_ar")
+  status          ComplaintStatus @default(OPEN)
+  referenceNumber String          @default("") @map("reference_number")
+  resolutionNotes String          @default("") @map("resolution_notes")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+
+  subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@index([subscriptionId])
+  @@map("complaints")
+}
+
+enum ComplaintType {
+  OUTAGE
+  BILLING
+  METER
+  VOLTAGE
+  OTHER
+}
+
+enum ComplaintStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+// ─── Conversation / Chat ──────────────────────────────────
+
+model ConversationSession {
+  id             String   @id @default(uuid())
+  userId         String   @map("user_id")
+  subscriptionId String?  @map("subscription_id")
+  platform       Platform @default(MOBILE)
+  isActive       Boolean  @default(true) @map("is_active")
+  context        Json     @default("{}")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscription Subscription? @relation(fields: [subscriptionId], references: [id])
+  messages     Message[]
+
+  @@index([userId])
+  @@map("conversation_sessions")
+}
+
+model Message {
+  id               String      @id @default(uuid())
+  sessionId        String      @map("session_id")
+  role             MessageRole
+  content          String
+  messageType      MessageType @default(TEXT) @map("message_type")
+  tokensUsed       Int         @default(0) @map("tokens_used")
+  costUsd          Decimal     @default(0) @db.Decimal(10, 6) @map("cost_usd")
+  processingTimeMs Int         @default(0) @map("processing_time_ms")
+  createdAt        DateTime    @default(now()) @map("created_at")
+
+  session ConversationSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@map("messages")
+}
+
+enum Platform {
+  MOBILE
+  WEB
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+}
+
+// ─── Notification ─────────────────────────────────────────
+
+model Notification {
+  id                String           @id @default(uuid())
+  userId            String           @map("user_id")
+  notificationType  NotificationType @map("notification_type")
+  title             String
+  titleAr           String           @default("") @map("title_ar")
+  message           String
+  messageAr         String           @default("") @map("message_ar")
+  isRead            Boolean          @default(false) @map("is_read")
+  readAt            DateTime?        @map("read_at")
+  relatedObjectType String           @default("") @map("related_object_type")
+  relatedObjectId   String?          @map("related_object_id")
+  createdAt         DateTime         @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("notifications")
+}
+
+enum NotificationType {
+  INFO
+  WARNING
+  BILL_READY
+  OUTAGE_UPDATE
+  SAVINGS_TIP
+  SYSTEM
+}
+
+// ─── AI Log ───────────────────────────────────────────────
+
+model AiLog {
+  id           String   @id @default(uuid())
+  modelName    String   @map("model_name")
+  provider     String // openai, anthropic
+  inputTokens  Int      @default(0) @map("input_tokens")
+  outputTokens Int      @default(0) @map("output_tokens")
+  costUsd      Decimal  @default(0) @db.Decimal(10, 6) @map("cost_usd")
+  latencyMs    Int      @default(0) @map("latency_ms")
+  taskType     String   @map("task_type") // vision, chat, rag
+  success      Boolean  @default(true)
+  errorMessage String?  @map("error_message")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([provider, createdAt(sort: Desc)])
+  @@map("ai_logs")
+}
+
+// ─── User Activity ────────────────────────────────────────
+
+model UserActivity {
+  id          String   @id @default(uuid())
+  userId      String?  @map("user_id")
+  actionType  String   @map("action_type") // login, register, bill_scan, etc.
+  description String
+  details     Json     @default("{}")
+  ipAddress   String?  @map("ip_address")
+  userAgent   String   @default("") @map("user_agent")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("user_activities")
+}

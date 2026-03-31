@@ -12,9 +12,33 @@ import { Colors, FontSize, Radius, Spacing, Shadows } from '../../src/constants/
 import { KpiCard } from '../../src/components/KpiCard';
 import { ProgressBar } from '../../src/components/ProgressBar';
 import { mockAnalytics, mockCurrentBill } from '../../src/utils/mockData';
+import { analyticsApi } from '../../src/services/api';
 
 export default function InsightsScreen() {
-  const analytics = mockAnalytics;
+  const [apiInsights, setApiInsights] = React.useState<any>(null);
+
+  React.useEffect(() => {
+    analyticsApi.getInsights().then(setApiInsights).catch(() => {});
+  }, []);
+
+  // Use API data if available, fallback to mock
+  const analytics = apiInsights ? {
+    ...mockAnalytics,
+    costPerKwh: apiInsights.costPerKwh || mockAnalytics.costPerKwh,
+    projectedNextBill: apiInsights.projectedNextBillJd || mockAnalytics.projectedNextBill,
+    comparisonToAverage: apiInsights.comparisonToAverage ?? mockAnalytics.comparisonToAverage,
+    peakOffPeakSplit: apiInsights.peakOffPeakSplit || mockAnalytics.peakOffPeakSplit,
+    applianceEstimates: apiInsights.applianceEstimates?.map((a: any) => ({
+      name: a.name,
+      nameAr: a.nameAr,
+      icon: a.icon,
+      percentage: a.percentage,
+      kwhEstimate: a.estimatedKwh,
+      color: '#3B82F6',
+    })) || mockAnalytics.applianceEstimates,
+    environmentalImpact: apiInsights.environmentalImpact || mockAnalytics.environmentalImpact,
+  } : mockAnalytics;
+
   const bill = mockCurrentBill;
   const env = analytics.environmentalImpact;
 

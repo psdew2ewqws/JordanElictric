@@ -13,12 +13,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Colors, FontSize, Radius, Spacing, Shadows } from '../../src/constants/theme';
+import { useAuth } from '../../src/contexts/AuthContext';
 
 type Step = 'account' | 'subscriber';
 
 export default function RegisterScreen() {
   const router = useRouter();
+  const { register, createSubscription } = useAuth();
   const [step, setStep] = useState<Step>('account');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -27,6 +31,38 @@ export default function RegisterScreen() {
   const [subscriberNumber, setSubscriberNumber] = useState('');
   const [company, setCompany] = useState<string | null>(null);
   const [householdSize, setHouseholdSize] = useState('');
+
+  const handleAccountStep = async () => {
+    if (!name || !email || !password || isSubmitting) return;
+    setIsSubmitting(true);
+    setErrorMsg('');
+    try {
+      await register(name, email, password);
+      setStep('subscriber');
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Registration failed');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSubscriberStep = async () => {
+    if (!subscriberNumber || !company || isSubmitting) return;
+    setIsSubmitting(true);
+    setErrorMsg('');
+    try {
+      await createSubscription({
+        subscriberNumber,
+        distributionCompany: company as 'JEPCO' | 'IDECO' | 'EDCO',
+        householdSize: parseInt(householdSize, 10) || 1,
+      });
+      router.replace('/(tabs)');
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Failed to create subscription');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const companies = [
     { id: 'JEPCO', label: 'JEPCO', region: 'Central (Amman)' },
@@ -98,12 +134,15 @@ export default function RegisterScreen() {
                   />
                 </View>
 
+                {errorMsg && step === 'account' ? (
+                  <Text style={{ color: '#DC2626', fontSize: 13, textAlign: 'center' }}>{errorMsg}</Text>
+                ) : null}
                 <TouchableOpacity
-                  style={[styles.primaryBtn, (!name || !email || !password) && styles.btnDisabled]}
-                  disabled={!name || !email || !password}
-                  onPress={() => setStep('subscriber')}
+                  style={[styles.primaryBtn, (!name || !email || !password || isSubmitting) && styles.btnDisabled]}
+                  disabled={!name || !email || !password || isSubmitting}
+                  onPress={handleAccountStep}
                 >
-                  <Text style={styles.primaryBtnText}>Continue</Text>
+                  <Text style={styles.primaryBtnText}>{isSubmitting ? '...' : 'Continue'}</Text>
                   <Ionicons name="arrow-forward" size={18} color={Colors.white} />
                 </TouchableOpacity>
               </View>
@@ -164,12 +203,15 @@ export default function RegisterScreen() {
                   />
                 </View>
 
+                {errorMsg && step === 'subscriber' ? (
+                  <Text style={{ color: '#DC2626', fontSize: 13, textAlign: 'center' }}>{errorMsg}</Text>
+                ) : null}
                 <TouchableOpacity
-                  style={[styles.primaryBtn, (!subscriberNumber || !company) && styles.btnDisabled]}
-                  disabled={!subscriberNumber || !company}
-                  onPress={() => router.replace('/(tabs)')}
+                  style={[styles.primaryBtn, (!subscriberNumber || !company || isSubmitting) && styles.btnDisabled]}
+                  disabled={!subscriberNumber || !company || isSubmitting}
+                  onPress={handleSubscriberStep}
                 >
-                  <Text style={styles.primaryBtnText}>Get Started</Text>
+                  <Text style={styles.primaryBtnText}>{isSubmitting ? '...' : 'Get Started'}</Text>
                   <Ionicons name="flash" size={18} color={Colors.white} />
                 </TouchableOpacity>
               </View>

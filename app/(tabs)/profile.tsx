@@ -8,8 +8,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { Colors, FontSize, Radius, Spacing, Shadows } from '../../src/constants/theme';
 import { mockUser } from '../../src/utils/mockData';
+import { useAuth } from '../../src/contexts/AuthContext';
+import { billApi } from '../../src/services/api';
 
 interface MenuItemProps {
   icon: keyof typeof Ionicons.glyphMap;
@@ -39,7 +42,27 @@ function MenuItem({ icon, label, value, onPress, danger }: MenuItemProps) {
 }
 
 export default function ProfileScreen() {
-  const user = mockUser;
+  const router = useRouter();
+  const { user: authUser, subscription, logout } = useAuth();
+  const [billCount, setBillCount] = React.useState(0);
+
+  React.useEffect(() => {
+    billApi.list(0, 0).then((r) => setBillCount(r.total)).catch(() => {});
+  }, []);
+
+  const handleLogout = async () => {
+    await logout();
+    router.replace('/auth/login');
+  };
+
+  // Build a user object that matches what the template expects
+  const user = {
+    name: authUser?.name || mockUser.name,
+    email: authUser?.email || mockUser.email,
+    subscriberNumber: subscription?.subscriberNumber || mockUser.subscriberNumber,
+    distributionCompany: subscription?.distributionCompany || mockUser.distributionCompany,
+    householdSize: subscription?.householdSize || mockUser.householdSize,
+  };
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -105,7 +128,7 @@ export default function ProfileScreen() {
           <MenuItem
             icon="receipt-outline"
             label="Bill History"
-            value="12 bills"
+            value={`${billCount} bills`}
           />
           <View style={styles.menuDivider} />
           <MenuItem
@@ -139,6 +162,7 @@ export default function ProfileScreen() {
             icon="log-out-outline"
             label="Log Out"
             danger
+            onPress={handleLogout}
           />
         </View>
 
