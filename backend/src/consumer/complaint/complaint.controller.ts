@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
-import { ComplaintService, CreateComplaintDto } from './complaint.service';
+import { ComplaintService } from './complaint.service';
+import type { CreateComplaintDto } from './complaint.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser, JwtPayload } from '../../common/decorators/current-user.decorator';
 

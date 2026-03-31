@@ -3,7 +3,7 @@ import { Platform } from 'react-native';
 
 const API_BASE = __DEV__
   ? Platform.OS === 'web'
-    ? 'http://localhost:3002'
+    ? 'http://localhost:3001'
     : 'https://ayaan-ascertainable-tidally.ngrok-free.dev' // Ngrok tunneled backend
   : 'https://your-production-api.com';
 
@@ -316,6 +316,26 @@ export const complaintApi = {
     request<any>('/api/complaints', { method: 'POST', body: JSON.stringify(data) }),
 
   list: () => request<any[]>('/api/complaints'),
+};
+
+// ─── JEPCO Real Data API ─────────────────────────────────
+
+export const jepcoApi = {
+  getSmartMeter: () => request<{ fileNumber: string; data: any }>('/api/jepco/smart-meter'),
+  getBills: () => request<{ fileNumber: string; data: any }>('/api/jepco/bills'),
+  getSubscriberInfo: () => request<{ fileNumber: string; data: any }>('/api/jepco/subscriber-info'),
+  getComparison: () => request<{ fileNumber: string; data: any }>('/api/jepco/comparison'),
+  getBillHeader: () => request<{ fileNumber: string; data: any }>('/api/jepco/bill-header'),
+  getAccountStatement: () => request<{ fileNumber: string; data: any }>('/api/jepco/account-statement'),
+  getAccountSummary: () => request<{
+    fileNumber: string;
+    smartMeter: any;
+    sapInfo: any;
+    bills: any;
+    accountStatement: any;
+    comparison: any;
+    billHeader: any;
+  }>('/api/jepco/account-summary'),
 };
 
 // ─── Exports ──────────────────────────────────────────────

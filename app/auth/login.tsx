@@ -60,7 +60,13 @@ export default function LoginScreen() {
       await login(email, password);
       router.replace('/(tabs)');
     } catch (err: any) {
-      setErrorMsg(err.message || 'Login failed. Please try again.');
+      const msg = err.message || '';
+      // Don't show "Session expired" as a login error — it means login worked but a follow-up call failed
+      if (msg.includes('Session expired') || msg.includes('expired')) {
+        router.replace('/(tabs)');
+        return;
+      }
+      setErrorMsg(msg || 'Login failed. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

@@ -9,6 +9,7 @@ import { ConsumerModule } from './consumer/consumer.module';
 import { AiModule } from './ai/ai.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { NotificationModule } from './notification/notification.module';
+import { JepcoModule } from './external/jepco/jepco.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { NotificationModule } from './notification/notification.module';
     AiModule,
     AnalyticsModule,
     NotificationModule,
+    JepcoModule,
   ],
 })
 export class AppModule {}
