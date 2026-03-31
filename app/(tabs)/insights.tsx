@@ -13,8 +13,12 @@ import { KpiCard } from '../../src/components/KpiCard';
 import { ProgressBar } from '../../src/components/ProgressBar';
 import { mockAnalytics, mockCurrentBill } from '../../src/utils/mockData';
 import { analyticsApi } from '../../src/services/api';
+import { useLanguage } from '../../src/i18n/LanguageContext';
 
 export default function InsightsScreen() {
+  const { t, fonts, language } = useLanguage();
+  const isAr = language === 'ar';
+  const sz = (en: number) => isAr ? Math.max(11, en * 0.85) : en;
   const [apiInsights, setApiInsights] = React.useState<any>(null);
 
   React.useEffect(() => {
@@ -45,37 +49,37 @@ export default function InsightsScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>Insights</Text>
-        <Text style={styles.subtitle}>Understand your electricity like never before</Text>
+        <Text style={styles.title}>{t('insightsTitle')}</Text>
+        <Text style={styles.subtitle}>{t('insightsSubtitle')}</Text>
 
         {/* KPI Grid */}
         <View style={styles.kpiGrid}>
           <KpiCard
-            label="Cost per kWh"
+            label={t('costPerKwh')}
             value={String(analytics.costPerKwh)}
-            unit="fils"
-            subtitle="National avg: 120 fils"
+            unit={t('filsUnit')}
+            subtitle={t('nationalAvg')}
             valueColor={Colors.primary}
           />
           <KpiCard
-            label="Projected Next Bill"
+            label={t('projectedNextBill')}
             value={`~${analytics.projectedNextBill}`}
-            unit="JD"
+            unit={t('jdUnit')}
             subtitle="↑ 13% from current"
             valueColor={Colors.warning}
             subtitleColor={Colors.danger}
           />
           <KpiCard
-            label="vs Similar Homes"
+            label={t('vsSimilarHomes')}
             value={`+${analytics.comparisonToAverage}%`}
-            subtitle="Above average"
+            subtitle={t('aboveAverage')}
             valueColor={Colors.danger}
             subtitleColor={Colors.danger}
           />
           <KpiCard
-            label="Peak / Off-Peak"
+            label={t('peakOffPeak')}
             value={`${analytics.peakOffPeakSplit.peak}/${analytics.peakOffPeakSplit.offPeak}`}
-            subtitle="% peak / % off-peak"
+            subtitle={t('peakOffPeakDesc')}
             valueColor={Colors.accent}
           />
         </View>
@@ -83,7 +87,7 @@ export default function InsightsScreen() {
         {/* Appliance Estimates */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>Estimated Appliance Usage</Text>
+            <Text style={styles.cardTitle}>{t('estimatedApplianceUsage')}</Text>
             <Ionicons name="information-circle-outline" size={18} color={Colors.textMuted} />
           </View>
           <Text style={styles.cardSubtitle}>
@@ -125,11 +129,11 @@ export default function InsightsScreen() {
         <View style={styles.envCard}>
           <View style={styles.cardHeader}>
             <Text style={[styles.cardTitle, { color: Colors.white }]}>
-              🌍  Your Environmental Impact
+              🌍  {t('environmentalImpact')}
             </Text>
           </View>
           <Text style={styles.envSubtitle}>
-            Based on your electricity consumption this month
+            {t('basedOnConsumption')}
           </Text>
 
           <View style={styles.envGrid}>
@@ -138,38 +142,38 @@ export default function InsightsScreen() {
                 <Text style={{ fontSize: 20 }}>☁️</Text>
               </View>
               <Text style={styles.envValue}>{env.co2Kg}</Text>
-              <Text style={styles.envUnit}>kg CO₂</Text>
-              <Text style={styles.envDesc}>emitted</Text>
+              <Text style={styles.envUnit}>{t('kgCo2')}</Text>
+              <Text style={styles.envDesc}>{t('emitted')}</Text>
             </View>
             <View style={styles.envItem}>
               <View style={styles.envIconBg}>
                 <Text style={{ fontSize: 20 }}>🌳</Text>
               </View>
               <Text style={styles.envValue}>{env.treesNeeded}</Text>
-              <Text style={styles.envUnit}>trees</Text>
-              <Text style={styles.envDesc}>to offset</Text>
+              <Text style={styles.envUnit}>{t('treesLabel')}</Text>
+              <Text style={styles.envDesc}>{t('toOffset')}</Text>
             </View>
             <View style={styles.envItem}>
               <View style={styles.envIconBg}>
                 <Text style={{ fontSize: 20 }}>💧</Text>
               </View>
               <Text style={styles.envValue}>{env.waterLiters}</Text>
-              <Text style={styles.envUnit}>liters</Text>
-              <Text style={styles.envDesc}>water used</Text>
+              <Text style={styles.envUnit}>{t('liters')}</Text>
+              <Text style={styles.envDesc}>{t('waterUsed')}</Text>
             </View>
           </View>
 
           {/* Comparison */}
           <View style={styles.envCompare}>
             <View style={styles.envCompareItem}>
-              <Text style={styles.envCompareLabel}>vs Last Month</Text>
+              <Text style={styles.envCompareLabel}>{t('vsLastMonth')}</Text>
               <Text style={[styles.envCompareValue, { color: '#FCA5A5' }]}>
                 +{env.co2ChangeFromLastMonth} kg CO₂ ↑
               </Text>
             </View>
             <View style={styles.envCompareDivider} />
             <View style={styles.envCompareItem}>
-              <Text style={styles.envCompareLabel}>If you save 60 kWh</Text>
+              <Text style={styles.envCompareLabel}>{t('ifYouSave')}</Text>
               <Text style={[styles.envCompareValue, { color: '#6EE7B7' }]}>
                 −36 kg CO₂ ↓
               </Text>
@@ -181,7 +185,7 @@ export default function InsightsScreen() {
         <View style={styles.savingsCard}>
           <Ionicons name="trending-down" size={24} color={Colors.success} />
           <View style={styles.savingsContent}>
-            <Text style={styles.savingsTitle}>Savings Potential</Text>
+            <Text style={styles.savingsTitle}>{t('savingsPotential')}</Text>
             <Text style={styles.savingsAmount}>
               Save ~{analytics.savingsPotential.reduce((s, t) => s + t.potentialSavingsJd, 0).toFixed(1)} JD/month
             </Text>
@@ -190,7 +194,7 @@ export default function InsightsScreen() {
             </Text>
           </View>
           <TouchableOpacity style={styles.savingsBtn}>
-            <Text style={styles.savingsBtnText}>View Tips</Text>
+            <Text style={styles.savingsBtnText}>{t('viewTips')}</Text>
             <Ionicons name="arrow-forward" size={16} color={Colors.white} />
           </TouchableOpacity>
         </View>
@@ -200,7 +204,7 @@ export default function InsightsScreen() {
           <View key={tip.id} style={styles.tipCard}>
             <View style={styles.tipBadge}>
               <Text style={styles.tipBadgeText}>
-                Save {tip.potentialSavingsJd} JD
+                {t('save')} {tip.potentialSavingsJd} {t('jdUnit')}
               </Text>
             </View>
             <Text style={styles.tipTitle}>{tip.title}</Text>

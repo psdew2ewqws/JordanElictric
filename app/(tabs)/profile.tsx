@@ -13,6 +13,7 @@ import { Colors, FontSize, Radius, Spacing, Shadows } from '../../src/constants/
 import { mockUser } from '../../src/utils/mockData';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { billApi } from '../../src/services/api';
+import { useLanguage } from '../../src/i18n/LanguageContext';
 
 interface MenuItemProps {
   icon: keyof typeof Ionicons.glyphMap;
@@ -44,6 +45,9 @@ function MenuItem({ icon, label, value, onPress, danger }: MenuItemProps) {
 export default function ProfileScreen() {
   const router = useRouter();
   const { user: authUser, subscription, logout } = useAuth();
+  const { t, fonts, language } = useLanguage();
+  const isAr = language === 'ar';
+  const sz = (en: number) => isAr ? Math.max(11, en * 0.85) : en;
   const [billCount, setBillCount] = React.useState(0);
 
   React.useEffect(() => {
@@ -79,80 +83,80 @@ export default function ProfileScreen() {
         </View>
 
         {/* Account Section */}
-        <Text style={styles.sectionLabel}>Account</Text>
+        <Text style={styles.sectionLabel}>{t('account')}</Text>
         <View style={styles.menuCard}>
           <MenuItem
             icon="flash-outline"
-            label="Subscriber Number"
+            label={t('subscriberNumber')}
             value={user.subscriberNumber}
           />
           <View style={styles.menuDivider} />
           <MenuItem
             icon="business-outline"
-            label="Distribution Company"
+            label={t('distributionCompany')}
             value={user.distributionCompany}
           />
           <View style={styles.menuDivider} />
           <MenuItem
             icon="people-outline"
-            label="Household Size"
-            value={`${user.householdSize} people`}
+            label={t('householdSize')}
+            value={`${user.householdSize} ${t('people')}`}
           />
         </View>
 
         {/* Settings Section */}
-        <Text style={styles.sectionLabel}>Settings</Text>
+        <Text style={styles.sectionLabel}>{t('settings')}</Text>
         <View style={styles.menuCard}>
           <MenuItem
             icon="globe-outline"
-            label="Language"
-            value="English"
+            label={t('languageSetting')}
+            value={t('english')}
           />
           <View style={styles.menuDivider} />
           <MenuItem
             icon="notifications-outline"
-            label="Notifications"
-            value="On"
+            label={t('notifications')}
+            value={t('notifOn')}
           />
           <View style={styles.menuDivider} />
           <MenuItem
             icon="moon-outline"
-            label="Appearance"
-            value="Light"
+            label={t('appearance')}
+            value={t('light')}
           />
         </View>
 
         {/* Data Section */}
-        <Text style={styles.sectionLabel}>Data</Text>
+        <Text style={styles.sectionLabel}>{t('data')}</Text>
         <View style={styles.menuCard}>
           <MenuItem
             icon="receipt-outline"
-            label="Bill History"
-            value={`${billCount} bills`}
+            label={t('billHistory')}
+            value={`${billCount} ${t('bills')}`}
           />
           <View style={styles.menuDivider} />
           <MenuItem
             icon="download-outline"
-            label="Export Data"
+            label={t('exportData')}
           />
         </View>
 
         {/* About Section */}
-        <Text style={styles.sectionLabel}>About</Text>
+        <Text style={styles.sectionLabel}>{t('about')}</Text>
         <View style={styles.menuCard}>
           <MenuItem
             icon="shield-checkmark-outline"
-            label="About CPA Jordan"
+            label={t('aboutCpa')}
           />
           <View style={styles.menuDivider} />
           <MenuItem
             icon="document-text-outline"
-            label="Terms & Privacy"
+            label={t('termsPrivacy')}
           />
           <View style={styles.menuDivider} />
           <MenuItem
             icon="help-circle-outline"
-            label="Help & Support"
+            label={t('helpSupport')}
           />
         </View>
 
@@ -160,15 +164,15 @@ export default function ProfileScreen() {
         <View style={[styles.menuCard, { marginTop: Spacing.lg }]}>
           <MenuItem
             icon="log-out-outline"
-            label="Log Out"
+            label={t('logOut')}
             danger
             onPress={handleLogout}
           />
         </View>
 
         {/* Version */}
-        <Text style={styles.version}>Diaa v1.0.0</Text>
-        <Text style={styles.versionSub}>Built for CPA Jordan</Text>
+        <Text style={styles.version}>{t('version')}</Text>
+        <Text style={styles.versionSub}>{t('builtForCpa')}</Text>
 
         <View style={{ height: 32 }} />
       </ScrollView>

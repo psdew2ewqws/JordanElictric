@@ -305,6 +305,19 @@ export const notificationApi = {
   markAllRead: () => request('/api/notifications/read-all', { method: 'PATCH' }),
 };
 
+// ─── Complaint API ────────────────────────────────────────
+
+export const complaintApi = {
+  create: (data: {
+    complaintType: 'OUTAGE' | 'BILLING' | 'METER' | 'VOLTAGE' | 'OTHER';
+    description: string;
+    descriptionAr?: string;
+  }) =>
+    request<any>('/api/complaints', { method: 'POST', body: JSON.stringify(data) }),
+
+  list: () => request<any[]>('/api/complaints'),
+};
+
 // ─── Exports ──────────────────────────────────────────────
 
 export { storeTokens, clearTokens, getStoredToken, ApiError, API_BASE };

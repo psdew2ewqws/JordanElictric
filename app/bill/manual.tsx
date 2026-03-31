@@ -16,8 +16,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Colors, FontSize, Radius, Spacing, Shadows } from '../../src/constants/theme';
 import { billApi } from '../../src/services/api';
+import { useLanguage } from '../../src/i18n/LanguageContext';
 
 export default function ManualEntryScreen() {
+  const { t, fonts, language } = useLanguage();
+  const isAr = language === 'ar';
+  const sz = (en: number) => isAr ? Math.max(11, en * 0.85) : en;
   const router = useRouter();
   const [totalKwh, setTotalKwh] = useState('');
   const [totalAmount, setTotalAmount] = useState('');
@@ -94,16 +98,16 @@ export default function ManualEntryScreen() {
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
           <View style={styles.header}>
             <Ionicons name="create-outline" size={40} color={Colors.primary} />
-            <Text style={styles.heading}>Enter Bill Details</Text>
+            <Text style={styles.heading}>{t('enterBillDetails')}</Text>
             <Text style={styles.desc}>
-              Enter the key values from your electricity bill. You can find these on the front page of your JEPCO/EDCO/IDECO bill.
+              {t('manualDesc')}
             </Text>
           </View>
 
           {/* Form */}
           <View style={styles.form}>
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Total Consumption (kWh) *</Text>
+              <Text style={styles.label}>{t('totalConsumption')}</Text>
               <TextInput
                 style={styles.input}
                 placeholder="e.g. 320"
@@ -113,12 +117,12 @@ export default function ManualEntryScreen() {
                 onChangeText={setTotalKwh}
               />
               <Text style={styles.hint}>
-                Found under "الاستهلاك" or "Consumption" on your bill
+                {t('consumptionHint')}
               </Text>
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Total Amount (JD) *</Text>
+              <Text style={styles.label}>{t('totalAmount')}</Text>
               <TextInput
                 style={styles.input}
                 placeholder="e.g. 45.80"
@@ -128,13 +132,13 @@ export default function ManualEntryScreen() {
                 onChangeText={setTotalAmount}
               />
               <Text style={styles.hint}>
-                The total due amount "المبلغ المستحق"
+                {t('amountHint')}
               </Text>
             </View>
 
             <View style={styles.row}>
               <View style={[styles.inputGroup, { flex: 1 }]}>
-                <Text style={styles.label}>Billing Start</Text>
+                <Text style={styles.label}>{t('billingStart')}</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="DD/MM/YYYY"
@@ -144,7 +148,7 @@ export default function ManualEntryScreen() {
                 />
               </View>
               <View style={[styles.inputGroup, { flex: 1 }]}>
-                <Text style={styles.label}>Billing End</Text>
+                <Text style={styles.label}>{t('billingEnd')}</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="DD/MM/YYYY"
@@ -157,13 +161,13 @@ export default function ManualEntryScreen() {
 
             {/* Optional fields */}
             <View style={styles.optionalHeader}>
-              <Text style={styles.optionalLabel}>Optional Details</Text>
-              <Text style={styles.optionalHint}>For a more accurate breakdown</Text>
+              <Text style={styles.optionalLabel}>{t('optionalDetails')}</Text>
+              <Text style={styles.optionalHint}>{t('forMoreAccurate')}</Text>
             </View>
 
             <View style={styles.optionalFields}>
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Fuel Clause Amount (JD)</Text>
+                <Text style={styles.label}>{t('fuelClauseAmount')}</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="e.g. 12.80"
@@ -175,7 +179,7 @@ export default function ManualEntryScreen() {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Previous Meter Reading</Text>
+                <Text style={styles.label}>{t('previousMeterReading')}</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="e.g. 14520"
@@ -187,7 +191,7 @@ export default function ManualEntryScreen() {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Current Meter Reading</Text>
+                <Text style={styles.label}>{t('currentMeterReading')}</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="e.g. 14840"
@@ -217,7 +221,7 @@ export default function ManualEntryScreen() {
               <Ionicons name="analytics" size={20} color={Colors.white} />
             )}
             <Text style={styles.submitBtnText}>
-              {loading ? 'Analyzing...' : 'Analyze My Bill'}
+              {loading ? t('analyzing') : t('analyzeMyBill')}
             </Text>
           </TouchableOpacity>
 
@@ -225,7 +229,7 @@ export default function ManualEntryScreen() {
             style={styles.scanLink}
             onPress={() => router.replace('/bill/scan')}
           >
-            <Text style={styles.scanLinkText}>Or scan a photo instead</Text>
+            <Text style={styles.scanLinkText}>{t('orScanInstead')}</Text>
           </TouchableOpacity>
 
           <View style={{ height: 40 }} />

@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import { Colors, FontSize, Radius, Spacing, Shadows } from '../../src/constants/theme';
 import { billApi } from '../../src/services/api';
+import { useLanguage } from '../../src/i18n/LanguageContext';
 
 const categoryColors: Record<string, string> = {
   energy_tier1: Colors.tierGreen,
@@ -57,6 +58,9 @@ interface BillData {
 
 export default function BillDetailScreen() {
   const { id } = useLocalSearchParams();
+  const { t, fonts, language } = useLanguage();
+  const isAr = language === 'ar';
+  const sz = (en: number) => isAr ? Math.max(11, en * 0.85) : en;
   const [bill, setBill] = useState<BillData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -85,7 +89,7 @@ export default function BillDetailScreen() {
       <SafeAreaView style={styles.safe} edges={['bottom']}>
         <View style={styles.centeredContainer}>
           <ActivityIndicator size="large" color={Colors.primary} />
-          <Text style={styles.loadingText}>Loading bill...</Text>
+          <Text style={styles.loadingText}>{t('loadingBill')}</Text>
         </View>
       </SafeAreaView>
     );

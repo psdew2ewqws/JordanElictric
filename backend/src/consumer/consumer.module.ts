@@ -5,10 +5,11 @@ import { BillController } from './bill/bill.controller';
 import { BillService } from './bill/bill.service';
 import { TariffController } from './tariff/tariff.controller';
 import { TariffService } from './tariff/tariff.service';
+import { ComplaintController } from './complaint/complaint.controller';
 import { ComplaintService } from './complaint/complaint.service';
 
 @Module({
-  controllers: [SubscriptionController, BillController, TariffController],
+  controllers: [SubscriptionController, BillController, TariffController, ComplaintController],
   providers: [SubscriptionService, BillService, TariffService, ComplaintService],
   exports: [SubscriptionService, BillService, TariffService, ComplaintService],
 })

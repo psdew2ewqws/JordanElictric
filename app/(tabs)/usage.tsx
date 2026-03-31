@@ -11,10 +11,14 @@ import { Colors, FontSize, Radius, Spacing, Shadows } from '../../src/constants/
 import { BarChart } from '../../src/components/BarChart';
 import { mockAnalytics } from '../../src/utils/mockData';
 import { analyticsApi } from '../../src/services/api';
+import { useLanguage } from '../../src/i18n/LanguageContext';
 
 type Period = 'monthly' | 'quarterly' | 'yearly';
 
 export default function UsageScreen() {
+  const { t, fonts, language } = useLanguage();
+  const isAr = language === 'ar';
+  const sz = (en: number) => isAr ? Math.max(11, en * 0.85) : en;
   const [period, setPeriod] = useState<Period>('monthly');
   const [apiTrend, setApiTrend] = useState<{ date: string; kwh: number; costJd: number }[] | null>(null);
 
@@ -50,8 +54,8 @@ export default function UsageScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>Usage</Text>
-        <Text style={styles.subtitle}>Track your electricity consumption</Text>
+        <Text style={styles.title}>{t('usageTitle')}</Text>
+        <Text style={styles.subtitle}>{t('usageSubtitle')}</Text>
 
         {/* Period Toggle */}
         <View style={styles.periodToggle}>
@@ -62,7 +66,7 @@ export default function UsageScreen() {
               onPress={() => setPeriod(p)}
             >
               <Text style={[styles.periodText, period === p && styles.periodTextActive]}>
-                {p.charAt(0).toUpperCase() + p.slice(1)}
+                {p === 'monthly' ? t('monthly') : p === 'quarterly' ? t('quarterly') : t('yearly')}
               </Text>
             </TouchableOpacity>
           ))}
@@ -70,7 +74,7 @@ export default function UsageScreen() {
 
         {/* Consumption Chart */}
         <View style={styles.chartCard}>
-          <Text style={styles.chartTitle}>Consumption (kWh)</Text>
+          <Text style={styles.chartTitle}>{t('consumptionKwh')}</Text>
           <BarChart
             data={consumptionData}
             color={Colors.primary}
@@ -79,14 +83,14 @@ export default function UsageScreen() {
           <View style={styles.avgRow}>
             <View style={styles.avgDot} />
             <Text style={styles.avgText}>
-              Average: {Math.round(analytics.monthlyTrend.reduce((s, d) => s + d.kwh, 0) / analytics.monthlyTrend.length)} kWh
+              {t('average')}: {Math.round(analytics.monthlyTrend.reduce((s, d) => s + d.kwh, 0) / analytics.monthlyTrend.length)} {t('kwhUnit')}
             </Text>
           </View>
         </View>
 
         {/* Tier Breakdown */}
         <View style={styles.chartCard}>
-          <Text style={styles.chartTitle}>Tier Breakdown</Text>
+          <Text style={styles.chartTitle}>{t('tierBreakdown')}</Text>
           <Text style={styles.chartSubtitle}>How your {analytics.monthlyTrend[analytics.monthlyTrend.length - 1]?.kwh} kWh is distributed across tariff tiers</Text>
 
           {analytics.tierBreakdown.map((tier) => {
@@ -98,10 +102,10 @@ export default function UsageScreen() {
                   <View style={[styles.tierDot, { backgroundColor: tier.color }]} />
                   <View>
                     <Text style={styles.tierLabel}>
-                      Tier {tier.tier} · {tier.ratePerKwh} fils/kWh
+                      {t('tier')} {tier.tier} · {tier.ratePerKwh} {t('filsPerKwh')}
                     </Text>
                     <Text style={styles.tierDetail}>
-                      {tier.kwh} kWh · {tier.cost.toFixed(1)} JD
+                      {tier.kwh} {t('kwhUnit')} · {tier.cost.toFixed(1)} {t('jdUnit')}
                     </Text>
                   </View>
                 </View>
@@ -118,17 +122,17 @@ export default function UsageScreen() {
           })}
 
           <View style={styles.tierTotalRow}>
-            <Text style={styles.tierTotalLabel}>Total Energy Charge</Text>
+            <Text style={styles.tierTotalLabel}>{t('totalEnergyCharge')}</Text>
             <Text style={styles.tierTotalValue}>
-              {analytics.tierBreakdown.reduce((s, t) => s + t.cost, 0).toFixed(1)} JD
+              {analytics.tierBreakdown.reduce((s, tr) => s + tr.cost, 0).toFixed(1)} {t('jdUnit')}
             </Text>
           </View>
         </View>
 
         {/* Cost Trend */}
         <View style={styles.chartCard}>
-          <Text style={styles.chartTitle}>Cost Trend (JD)</Text>
-          <Text style={styles.chartSubtitle}>Your bills over the last 6 months</Text>
+          <Text style={styles.chartTitle}>{t('costTrendJd')}</Text>
+          <Text style={styles.chartSubtitle}>{t('billsOverMonths')}</Text>
           <BarChart
             data={costData}
             color={Colors.accent}
@@ -139,25 +143,25 @@ export default function UsageScreen() {
 
         {/* Month Comparison */}
         <View style={styles.chartCard}>
-          <Text style={styles.chartTitle}>This Month vs Last Month</Text>
+          <Text style={styles.chartTitle}>{t('thisMonthVsLast')}</Text>
           <View style={styles.compareRow}>
             <ComparisonItem
-              label="Consumption"
+              label={t('consumption')}
               current={320}
               previous={260}
-              unit="kWh"
+              unit={t('kwhUnit')}
             />
             <ComparisonItem
-              label="Cost"
+              label={t('cost')}
               current={45.8}
               previous={28}
-              unit="JD"
+              unit={t('jdUnit')}
             />
             <ComparisonItem
-              label="Avg Cost"
+              label={t('avgCost')}
               current={143}
               previous={108}
-              unit="fils/kWh"
+              unit={t('filsPerKwh')}
             />
           </View>
         </View>

@@ -110,7 +110,15 @@ export default function HomeScreen() {
 
           <View style={styles.grid}>
             {SERVICES.map((svc) => (
-              <TouchableOpacity key={svc.key} style={styles.serviceCard} activeOpacity={0.7}>
+              <TouchableOpacity key={svc.key} style={styles.serviceCard} activeOpacity={0.7}
+                onPress={() => {
+                  switch (svc.key) {
+                    case 'chat': router.push('/chat/'); break;
+                    case 'bills': router.push('/bill/'); break;
+                    case 'outage': router.push('/outage/'); break;
+                    case 'report': router.push('/complaints/'); break;
+                  }
+                }}>
                 {svc.badge && (
                   <View style={[styles.badge, svc.key === 'outage' && styles.badgeAmber]}>
                     <Text style={[styles.badgeText, svc.key === 'outage' && styles.badgeTextAmber, { fontFamily: fonts.bold }]}>
@@ -131,7 +139,7 @@ export default function HomeScreen() {
             ))}
 
             {/* Energy Friend — full width */}
-            <TouchableOpacity style={styles.serviceCardFull} activeOpacity={0.7}>
+            <TouchableOpacity style={styles.serviceCardFull} activeOpacity={0.7} onPress={() => router.push('/energy-friend/')}>
               <View style={styles.iconWrap}>
                 <MaterialCommunityIcons name="shield-account" size={30} color="#E05A3A" />
               </View>

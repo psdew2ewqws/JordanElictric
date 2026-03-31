@@ -14,10 +14,14 @@ import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { Colors, FontSize, Radius, Spacing, Shadows } from '../../src/constants/theme';
 import { billApi } from '../../src/services/api';
+import { useLanguage } from '../../src/i18n/LanguageContext';
 
 type ScanState = 'idle' | 'preview' | 'processing' | 'done' | 'error';
 
 export default function ScanBillScreen() {
+  const { t, fonts, language } = useLanguage();
+  const isAr = language === 'ar';
+  const sz = (en: number) => isAr ? Math.max(11, en * 0.85) : en;
   const router = useRouter();
   const [state, setState] = useState<ScanState>('idle');
   const [imageUri, setImageUri] = useState<string | null>(null);
@@ -78,26 +82,26 @@ export default function ScanBillScreen() {
             <View style={styles.illustration}>
               <Ionicons name="scan-outline" size={64} color={Colors.primary} />
             </View>
-            <Text style={styles.heading}>Scan Your Bill</Text>
+            <Text style={styles.heading}>{t('scanYourBill')}</Text>
             <Text style={styles.desc}>
-              Take a photo of your electricity bill or choose from your gallery. We'll extract all the details automatically.
+              {t('scanDesc')}
             </Text>
 
             <TouchableOpacity style={styles.primaryBtn} onPress={takePhoto}>
               <Ionicons name="camera" size={22} color={Colors.white} />
-              <Text style={styles.primaryBtnText}>Take Photo</Text>
+              <Text style={styles.primaryBtnText}>{t('takePhoto')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.secondaryBtn} onPress={pickImage}>
               <Ionicons name="images-outline" size={22} color={Colors.primary} />
-              <Text style={styles.secondaryBtnText}>Choose from Gallery</Text>
+              <Text style={styles.secondaryBtnText}>{t('chooseGallery')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.linkBtn}
               onPress={() => router.replace('/bill/manual')}
             >
-              <Text style={styles.linkBtnText}>Or enter manually instead</Text>
+              <Text style={styles.linkBtnText}>{t('enterManually')}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -111,11 +115,11 @@ export default function ScanBillScreen() {
                 onPress={() => { setState('idle'); setImageUri(null); }}
               >
                 <Ionicons name="refresh-outline" size={20} color={Colors.primary} />
-                <Text style={styles.secondaryBtnText}>Retake</Text>
+                <Text style={styles.secondaryBtnText}>{t('retake')}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.primaryBtn} onPress={processImage}>
                 <Ionicons name="sparkles" size={20} color={Colors.white} />
-                <Text style={styles.primaryBtnText}>Analyze Bill</Text>
+                <Text style={styles.primaryBtnText}>{t('analyzeBill')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -124,14 +128,14 @@ export default function ScanBillScreen() {
         {state === 'processing' && (
           <View style={styles.processingContainer}>
             <ActivityIndicator size="large" color={Colors.primary} />
-            <Text style={styles.processingTitle}>Analyzing your bill...</Text>
+            <Text style={styles.processingTitle}>{t('analyzingBill')}</Text>
             <Text style={styles.processingDesc}>
-              Our AI is reading and extracting every detail from your bill
+              {t('aiReading')}
             </Text>
             <View style={styles.processingSteps}>
-              <StepIndicator label="Reading bill image" done />
-              <StepIndicator label="Extracting fields" active />
-              <StepIndicator label="Calculating breakdown" />
+              <StepIndicator label={t('readingBillImage')} done />
+              <StepIndicator label={t('extractingFields')} active />
+              <StepIndicator label={t('calculatingBreakdown')} />
             </View>
           </View>
         )}
@@ -139,15 +143,15 @@ export default function ScanBillScreen() {
         {state === 'done' && (
           <View style={styles.processingContainer}>
             <Ionicons name="checkmark-circle" size={64} color={Colors.success} />
-            <Text style={styles.processingTitle}>Bill Analyzed!</Text>
-            <Text style={styles.processingDesc}>Redirecting to your bill breakdown...</Text>
+            <Text style={styles.processingTitle}>{t('billAnalyzed')}</Text>
+            <Text style={styles.processingDesc}>{t('redirecting')}</Text>
           </View>
         )}
 
         {state === 'error' && (
           <View style={styles.processingContainer}>
             <Ionicons name="alert-circle" size={64} color={Colors.danger} />
-            <Text style={styles.processingTitle}>Scan Failed</Text>
+            <Text style={styles.processingTitle}>{t('scanFailed')}</Text>
             <Text style={styles.processingDesc}>
               {errorMessage || 'Something went wrong. Please try again.'}
             </Text>
@@ -156,7 +160,7 @@ export default function ScanBillScreen() {
               onPress={() => { setState('preview'); setErrorMessage(null); }}
             >
               <Ionicons name="refresh-outline" size={20} color={Colors.white} />
-              <Text style={styles.primaryBtnText}>Try Again</Text>
+              <Text style={styles.primaryBtnText}>{t('tryAgain')}</Text>
             </TouchableOpacity>
           </View>
         )}

@@ -56,6 +56,26 @@ export default function RootLayout() {
           name="bill/[id]"
           options={{ headerShown: true, title: 'Bill Details' }}
         />
+        <Stack.Screen
+          name="bill/index"
+          options={{ headerShown: true, title: 'Bills' }}
+        />
+        <Stack.Screen
+          name="chat/index"
+          options={{ headerShown: true, title: 'Live Chat' }}
+        />
+        <Stack.Screen
+          name="outage/index"
+          options={{ headerShown: true, title: 'Report Outage' }}
+        />
+        <Stack.Screen
+          name="complaints/index"
+          options={{ headerShown: true, title: 'Reports' }}
+        />
+        <Stack.Screen
+          name="energy-friend/index"
+          options={{ headerShown: true, title: 'Energy Friend' }}
+        />
       </Stack>
     </LanguageProvider>
     </AuthProvider>

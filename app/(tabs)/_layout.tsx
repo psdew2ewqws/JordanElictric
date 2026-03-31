@@ -3,9 +3,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, FontSize } from '../../src/constants/theme';
+import { useLanguage } from '../../src/i18n/LanguageContext';
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
+  const { t } = useLanguage();
   const bottomPadding = Platform.OS === 'ios' ? insets.bottom : 6;
 
   return (
@@ -31,7 +33,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: t('home'),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home-outline" size={size} color={color} />
           ),
@@ -40,7 +42,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="usage"
         options={{
-          title: 'Usage',
+          title: t('usage'),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="bar-chart-outline" size={size} color={color} />
           ),
@@ -49,7 +51,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="insights"
         options={{
-          title: 'Insights',
+          title: t('insights'),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="bulb-outline" size={size} color={color} />
           ),
@@ -58,7 +60,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
+          title: t('profile'),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person-outline" size={size} color={color} />
           ),
