@@ -100,7 +100,7 @@ export default function BillDetailScreen() {
       <SafeAreaView style={styles.safe} edges={['bottom']}>
         <View style={styles.centeredContainer}>
           <Ionicons name="alert-circle-outline" size={48} color={Colors.danger} />
-          <Text style={styles.errorTitle}>Unable to load bill</Text>
+          <Text style={styles.errorTitle}>{t('unableToLoad')}</Text>
           <Text style={styles.errorDesc}>{error || 'Bill not found'}</Text>
         </View>
       </SafeAreaView>
@@ -126,9 +126,9 @@ export default function BillDetailScreen() {
         <View style={styles.summaryCard}>
           <View style={styles.summaryTop}>
             <View>
-              <Text style={styles.summaryLabel}>Total Bill</Text>
+              <Text style={styles.summaryLabel}>{t('totalBill')}</Text>
               <Text style={styles.summaryAmount}>
-                {totalAmount.toFixed(2)} <Text style={styles.summaryCurrency}>JD</Text>
+                {totalAmount.toFixed(2)} <Text style={styles.summaryCurrency}>{t('jdUnit')}</Text>
               </Text>
             </View>
             <View style={styles.summaryBadge}>
@@ -138,31 +138,31 @@ export default function BillDetailScreen() {
                 color={Colors.primary}
               />
               <Text style={styles.summaryBadgeText}>
-                {bill.source === 'scan' ? 'Scanned' : 'Manual'}
+                {bill.source === 'scan' ? t('scanned') : t('manual')}
               </Text>
             </View>
           </View>
           <View style={styles.summaryMeta}>
             <View style={styles.metaItem}>
-              <Text style={styles.metaLabel}>Period</Text>
+              <Text style={styles.metaLabel}>{t('period')}</Text>
               <Text style={styles.metaValue}>
                 {formatDate(bill.billingPeriodStart)} – {formatDate(bill.billingPeriodEnd)}
               </Text>
             </View>
             <View style={styles.metaItem}>
-              <Text style={styles.metaLabel}>Consumption</Text>
-              <Text style={styles.metaValue}>{bill.totalKwh} kWh</Text>
+              <Text style={styles.metaLabel}>{t('consumption')}</Text>
+              <Text style={styles.metaValue}>{bill.totalKwh} {t('kwhUnit')}</Text>
             </View>
             <View style={styles.metaItem}>
-              <Text style={styles.metaLabel}>Avg Cost</Text>
-              <Text style={styles.metaValue}>{Math.round((totalAmount / bill.totalKwh) * 1000)} fils/kWh</Text>
+              <Text style={styles.metaLabel}>{t('avgCostLabel')}</Text>
+              <Text style={styles.metaValue}>{Math.round((totalAmount / bill.totalKwh) * 1000)} {t('filsPerKwh')}</Text>
             </View>
           </View>
         </View>
 
         {/* Energy Charges */}
-        <Text style={styles.sectionTitle}>Energy Charges</Text>
-        <Text style={styles.sectionSubtitle}>How your {bill.totalKwh} kWh is priced across tariff tiers</Text>
+        <Text style={styles.sectionTitle}>{t('energyCharges')}</Text>
+        <Text style={styles.sectionSubtitle}>{t('howKwhPriced')}</Text>
         <View style={styles.card}>
           {energyItems.map((item, idx) => (
             <View key={item.id}>
@@ -170,28 +170,28 @@ export default function BillDetailScreen() {
                 <View style={styles.lineLeft}>
                   <View style={[styles.lineDot, { backgroundColor: categoryColors[item.category] }]} />
                   <View>
-                    <Text style={styles.lineLabel}>{item.label}</Text>
+                    <Text style={styles.lineLabel}>{isAr && item.labelAr ? item.labelAr : item.label}</Text>
                     {item.kwh && (
                       <Text style={styles.lineDetail}>
-                        {item.kwh} kWh × {item.ratePerKwh} fils
+                        {item.kwh} {t('kwhUnit')} × {item.ratePerKwh} {t('filsUnit')}
                       </Text>
                     )}
                   </View>
                 </View>
-                <Text style={styles.lineAmount}>{item.amount.toFixed(2)} JD</Text>
+                <Text style={styles.lineAmount}>{item.amount.toFixed(2)} {t('jdUnit')}</Text>
               </View>
               {idx < energyItems.length - 1 && <View style={styles.lineDivider} />}
             </View>
           ))}
           <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>Energy Subtotal</Text>
-            <Text style={styles.totalValue}>{energyTotal.toFixed(2)} JD</Text>
+            <Text style={styles.totalLabel}>{t('energySubtotal')}</Text>
+            <Text style={styles.totalValue}>{energyTotal.toFixed(2)} {t('jdUnit')}</Text>
           </View>
         </View>
 
         {/* Tier Visualization */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Tier Usage</Text>
+          <Text style={styles.cardTitle}>{t('tierUsage')}</Text>
           <View style={styles.tierBar}>
             {energyItems.map((item) => (
               <View
@@ -211,7 +211,7 @@ export default function BillDetailScreen() {
               <View key={item.id} style={styles.legendItem}>
                 <View style={[styles.legendDot, { backgroundColor: categoryColors[item.category] }]} />
                 <Text style={styles.legendText}>
-                  {item.kwh} kWh @ {item.ratePerKwh} fils
+                  {item.kwh} {t('kwhUnit')} @ {item.ratePerKwh} {t('filsUnit')}
                 </Text>
               </View>
             ))}
@@ -219,8 +219,8 @@ export default function BillDetailScreen() {
         </View>
 
         {/* Other Charges */}
-        <Text style={styles.sectionTitle}>Other Charges & Adjustments</Text>
-        <Text style={styles.sectionSubtitle}>Fees, taxes, and subsidies applied to your bill</Text>
+        <Text style={styles.sectionTitle}>{t('otherCharges')}</Text>
+        <Text style={styles.sectionSubtitle}>{t('otherChargesDesc')}</Text>
         <View style={styles.card}>
           {otherItems.map((item, idx) => (
             <View key={item.id}>
@@ -228,9 +228,9 @@ export default function BillDetailScreen() {
                 <View style={styles.lineLeft}>
                   <Text style={styles.lineIcon}>{categoryIcons[item.category]}</Text>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.lineLabel}>{item.label}</Text>
+                    <Text style={styles.lineLabel}>{isAr && item.labelAr ? item.labelAr : item.label}</Text>
                     <Text style={styles.lineExplanation}>
-                      {getExplanation(item.category)}
+                      {getExplanation(item.category, t)}
                     </Text>
                   </View>
                 </View>
@@ -238,7 +238,7 @@ export default function BillDetailScreen() {
                   styles.lineAmount,
                   item.amount < 0 && { color: Colors.success },
                 ]}>
-                  {item.amount < 0 ? '' : ''}{item.amount.toFixed(2)} JD
+                  {item.amount < 0 ? '' : ''}{item.amount.toFixed(2)} {t('jdUnit')}
                 </Text>
               </View>
               {idx < otherItems.length - 1 && <View style={styles.lineDivider} />}
@@ -248,19 +248,19 @@ export default function BillDetailScreen() {
 
         {/* Grand Total */}
         <View style={styles.grandTotalCard}>
-          <Text style={styles.grandTotalLabel}>Grand Total</Text>
-          <Text style={styles.grandTotalAmount}>{totalAmount.toFixed(2)} JD</Text>
+          <Text style={styles.grandTotalLabel}>{t('grandTotal')}</Text>
+          <Text style={styles.grandTotalAmount}>{totalAmount.toFixed(2)} {t('jdUnit')}</Text>
         </View>
 
         {/* Actions */}
         <View style={styles.actionsRow}>
           <TouchableOpacity style={styles.actionBtn}>
             <Ionicons name="share-outline" size={20} color={Colors.primary} />
-            <Text style={styles.actionBtnText}>Share</Text>
+            <Text style={styles.actionBtnText}>{t('share')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionBtn}>
             <Ionicons name="download-outline" size={20} color={Colors.primary} />
-            <Text style={styles.actionBtnText}>Export</Text>
+            <Text style={styles.actionBtnText}>{t('exportBill')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -270,13 +270,13 @@ export default function BillDetailScreen() {
   );
 }
 
-function getExplanation(category: string): string {
+function getExplanation(category: string, t: (key: any) => string): string {
   const explanations: Record<string, string> = {
-    fuel_clause: 'Monthly adjustment based on fuel cost changes for power generation',
-    rural_fee: '1 fil/kWh fee supporting electricity infrastructure in rural areas',
-    subsidy_deduction: 'Government subsidy for registered Jordanian households',
-    tax: 'Government taxes and municipal fees',
-    other: 'Additional charges',
+    fuel_clause: t('fuelClauseExplain'),
+    rural_fee: t('ruralFeeExplain'),
+    subsidy_deduction: t('subsidyExplain'),
+    tax: t('taxExplain'),
+    other: t('otherExplain'),
   };
   return explanations[category] || '';
 }

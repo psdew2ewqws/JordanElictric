@@ -14,12 +14,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Colors, FontSize, Radius, Spacing, Shadows } from '../../src/constants/theme';
 import { useAuth } from '../../src/contexts/AuthContext';
+import { useLanguage } from '../../src/i18n/LanguageContext';
 
 type Step = 'account' | 'subscriber';
 
 export default function RegisterScreen() {
   const router = useRouter();
   const { register, createSubscription } = useAuth();
+  const { t } = useLanguage();
   const [step, setStep] = useState<Step>('account');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -65,9 +67,9 @@ export default function RegisterScreen() {
   };
 
   const companies = [
-    { id: 'JEPCO', label: 'JEPCO', region: 'Central (Amman)' },
-    { id: 'IDECO', label: 'IDECO', region: 'North (Irbid)' },
-    { id: 'EDCO', label: 'EDCO', region: 'South (Aqaba)' },
+    { id: 'JEPCO', label: 'JEPCO', region: t('centralAmman') },
+    { id: 'IDECO', label: 'IDECO', region: t('northIrbid') },
+    { id: 'EDCO', label: 'EDCO', region: t('southAqaba') },
   ];
 
   return (
@@ -96,12 +98,12 @@ export default function RegisterScreen() {
 
           {step === 'account' && (
             <>
-              <Text style={styles.title}>Create Account</Text>
-              <Text style={styles.subtitle}>Join thousands of Jordanians understanding their electricity</Text>
+              <Text style={styles.title}>{t('createAccount')}</Text>
+              <Text style={styles.subtitle}>{t('joinThousands')}</Text>
 
               <View style={styles.form}>
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Full Name</Text>
+                  <Text style={styles.label}>{t('fullName')}</Text>
                   <TextInput
                     style={styles.input}
                     placeholder="e.g. Ahmad Hassan"
@@ -111,7 +113,7 @@ export default function RegisterScreen() {
                   />
                 </View>
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Email</Text>
+                  <Text style={styles.label}>{t('email')}</Text>
                   <TextInput
                     style={styles.input}
                     placeholder="your@email.com"
@@ -123,10 +125,10 @@ export default function RegisterScreen() {
                   />
                 </View>
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Password</Text>
+                  <Text style={styles.label}>{t('password')}</Text>
                   <TextInput
                     style={styles.input}
-                    placeholder="Min 8 characters"
+                    placeholder={t('minChars')}
                     placeholderTextColor={Colors.textMuted}
                     secureTextEntry
                     value={password}
@@ -142,7 +144,7 @@ export default function RegisterScreen() {
                   disabled={!name || !email || !password || isSubmitting}
                   onPress={handleAccountStep}
                 >
-                  <Text style={styles.primaryBtnText}>{isSubmitting ? '...' : 'Continue'}</Text>
+                  <Text style={styles.primaryBtnText}>{isSubmitting ? '...' : t('continueBtn')}</Text>
                   <Ionicons name="arrow-forward" size={18} color={Colors.white} />
                 </TouchableOpacity>
               </View>
@@ -151,25 +153,25 @@ export default function RegisterScreen() {
 
           {step === 'subscriber' && (
             <>
-              <Text style={styles.title}>Your Electricity Account</Text>
-              <Text style={styles.subtitle}>Link your electricity subscriber number to get personalized insights</Text>
+              <Text style={styles.title}>{t('yourElecAccount')}</Text>
+              <Text style={styles.subtitle}>{t('linkSubscriber')}</Text>
 
               <View style={styles.form}>
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Subscriber Number</Text>
+                  <Text style={styles.label}>{t('subscriberNumber')}</Text>
                   <TextInput
                     style={styles.input}
-                    placeholder="Found on your electricity bill"
+                    placeholder={t('foundOnBill')}
                     placeholderTextColor={Colors.textMuted}
                     keyboardType="numeric"
                     value={subscriberNumber}
                     onChangeText={setSubscriberNumber}
                   />
-                  <Text style={styles.hint}>رقم الاشتراك الموجود على فاتورة الكهرباء</Text>
+                  <Text style={styles.hint}>{t('subscriberHintAr')}</Text>
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Distribution Company</Text>
+                  <Text style={styles.label}>{t('distributionCompany')}</Text>
                   <View style={styles.companyGrid}>
                     {companies.map((c) => (
                       <TouchableOpacity
@@ -192,10 +194,10 @@ export default function RegisterScreen() {
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Household Size</Text>
+                  <Text style={styles.label}>{t('householdSize')}</Text>
                   <TextInput
                     style={styles.input}
-                    placeholder="Number of people in your home"
+                    placeholder={t('numberOfPeople')}
                     placeholderTextColor={Colors.textMuted}
                     keyboardType="numeric"
                     value={householdSize}
@@ -211,7 +213,7 @@ export default function RegisterScreen() {
                   disabled={!subscriberNumber || !company || isSubmitting}
                   onPress={handleSubscriberStep}
                 >
-                  <Text style={styles.primaryBtnText}>{isSubmitting ? '...' : 'Get Started'}</Text>
+                  <Text style={styles.primaryBtnText}>{isSubmitting ? '...' : t('getStarted')}</Text>
                   <Ionicons name="flash" size={18} color={Colors.white} />
                 </TouchableOpacity>
               </View>
@@ -220,9 +222,9 @@ export default function RegisterScreen() {
 
           {/* Login Link */}
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Already have an account?</Text>
+            <Text style={styles.footerText}>{t('alreadyHaveAccount')}</Text>
             <TouchableOpacity onPress={() => router.push('/auth/login')}>
-              <Text style={styles.footerLink}> Log in</Text>
+              <Text style={styles.footerLink}> {t('logInLink')}</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
