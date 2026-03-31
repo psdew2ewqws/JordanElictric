@@ -40,6 +40,7 @@ export default function RootLayout() {
           name="auth/register"
           options={{ presentation: 'fullScreenModal' }}
         />
+        <Stack.Screen name="onboarding/index" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen
           name="bill/scan"

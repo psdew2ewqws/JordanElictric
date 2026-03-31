@@ -50,6 +50,9 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setLang] = useState<Language>('en');
 
   useEffect(() => {
+    // Always force LTR on startup — both languages use same layout
+    I18nManager.allowRTL(false);
+    I18nManager.forceRTL(false);
     AsyncStorage.getItem('diaa_lang').then((stored) => {
       if (stored === 'ar' || stored === 'en') {
         setLang(stored);

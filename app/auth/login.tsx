@@ -175,7 +175,7 @@ export default function LoginScreen() {
             <TouchableOpacity
               style={[styles.primaryBtn, (!email || !password) && styles.btnDisabled, isAr && { paddingVertical: 13 }]}
               disabled={!email || !password}
-              onPress={() => router.replace('/(tabs)')}
+              onPress={() => router.replace('/onboarding')}
               activeOpacity={0.85}
             >
               <Text style={[styles.primaryBtnText, { fontFamily: fonts.bold, fontSize: sz(16) }]}>
