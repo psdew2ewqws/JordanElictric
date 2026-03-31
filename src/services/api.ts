@@ -4,7 +4,7 @@ import { Platform } from 'react-native';
 const API_BASE = __DEV__
   ? Platform.OS === 'web'
     ? 'http://localhost:3002'
-    : 'https://mighty-robin-7.loca.lt' // Tunneled backend for phone access
+    : 'https://ayaan-ascertainable-tidally.ngrok-free.dev' // Ngrok tunneled backend
   : 'https://your-production-api.com';
 
 const TOKEN_KEY = 'access_token';
@@ -63,7 +63,7 @@ async function request<T>(
   const token = await getStoredToken();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    'Bypass-Tunnel-Reminder': 'true',
+    'ngrok-skip-browser-warning': 'true',
     ...(options.headers as Record<string, string>),
   };
 
