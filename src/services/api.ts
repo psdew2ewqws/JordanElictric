@@ -104,9 +104,9 @@ async function request<T>(
       }
       return retryResponse.json();
     }
-    // Refresh failed — don't clear tokens, just throw error
-    // (keeps user session alive for competition demo)
-    throw new ApiError('Request failed', 401);
+    // Refresh failed — clear stale tokens so next login gets fresh ones
+    await clearTokens();
+    throw new ApiError('Session expired', 401);
   }
 
   if (!response.ok) {

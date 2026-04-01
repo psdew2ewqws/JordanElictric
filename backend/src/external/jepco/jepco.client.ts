@@ -46,25 +46,8 @@ export class JepcoClient {
       }
 
       const data = await res.json();
-      let token: string | null = null;
-
-      if (typeof data === 'object' && data !== null) {
-        token =
-          data.token ?? data.Token ??
-          data.authToken ?? data.AuthToken ??
-          data.access_token ?? null;
-
-        if (!token && typeof data.body === 'object') {
-          token =
-            data.body?.token ?? data.body?.Token ??
-            data.body?.authToken ?? data.body?.AuthToken ?? null;
-        }
-        if (!token && typeof data.body === 'string' && data.body.length > 20) {
-          token = data.body;
-        }
-      } else if (typeof data === 'string' && data.length > 20) {
-        token = data;
-      }
+      // JEPCO returns: { statusCode: "Success", body: { token: "..." } }
+      const token = data?.body?.token || data?.body?.Token || data?.token || data?.Token || null;
 
       if (token) {
         this.token = token;
@@ -73,7 +56,7 @@ export class JepcoClient {
         return token;
       }
 
-      this.logger.error('JEPCO login: no token in response');
+      this.logger.error(`JEPCO login: no token found. Keys: ${JSON.stringify(Object.keys(data || {}))}`);
       return null;
     } catch (err) {
       this.logger.error(`JEPCO login error: ${err}`);
@@ -88,6 +71,7 @@ export class JepcoClient {
     endpoint: string,
     body: Record<string, unknown>,
     timeout = 20000,
+    isRetry = false,
   ): Promise<any | null> {
     const token = await this.getToken();
     if (!token) return null;
@@ -106,6 +90,14 @@ export class JepcoClient {
         body: JSON.stringify(body),
         signal: AbortSignal.timeout(timeout),
       });
+
+      // On 401, invalidate cached token and retry once
+      if (res.status === 401 && !isRetry) {
+        this.logger.warn(`JEPCO ${endpoint} got 401 — refreshing token`);
+        this.token = null;
+        this.tokenExpiresAt = 0;
+        return this.authedPost(endpoint, body, timeout, true);
+      }
 
       if (!res.ok) {
         this.logger.warn(`JEPCO ${endpoint} HTTP ${res.status}`);

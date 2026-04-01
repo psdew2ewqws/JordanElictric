@@ -99,7 +99,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    await authApi.logout();
+    try { await authApi.logout(); } catch {}
+    await clearTokens();
     setUser(null);
     setSubscription(null);
   }, []);

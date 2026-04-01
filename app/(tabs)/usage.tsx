@@ -58,6 +58,9 @@ export default function UsageScreen() {
         Animated.timing(costBarWeekday, { toValue: 72, duration: 600, useNativeDriver: false }),
         Animated.timing(costBarWeekend, { toValue: 95, duration: 600, useNativeDriver: false }),
       ]).start();
+    } catch (e: any) {
+      console.warn('JEPCO fetch failed:', e?.message);
+      setError(e?.message || 'Failed to load data');
     } finally {
       setLoading(false);
     }
@@ -74,14 +77,13 @@ export default function UsageScreen() {
   const lastReadingDate = sm.lastBillReadingDate || '';
   const daysInCycle = parseInt(sm.numberOfConsumptionDaysSinceLastRead || '1');
 
-  // Comparison data (embedded in smart meter response)
+  // Comparison data — use ACTUAL current usage, not JEPCO projected
   const comp = sm.comparazinConsumption || {};
-  const expectedMonth = parseInt(comp.expectedMonthConsumption || '0');
   const lastMonth = parseInt(comp.lastMonthconsumption || '0');
   const lastYear = parseInt(comp.lastYearconsumption || '0');
-  const lastMonthDiff = expectedMonth - lastMonth;
+  const lastMonthDiff = currentKwh - lastMonth;
   const lastMonthPct = lastMonth > 0 ? +((lastMonthDiff / lastMonth) * 100).toFixed(1) : 0;
-  const lastYearDiff = expectedMonth - lastYear;
+  const lastYearDiff = currentKwh - lastYear;
   const lastYearPct = lastYear > 0 ? +((lastYearDiff / lastYear) * 100).toFixed(1) : 0;
 
   // Daily consumption from consumptionMonthlyList
