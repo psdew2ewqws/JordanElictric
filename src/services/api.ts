@@ -4,7 +4,7 @@ import { Platform } from 'react-native';
 const API_BASE = __DEV__
   ? Platform.OS === 'web'
     ? 'http://localhost:3001'
-    : 'https://ayaan-ascertainable-tidally.ngrok-free.dev' // Ngrok tunneled backend
+    : 'http://10.205.84.39:3001' // Local network IP
   : 'https://your-production-api.com';
 
 const TOKEN_KEY = 'access_token';
@@ -104,8 +104,7 @@ async function request<T>(
       }
       return retryResponse.json();
     }
-    // Refresh failed — clear stale tokens so next login gets fresh ones
-    await clearTokens();
+    // Refresh failed — throw but DON'T clear tokens yet (let AuthContext handle logout)
     throw new ApiError('Session expired', 401);
   }
 

@@ -12,9 +12,13 @@ export class OpenAIClient {
     private config: ConfigService,
     private prisma: PrismaService,
   ) {
+    const apiKey = this.config.get<string>('OPENAI_API_KEY');
     this.client = new OpenAI({
-      apiKey: this.config.get<string>('OPENAI_API_KEY'),
+      apiKey: apiKey || 'sk-placeholder-not-configured',
     });
+    if (!apiKey) {
+      this.logger.warn('OPENAI_API_KEY not set — AI features will be unavailable');
+    }
   }
 
   /**

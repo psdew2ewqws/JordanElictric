@@ -118,10 +118,14 @@ export default function ComplaintsScreen() {
       setError(null);
       const data = await complaintApi.list();
       setComplaints(Array.isArray(data) ? data : []);
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : 'Failed to load complaints';
-      setError(message);
+    } catch (err: any) {
+      // On 401, just show empty state — don't block the screen
+      if (err?.status === 401) {
+        setComplaints([]);
+      } else {
+        const message = err instanceof Error ? err.message : 'Failed to load complaints';
+        setError(message);
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);

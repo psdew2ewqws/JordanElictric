@@ -35,7 +35,10 @@ export default function InsightsScreen() {
       const res = await jepcoApi.getSmartMeter();
       setSmartMeter(res.data);
     } catch (e: any) {
-      setError(e?.message || 'Failed to load');
+      // On 401, show empty state instead of error
+      if (e?.status !== 401) {
+        setError(e?.message || 'Failed to load');
+      }
     } finally {
       setLoading(false);
     }

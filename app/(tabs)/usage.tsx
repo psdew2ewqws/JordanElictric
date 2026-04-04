@@ -59,8 +59,11 @@ export default function UsageScreen() {
         Animated.timing(costBarWeekend, { toValue: 95, duration: 600, useNativeDriver: false }),
       ]).start();
     } catch (e: any) {
-      console.warn('JEPCO fetch failed:', e?.message);
-      setError(e?.message || 'Failed to load data');
+      // On 401, show empty state instead of error
+      if (e?.status !== 401) {
+        console.warn('JEPCO fetch failed:', e?.message);
+        setError(e?.message || 'Failed to load data');
+      }
     } finally {
       setLoading(false);
     }

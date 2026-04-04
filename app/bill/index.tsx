@@ -69,10 +69,15 @@ export default function BillHistoryScreen() {
       const data = await billApi.list(20, 0);
       setBills(data.bills || []);
       setTotal(data.total || 0);
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : 'Failed to load bills';
-      setError(message);
+    } catch (err: any) {
+      // On 401, just show empty state — don't block the screen
+      if (err?.status === 401) {
+        setBills([]);
+        setTotal(0);
+      } else {
+        const message = err instanceof Error ? err.message : 'Failed to load bills';
+        setError(message);
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);

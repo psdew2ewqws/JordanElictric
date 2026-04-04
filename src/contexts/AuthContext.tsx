@@ -28,6 +28,12 @@ interface AuthContextType {
     distributionCompany: 'JEPCO' | 'IDECO' | 'EDCO';
     householdSize: number;
   }) => Promise<void>;
+  updateSubscription: (data: Partial<{
+    subscriberNumber: string;
+    distributionCompany: string;
+    householdSize: number;
+  }>) => Promise<void>;
+  updateUser: (data: { name?: string; phone?: string; language?: 'AR' | 'EN' }) => Promise<void>;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -98,6 +104,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setSubscription(sub as Subscription);
   }, []);
 
+  const updateSubscription = useCallback(async (data: Partial<{
+    subscriberNumber: string;
+    distributionCompany: string;
+    householdSize: number;
+  }>) => {
+    await subscriptionApi.updateMine(data);
+    const sub = await subscriptionApi.getMine();
+    setSubscription(sub);
+  }, []);
+
+  const updateUser = useCallback(async (data: { name?: string; phone?: string; language?: 'AR' | 'EN' }) => {
+    await userApi.updateMe(data);
+    const profile = await userApi.getMe();
+    setUser({
+      id: profile.id,
+      email: profile.email,
+      name: profile.name,
+      language: profile.language,
+      isVerified: profile.isVerified,
+    });
+  }, []);
+
   const logout = useCallback(async () => {
     try { await authApi.logout(); } catch {}
     await clearTokens();
@@ -132,6 +160,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         register,
         createSubscription,
+        updateSubscription,
+        updateUser,
         logout,
         refreshProfile,
       }}

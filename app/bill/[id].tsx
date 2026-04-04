@@ -74,9 +74,11 @@ export default function BillDetailScreen() {
         if (!billId) throw new Error('No bill ID provided');
         const data = await billApi.getById(billId);
         setBill(data);
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : 'Failed to load bill';
-        setError(message);
+      } catch (err: any) {
+        if (err?.status !== 401) {
+          const message = err instanceof Error ? err.message : 'Failed to load bill';
+          setError(message);
+        }
       } finally {
         setLoading(false);
       }
