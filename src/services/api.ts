@@ -3,8 +3,8 @@ import { Platform } from 'react-native';
 
 const API_BASE = __DEV__
   ? Platform.OS === 'web'
-    ? 'http://localhost:3001'
-    : 'http://10.205.84.39:3001' // Local network IP
+    ? 'http://localhost:3002'
+    : 'https://ayaan-ascertainable-tidally.ngrok-free.dev' // Ngrok tunneled backend
   : 'https://your-production-api.com';
 
 const TOKEN_KEY = 'access_token';
