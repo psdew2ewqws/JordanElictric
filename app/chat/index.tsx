@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 import { useLanguage } from '../../src/i18n/LanguageContext';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { Colors, FontSize, Radius, Spacing, Shadows } from '../../src/constants/theme';
@@ -66,6 +67,7 @@ export default function ChatScreen() {
     async (text: string) => {
       const trimmed = text.trim();
       if (!trimmed || isLoading) return;
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
       // Add user message
       const userMsg: ChatMessage = {

@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Skeleton } from 'moti/skeleton';
 import { useLanguage } from '../../src/i18n/LanguageContext';
 import { LanguageToggle } from '../../src/components/LanguageToggle';
+import { DataSourceBadge } from '../../src/components/DataSourceBadge';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { jepcoApi, notificationApi, billApi, complaintApi } from '../../src/services/api';
 
@@ -68,8 +70,18 @@ export default function HomeScreen() {
 
   if (loading) {
     return (
-      <View style={[s.screen, { justifyContent: 'center', alignItems: 'center' }]}>
-        <ActivityIndicator size="large" color={C.navyLight} />
+      <View style={s.screen}>
+        <View style={{ paddingHorizontal: 16, paddingTop: 120 }}>
+          <Text style={{ color: C.gray400, fontSize: 12, fontFamily: f.regular, textAlign: 'center', marginBottom: 16 }}>
+            {isAr ? 'جاري جلب بياناتك من جيبكو...' : 'Fetching your data from JEPCO...'}
+          </Text>
+          <Skeleton colorMode="light" radius={14} height={120} width={'100%'} />
+          <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
+            <View style={{ flex: 1 }}><Skeleton colorMode="light" radius={14} height={50} width={'100%'} /></View>
+            <View style={{ flex: 1 }}><Skeleton colorMode="light" radius={14} height={50} width={'100%'} /></View>
+            <View style={{ flex: 1 }}><Skeleton colorMode="light" radius={14} height={50} width={'100%'} /></View>
+          </View>
+        </View>
       </View>
     );
   }
@@ -176,6 +188,9 @@ export default function HomeScreen() {
               <Ionicons name="arrow-forward" size={16} color={C.white} />
             </TouchableOpacity>
           </View>
+          <View style={{ paddingHorizontal: 4, marginTop: 6 }}>
+            <DataSourceBadge source={co} updatedAt={new Date()} fonts={{ regular: f.regular }} />
+          </View>
         </View>
 
         {/* ═══ SUMMARY ═══ */}
@@ -209,7 +224,7 @@ const s = StyleSheet.create({
   navRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8 },
   navRight: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   badge: { position: 'absolute', top: -2, right: -4, width: 7, height: 7, borderRadius: 4, backgroundColor: '#EF4444' },
-  subStrip: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 18, backgroundColor: 'rgba(255,255,255,0.07)', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10 },
+  subStrip: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 18, backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10 },
   editBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   billWrap: { marginTop: -44, paddingHorizontal: 16 },
   billCard: { backgroundColor: C.white, borderRadius: 14, padding: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 3 },

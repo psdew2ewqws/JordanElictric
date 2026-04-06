@@ -55,7 +55,7 @@ function Sheet({ visible, onClose, title, children }: { visible: boolean; onClos
 
 function Pick({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
   return (
-    <TouchableOpacity style={s.pick} onPress={onPress} activeOpacity={0.6}>
+    <TouchableOpacity style={[s.pick, { backgroundColor: selected ? 'rgba(20, 61, 92, 0.06)' : 'transparent' }]} onPress={onPress} activeOpacity={0.6}>
       <Text style={[s.pickText, selected && s.pickTextActive]}>{label}</Text>
       {selected && <Ionicons name="checkmark" size={18} color={C.navy} />}
     </TouchableOpacity>
@@ -211,7 +211,7 @@ const s = StyleSheet.create({
   cancelText: { fontSize: 14, fontFamily: 'Inter-Medium', color: C.gray400 },
   saveBtn: { backgroundColor: C.navy, borderRadius: 8, paddingHorizontal: 20, paddingVertical: 10 },
   saveText: { fontSize: 14, fontFamily: 'Inter-Bold', color: C.white },
-  pick: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 13, borderBottomWidth: 1, borderBottomColor: C.gray100 },
+  pick: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 13, paddingHorizontal: 10, borderBottomWidth: 1, borderBottomColor: C.gray100, borderRadius: 8, marginHorizontal: -4 },
   pickText: { fontSize: 14, fontFamily: 'Inter-Regular', color: C.gray800 },
   pickTextActive: { fontFamily: 'Inter-Bold', color: C.navy },
 });

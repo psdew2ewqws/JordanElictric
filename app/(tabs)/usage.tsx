@@ -1,20 +1,46 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator, Animated, RefreshControl,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Animated, RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Skeleton } from 'moti/skeleton';
 import Svg, { Path, Line, Circle, Defs, LinearGradient as SvgGrad, Stop, Text as SvgText } from 'react-native-svg';
 import { jepcoApi } from '../../src/services/api';
 import { useLanguage } from '../../src/i18n/LanguageContext';
 import { LanguageToggle } from '../../src/components/LanguageToggle';
+import { DataSourceBadge } from '../../src/components/DataSourceBadge';
 import { AnimatedCounter } from '../../src/components/AnimatedCounter';
 import { LazyCard } from '../../src/components/LazyCard';
 
 const { width: SW } = Dimensions.get('window');
 const CHART_W = SW - 72;
 const CHART_H = 140;
+
+function buildSmoothPath(points: {x: number, y: number}[]): string {
+  if (points.length < 2) return '';
+  if (points.length === 2) return `M${points[0].x},${points[0].y} L${points[1].x},${points[1].y}`;
+
+  let path = `M${points[0].x.toFixed(1)},${points[0].y.toFixed(1)}`;
+
+  for (let i = 0; i < points.length - 1; i++) {
+    const p0 = points[Math.max(0, i - 1)];
+    const p1 = points[i];
+    const p2 = points[i + 1];
+    const p3 = points[Math.min(points.length - 1, i + 2)];
+
+    // Catmull-Rom to Bezier conversion (tension = 0 for smooth)
+    const cp1x = p1.x + (p2.x - p0.x) / 6;
+    const cp1y = p1.y + (p2.y - p0.y) / 6;
+    const cp2x = p2.x - (p3.x - p1.x) / 6;
+    const cp2y = p2.y - (p3.y - p1.y) / 6;
+
+    path += ` C${cp1x.toFixed(1)},${cp1y.toFixed(1)} ${cp2x.toFixed(1)},${cp2y.toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`;
+  }
+
+  return path;
+}
 
 export default function UsageScreen() {
   const { t, fonts, language } = useLanguage();
@@ -101,6 +127,8 @@ export default function UsageScreen() {
       ? +(dailyList.reduce((s, d) => s + d.kwh, 0) / dailyList.length).toFixed(1)
       : +(currentKwh / Math.max(daysInCycle, 1)).toFixed(1);
 
+    const lastMonthDailyAvg = lastMonth > 0 ? +(lastMonth / 30).toFixed(1) : 0;
+
     const tier1Kwh = Math.min(currentKwh, 300);
     const tier2Kwh = currentKwh > 300 ? Math.min(currentKwh - 300, 300) : 0;
     const tier3Kwh = currentKwh > 600 ? currentKwh - 600 : 0;
@@ -121,7 +149,7 @@ export default function UsageScreen() {
       y: CHART_H - (d.kwh / maxVal) * (CHART_H - 10),
       val: d.kwh,
     }));
-    const linePath = points.map((p, i) => i === 0 ? `M${p.x},${p.y}` : `L${p.x},${p.y}`).join(' ');
+    const linePath = buildSmoothPath(points);
     const areaPath = linePath + ` L${points[points.length - 1].x},${CHART_H} L${points[0].x},${CHART_H} Z`;
     const avgY = dailyAvg > 0 ? CHART_H - (dailyAvg / maxVal) * (CHART_H - 10) : CHART_H;
 
@@ -131,7 +159,7 @@ export default function UsageScreen() {
       lastMonth, lastYear, lastMonthDiff, lastMonthPct, lastYearDiff, lastYearPct,
       dailyList, dailyAvg, tier1Kwh, tier2Kwh, tier3Kwh, tierPct, currentTier,
       actualCostJd, dailyCostJd, isSmartMeter,
-      chartData, maxVal, points, linePath, areaPath, avgY,
+      chartData, maxVal, points, linePath, areaPath, avgY, lastMonthDailyAvg,
     };
   }, [smartMeter]);
 
@@ -141,7 +169,7 @@ export default function UsageScreen() {
     lastMonth, lastYear, lastMonthDiff, lastMonthPct, lastYearDiff, lastYearPct,
     dailyList, dailyAvg, tier1Kwh, tier2Kwh, tier3Kwh, tierPct, currentTier,
     actualCostJd, dailyCostJd, isSmartMeter,
-    chartData, maxVal, points, linePath, areaPath, avgY,
+    chartData, maxVal, points, linePath, areaPath, avgY, lastMonthDailyAvg,
   } = derived;
 
   const onRefresh = async () => {
@@ -152,9 +180,18 @@ export default function UsageScreen() {
 
   if (loading) {
     return (
-      <View style={[styles.screen, { justifyContent: 'center', alignItems: 'center' }]}>
-        <ActivityIndicator size="large" color="#1B4965" />
-        <Text style={{ color: '#6B8499', marginTop: 12, fontFamily: fonts.regular }}>Loading your electricity data...</Text>
+      <View style={styles.screen}>
+        <View style={{ paddingHorizontal: 16, paddingTop: 100 }}>
+          <Text style={{ color: '#6B8499', fontSize: 12, fontFamily: fonts.regular, textAlign: 'center', marginBottom: 16 }}>
+            {isAr ? 'جاري جلب بياناتك من جيبكو...' : 'Fetching your data from JEPCO...'}
+          </Text>
+          <Skeleton colorMode="light" radius={14} height={140} width={'100%'} />
+          <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
+            <View style={{ flex: 1 }}><Skeleton colorMode="light" radius={14} height={70} width={'100%'} /></View>
+            <View style={{ flex: 1 }}><Skeleton colorMode="light" radius={14} height={70} width={'100%'} /></View>
+            <View style={{ flex: 1 }}><Skeleton colorMode="light" radius={14} height={70} width={'100%'} /></View>
+          </View>
+        </View>
       </View>
     );
   }
@@ -207,6 +244,7 @@ export default function UsageScreen() {
         </LinearGradient>
 
         <View style={styles.body}>
+          <DataSourceBadge source="JEPCO" updatedAt={new Date()} fonts={{ regular: fonts.regular }} />
 
           {/* === DAILY CONSUMPTION TIMELINE === */}
           {dailyList.length > 0 && (
@@ -238,6 +276,27 @@ export default function UsageScreen() {
                       ))}
                       <Line x1={0} y1={avgY} x2={CHART_W} y2={avgY} stroke="#94A9B8" strokeWidth={0.8} strokeDasharray="4,3" />
                       <SvgText x={CHART_W - 30} y={avgY - 4} fontSize={7} fill="#94A9B8">{dailyAvg} avg</SvgText>
+                      {lastMonthDailyAvg > 0 && (
+                        <>
+                          <Line
+                            x1="0"
+                            y1={CHART_H - (lastMonthDailyAvg / maxVal) * (CHART_H - 10)}
+                            x2={CHART_W}
+                            y2={CHART_H - (lastMonthDailyAvg / maxVal) * (CHART_H - 10)}
+                            stroke="#94A9B8"
+                            strokeWidth="1"
+                            strokeDasharray="4,4"
+                            opacity={0.4}
+                          />
+                          <SvgText
+                            x={4}
+                            y={CHART_H - (lastMonthDailyAvg / maxVal) * (CHART_H - 10) - 4}
+                            fontSize={6}
+                            fill="#94A9B8"
+                            opacity={0.6}
+                          >Last month avg</SvgText>
+                        </>
+                      )}
                       <Path d={areaPath} fill="url(#areaFill)" />
                       <Path d={linePath} stroke="#1B4965" strokeWidth={2} fill="none" strokeLinecap="round" strokeLinejoin="round" />
                       {points.filter(p => p.val > dailyAvg * 1.3).map((p, i) => (

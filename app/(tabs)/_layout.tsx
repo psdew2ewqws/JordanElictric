@@ -2,6 +2,7 @@ import { Tabs } from 'expo-router';
 import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { Colors } from '../../src/constants/theme';
 import { useLanguage } from '../../src/i18n/LanguageContext';
 
@@ -41,6 +42,7 @@ export default function TabLayout() {
             <Ionicons name={focused ? 'home' : 'home-outline'} size={22} color={color} />
           ),
         }}
+        listeners={{ tabPress: () => Haptics.selectionAsync() }}
       />
       <Tabs.Screen
         name="usage"
@@ -50,6 +52,7 @@ export default function TabLayout() {
             <Ionicons name={focused ? 'bar-chart' : 'bar-chart-outline'} size={22} color={color} />
           ),
         }}
+        listeners={{ tabPress: () => Haptics.selectionAsync() }}
       />
       <Tabs.Screen
         name="insights"
@@ -59,6 +62,7 @@ export default function TabLayout() {
             <Ionicons name={focused ? 'bulb' : 'bulb-outline'} size={22} color={color} />
           ),
         }}
+        listeners={{ tabPress: () => Haptics.selectionAsync() }}
       />
       <Tabs.Screen
         name="services"
@@ -68,6 +72,7 @@ export default function TabLayout() {
             <Ionicons name={focused ? 'grid' : 'grid-outline'} size={22} color={color} />
           ),
         }}
+        listeners={{ tabPress: () => Haptics.selectionAsync() }}
       />
       <Tabs.Screen
         name="profile"
@@ -77,6 +82,7 @@ export default function TabLayout() {
             <Ionicons name={focused ? 'person' : 'person-outline'} size={22} color={color} />
           ),
         }}
+        listeners={{ tabPress: () => Haptics.selectionAsync() }}
       />
     </Tabs>
   );

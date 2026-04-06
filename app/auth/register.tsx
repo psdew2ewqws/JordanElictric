@@ -11,6 +11,8 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
+import Animated, { useSharedValue, useAnimatedStyle, withSequence, withTiming } from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -23,10 +25,12 @@ type Step = 'account' | 'subscriber';
 export default function RegisterScreen() {
   const router = useRouter();
   const { register, createSubscription } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const isAr = language === 'ar';
   const [step, setStep] = useState<Step>('account');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
   const emailRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
@@ -41,14 +45,33 @@ export default function RegisterScreen() {
   const [company, setCompany] = useState<string | null>(null);
   const [householdSize, setHouseholdSize] = useState('');
 
+  const shakeX = useSharedValue(0);
+  const shakeStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: shakeX.value }],
+  }));
+
+  const triggerShakeAndError = () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    shakeX.value = withSequence(
+      withTiming(-10, { duration: 50 }),
+      withTiming(10, { duration: 50 }),
+      withTiming(-10, { duration: 50 }),
+      withTiming(10, { duration: 50 }),
+      withTiming(0, { duration: 50 }),
+    );
+  };
+
   const handleAccountStep = async () => {
     if (!name || !email || !password || isSubmitting) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setIsSubmitting(true);
     setErrorMsg('');
     try {
       await register(name, email, password);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setStep('subscriber');
     } catch (err: any) {
+      triggerShakeAndError();
       setErrorMsg(err.message || 'Registration failed');
     } finally {
       setIsSubmitting(false);
@@ -57,16 +80,21 @@ export default function RegisterScreen() {
 
   const handleSubscriberStep = async () => {
     if (!subscriberNumber || !company || isSubmitting) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setIsSubmitting(true);
     setErrorMsg('');
+    setSuccessMsg('');
     try {
       await createSubscription({
         subscriberNumber,
         distributionCompany: company as 'JEPCO' | 'IDECO' | 'EDCO',
         householdSize: parseInt(householdSize, 10) || 1,
       });
-      router.replace('/(tabs)');
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setSuccessMsg(isAr ? 'تم العثور على حسابك!' : 'Account found!');
+      setTimeout(() => router.replace('/(tabs)'), 1200);
     } catch (err: any) {
+      triggerShakeAndError();
       setErrorMsg(err.message || 'Failed to create subscription');
     } finally {
       setIsSubmitting(false);
@@ -105,7 +133,7 @@ export default function RegisterScreen() {
           </View>
 
           {step === 'account' && (
-            <>
+            <Animated.View style={shakeStyle}>
               <Text style={styles.title}>{t('createAccount')}</Text>
               <Text style={styles.subtitle}>{t('joinThousands')}</Text>
 
@@ -183,11 +211,11 @@ export default function RegisterScreen() {
                   <Ionicons name="arrow-forward" size={18} color={Colors.white} />
                 </TouchableOpacity>
               </View>
-            </>
+            </Animated.View>
           )}
 
           {step === 'subscriber' && (
-            <>
+            <Animated.View style={shakeStyle}>
               <Text style={styles.title}>{t('yourElecAccount')}</Text>
               <Text style={styles.subtitle}>{t('linkSubscriber')}</Text>
 
@@ -243,19 +271,25 @@ export default function RegisterScreen() {
                   />
                 </View>
 
+                {successMsg ? (
+                  <View style={styles.successBanner}>
+                    <Ionicons name="checkmark-circle" size={20} color="#059669" />
+                    <Text style={styles.successText}>{successMsg}</Text>
+                  </View>
+                ) : null}
                 {errorMsg && step === 'subscriber' ? (
                   <Text style={{ color: '#DC2626', fontSize: 13, textAlign: 'center' }}>{errorMsg}</Text>
                 ) : null}
                 <TouchableOpacity
-                  style={[styles.primaryBtn, (!subscriberNumber || !company || isSubmitting) && styles.btnDisabled]}
-                  disabled={!subscriberNumber || !company || isSubmitting}
+                  style={[styles.primaryBtn, (!subscriberNumber || !company || isSubmitting || !!successMsg) && styles.btnDisabled]}
+                  disabled={!subscriberNumber || !company || isSubmitting || !!successMsg}
                   onPress={handleSubscriberStep}
                 >
                   <Text style={styles.primaryBtnText}>{isSubmitting ? '...' : t('getStarted')}</Text>
                   <Ionicons name="flash" size={18} color={Colors.white} />
                 </TouchableOpacity>
               </View>
-            </>
+            </Animated.View>
           )}
 
           {/* Login Link */}
@@ -419,6 +453,21 @@ const styles = StyleSheet.create({
     color: Colors.white,
   },
 
+  successBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#ECFDF5',
+    borderRadius: Radius.md,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  successText: {
+    fontSize: FontSize.sm,
+    fontWeight: '600',
+    color: '#059669',
+  },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',

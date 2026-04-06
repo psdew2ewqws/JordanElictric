@@ -13,6 +13,8 @@ import {
   Dimensions,
   Animated,
 } from 'react-native';
+import ReanimatedAnimated, { useSharedValue, useAnimatedStyle, withSequence, withTiming } from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Video, ResizeMode, AVPlaybackStatus } from 'expo-av';
@@ -56,8 +58,14 @@ export default function LoginScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
+  const shakeX = useSharedValue(0);
+  const shakeStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: shakeX.value }],
+  }));
+
   const handleLogin = async () => {
     if (!email || !password || isSubmitting) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setIsSubmitting(true);
     setErrorMsg('');
     // Clear any stale tokens before login attempt
@@ -69,6 +77,7 @@ export default function LoginScreen() {
     } catch {}
     try {
       await login(email, password);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       Keyboard.dismiss();
       router.replace('/(tabs)');
     } catch (err: any) {
@@ -77,6 +86,14 @@ export default function LoginScreen() {
         router.replace('/(tabs)');
         return;
       }
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      shakeX.value = withSequence(
+        withTiming(-10, { duration: 50 }),
+        withTiming(10, { duration: 50 }),
+        withTiming(-10, { duration: 50 }),
+        withTiming(10, { duration: 50 }),
+        withTiming(0, { duration: 50 }),
+      );
       setErrorMsg(msg || 'Login failed. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -159,6 +176,7 @@ export default function LoginScreen() {
             contentContainerStyle={styles.formScroll}
             keyboardShouldPersistTaps="handled"
           >
+          <ReanimatedAnimated.View style={shakeStyle}>
             {/* Brand */}
             <View style={[styles.brand, isAr && { marginBottom: 16 }]}>
               <Text style={[styles.appName, { fontFamily: fonts.extrabold, fontSize: sz(26) }]}>
@@ -224,7 +242,7 @@ export default function LoginScreen() {
             </View>
 
             {/* Forgot */}
-            <TouchableOpacity style={styles.forgotBtn}>
+            <TouchableOpacity style={styles.forgotBtn} activeOpacity={0.6}>
               <Text style={[styles.forgotText, { fontFamily: fonts.semibold, fontSize: sz(12) }]}>
                 {t('forgotPassword')}
               </Text>
@@ -281,6 +299,7 @@ export default function LoginScreen() {
             <Text style={[styles.cpaText, { fontFamily: fonts.regular, fontSize: sz(10) }]}>
               {t('cpaInitiative')}
             </Text>
+          </ReanimatedAnimated.View>
           </ScrollView>
         </Animated.View>
       </KeyboardAvoidingView>
@@ -390,10 +409,14 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-end',
     marginTop: -4,
     marginBottom: 18,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
   },
   forgotText: {
     fontSize: 12,
     color: '#4A9BB5',
+    opacity: 0.8,
     writingDirection: 'ltr',
   },
 

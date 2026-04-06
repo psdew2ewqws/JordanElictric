@@ -1,11 +1,17 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, View, Text, TextInput } from 'react-native';
 import { LanguageProvider, useLanguage } from '../src/i18n/LanguageContext';
 import { AuthProvider } from '../src/contexts/AuthContext';
 import { ToastProvider } from '../src/contexts/ToastContext';
 import { Colors } from '../src/constants/theme';
+
+// Set global max font scale to prevent layout breakage
+if (Text.defaultProps == null) Text.defaultProps = {};
+Text.defaultProps.maxFontSizeMultiplier = 1.5;
+if (TextInput.defaultProps == null) TextInput.defaultProps = {};
+TextInput.defaultProps.maxFontSizeMultiplier = 1.5;
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({

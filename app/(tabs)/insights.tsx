@@ -1,13 +1,15 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, Dimensions, Animated, ActivityIndicator, RefreshControl, TouchableOpacity,
+  View, Text, StyleSheet, ScrollView, Dimensions, RefreshControl, TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Skeleton } from 'moti/skeleton';
 import { jepcoApi } from '../../src/services/api';
 import { useLanguage } from '../../src/i18n/LanguageContext';
 import { LanguageToggle } from '../../src/components/LanguageToggle';
+import { DataSourceBadge } from '../../src/components/DataSourceBadge';
 import { AnimatedCounter } from '../../src/components/AnimatedCounter';
 import { LazyCard } from '../../src/components/LazyCard';
 import {
@@ -73,8 +75,17 @@ export default function InsightsScreen() {
 
   if (loading) {
     return (
-      <View style={[styles.screen, { justifyContent: 'center', alignItems: 'center' }]}>
-        <ActivityIndicator size="large" color="#1B4965" />
+      <View style={styles.screen}>
+        <View style={{ paddingHorizontal: 16, paddingTop: 100 }}>
+          <Text style={{ color: '#6B8499', fontSize: 12, fontFamily: fonts.regular, textAlign: 'center', marginBottom: 16 }}>
+            {isAr ? 'جاري جلب بياناتك من جيبكو...' : 'Fetching your data from JEPCO...'}
+          </Text>
+          <Skeleton colorMode="light" radius={14} height={100} width={'100%'} />
+          <View style={{ gap: 10, marginTop: 14 }}>
+            <Skeleton colorMode="light" radius={14} height={120} width={'100%'} />
+            <Skeleton colorMode="light" radius={14} height={120} width={'100%'} />
+          </View>
+        </View>
       </View>
     );
   }
@@ -116,6 +127,7 @@ export default function InsightsScreen() {
         </LinearGradient>
 
         <View style={styles.body}>
+          <DataSourceBadge source="JEPCO" updatedAt={new Date()} fonts={{ regular: fonts.regular }} />
 
           {/* ═══ CARD 1: UNDERSTAND YOUR TARIFF ═══ */}
           <LazyCard delay={100} style={styles.card}>
@@ -270,7 +282,7 @@ function BillLine({ label, val, color, fonts, sz }: any) {
 
 const blStyles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 7, gap: 8 },
-  dot: { width: 6, height: 6, borderRadius: 3 },
+  dot: { width: 9, height: 9, borderRadius: 5 },
   label: { flex: 1, color: '#6B8499', writingDirection: 'ltr', textAlign: 'left' },
   val: { writingDirection: 'ltr', textAlign: 'right' },
 });

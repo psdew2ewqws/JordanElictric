@@ -46,6 +46,9 @@ export const Colors = {
   tierGreen: '#1A7A54',
   tierYellow: '#B8860B',
   tierRed: '#B3261E',
+  tierGreenAA: '#0E7C47',
+  tierAmberAA: '#8B6914',
+  tierRedAA: '#C42B1C',
 
   // Chart
   chart1: '#143D5C',
@@ -61,13 +64,13 @@ export const Colors = {
 
   // Status (complaint/notification badges)
   statusBlue: '#3B82F6',
-  statusOrange: '#F59E0B',
-  statusGreen: '#10B981',
+  statusOrange: '#8B6914',
+  statusGreen: '#0E7C47',
   statusGray: '#94A9B8',
 
   // Muted text (used across screens)
-  muted: '#94A9B8',
-  mutedDark: '#6B8499',
+  muted: '#5C7080',
+  mutedDark: '#4A6275',
   cardBorder: '#E8ECF0',
   bodyBg: '#F2F5F7',
 };
