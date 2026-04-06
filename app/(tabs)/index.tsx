@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Skeleton } from 'moti/skeleton';
+import { Shimmer } from '../../src/components/Shimmer';
 import { useLanguage } from '../../src/i18n/LanguageContext';
 import { LanguageToggle } from '../../src/components/LanguageToggle';
 import { DataSourceBadge } from '../../src/components/DataSourceBadge';
@@ -75,11 +75,11 @@ export default function HomeScreen() {
           <Text style={{ color: C.gray400, fontSize: 12, fontFamily: f.regular, textAlign: 'center', marginBottom: 16 }}>
             {isAr ? 'جاري جلب بياناتك من جيبكو...' : 'Fetching your data from JEPCO...'}
           </Text>
-          <Skeleton colorMode="light" radius={14} height={120} width={'100%'} />
+          <Shimmer radius={14} height={120} />
           <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
-            <View style={{ flex: 1 }}><Skeleton colorMode="light" radius={14} height={50} width={'100%'} /></View>
-            <View style={{ flex: 1 }}><Skeleton colorMode="light" radius={14} height={50} width={'100%'} /></View>
-            <View style={{ flex: 1 }}><Skeleton colorMode="light" radius={14} height={50} width={'100%'} /></View>
+            <View style={{ flex: 1 }}><Shimmer radius={14} height={50} /></View>
+            <View style={{ flex: 1 }}><Shimmer radius={14} height={50} /></View>
+            <View style={{ flex: 1 }}><Shimmer radius={14} height={50} /></View>
           </View>
         </View>
       </View>
