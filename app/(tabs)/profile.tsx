@@ -1,69 +1,50 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Modal,
-  TextInput,
-  Alert,
-  ActivityIndicator,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Alert,
+  ActivityIndicator, TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Colors, FontSize, Radius, Spacing, Shadows } from '../../src/constants/theme';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { billApi } from '../../src/services/api';
 import { useLanguage } from '../../src/i18n/LanguageContext';
 
-// ─── Menu Item ───────────────────────────────────────────
+const C = {
+  white: '#FFFFFF',
+  offWhite: '#F4F6F8',
+  gray100: '#EAEDF0',
+  gray200: '#D1D5DB',
+  gray400: '#9CA3AF',
+  gray600: '#4B5563',
+  gray800: '#1F2937',
+  navy: '#1B4965',
+  red: '#B91C1C',
+  redBg: '#FEF2F2',
+};
+const COMPANIES = ['JEPCO', 'IDECO', 'EDCO'] as const;
 
-interface MenuItemProps {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  value?: string;
-  onPress?: () => void;
-  danger?: boolean;
-}
+// ─── Components ──────────────────────────────────────────
 
-function MenuItem({ icon, label, value, onPress, danger }: MenuItemProps) {
+function Row({ icon, label, value, onPress }: { icon: string; label: string; value?: string; onPress?: () => void }) {
   return (
-    <TouchableOpacity style={styles.menuItem} onPress={onPress} activeOpacity={0.6}>
-      <View style={styles.menuLeft}>
-        <Ionicons
-          name={icon}
-          size={20}
-          color={danger ? Colors.danger : Colors.textSecondary}
-        />
-        <Text style={[styles.menuLabel, danger && { color: Colors.danger }]}>{label}</Text>
-      </View>
-      <View style={styles.menuRight}>
-        {value && <Text style={styles.menuValue}>{value}</Text>}
-        <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
-      </View>
+    <TouchableOpacity style={s.row} onPress={onPress} activeOpacity={0.6}>
+      <Ionicons name={icon as any} size={18} color={C.gray400} style={{ width: 24 }} />
+      <Text style={s.rowLabel}>{label}</Text>
+      {value && <Text style={s.rowValue}>{value}</Text>}
+      <Ionicons name="chevron-forward" size={15} color={C.gray200} />
     </TouchableOpacity>
   );
 }
 
-// ─── Bottom Sheet Modal ──────────────────────────────────
-
-interface BottomSheetProps {
-  visible: boolean;
-  onClose: () => void;
-  title: string;
-  children: React.ReactNode;
-}
-
-function BottomSheet({ visible, onClose, title, children }: BottomSheetProps) {
+function Sheet({ visible, onClose, title, children }: { visible: boolean; onClose: () => void; title: string; children: React.ReactNode }) {
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={onClose}>
-        <TouchableOpacity style={styles.modalContent} activeOpacity={1} onPress={() => {}}>
-          <View style={styles.modalHandle} />
-          <Text style={styles.modalTitle}>{title}</Text>
+      <TouchableOpacity style={s.overlay} activeOpacity={1} onPress={onClose}>
+        <TouchableOpacity style={s.sheet} activeOpacity={1}>
+          <View style={s.handle} />
+          <Text style={s.sheetTitle}>{title}</Text>
           {children}
         </TouchableOpacity>
       </TouchableOpacity>
@@ -71,573 +52,147 @@ function BottomSheet({ visible, onClose, title, children }: BottomSheetProps) {
   );
 }
 
-// ─── Option Row ──────────────────────────────────────────
-
-interface OptionRowProps {
-  label: string;
-  selected: boolean;
-  onPress: () => void;
-}
-
-function OptionRow({ label, selected, onPress }: OptionRowProps) {
+function Pick({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
   return (
-    <TouchableOpacity style={styles.optionRow} onPress={onPress} activeOpacity={0.6}>
-      <Text style={[styles.optionLabel, selected && styles.optionLabelSelected]}>{label}</Text>
-      {selected && <Ionicons name="checkmark-circle" size={22} color={Colors.primary} />}
+    <TouchableOpacity style={s.pick} onPress={onPress} activeOpacity={0.6}>
+      <Text style={[s.pickText, selected && s.pickTextActive]}>{label}</Text>
+      {selected && <Ionicons name="checkmark" size={18} color={C.navy} />}
     </TouchableOpacity>
   );
 }
 
-// ─── Main Screen ─────────────────────────────────────────
-
-const COMPANIES = ['JEPCO', 'IDECO', 'EDCO'] as const;
-const COMPANY_LABELS: Record<string, string> = {
-  JEPCO: 'JEPCO — Central (Amman)',
-  IDECO: 'IDECO — North (Irbid)',
-  EDCO: 'EDCO — South (Aqaba)',
-};
-const COMPANY_LABELS_AR: Record<string, string> = {
-  JEPCO: 'JEPCO — الوسط (عمّان)',
-  IDECO: 'IDECO — الشمال (إربد)',
-  EDCO: 'EDCO — الجنوب (العقبة)',
-};
+// ─── Screen ──────────────────────────────────────────────
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user: authUser, subscription, logout, updateSubscription, updateUser, refreshProfile } = useAuth();
-  const { t, language, setLanguage } = useLanguage();
+  const { user: au, subscription: sub, logout, updateSubscription, updateUser } = useAuth();
+  const { t, language, setLanguage, fonts } = useLanguage();
   const isAr = language === 'ar';
 
   const [billCount, setBillCount] = useState(0);
-  const [notificationsOn, setNotificationsOn] = useState(true);
+  const [notifOn, setNotifOn] = useState(true);
   const [saving, setSaving] = useState(false);
-
-  // Modal states
-  const [subscriberModal, setSubscriberModal] = useState(false);
-  const [companyModal, setCompanyModal] = useState(false);
-  const [householdModal, setHouseholdModal] = useState(false);
-  const [languageModal, setLanguageModal] = useState(false);
-
-  // Edit state
-  const [editSubscriberNum, setEditSubscriberNum] = useState('');
+  const [subModal, setSubModal] = useState(false);
+  const [coModal, setCoModal] = useState(false);
+  const [hhModal, setHhModal] = useState(false);
+  const [langModal, setLangModal] = useState(false);
+  const [editNum, setEditNum] = useState('');
 
   useEffect(() => {
     billApi.list(0, 0).then((r) => setBillCount(r.total)).catch(() => {});
-    AsyncStorage.getItem('diaa_notifications').then((v) => {
-      if (v !== null) setNotificationsOn(v === 'on');
-    });
+    AsyncStorage.getItem('diaa_notifications').then((v) => { if (v !== null) setNotifOn(v === 'on'); });
   }, []);
 
-  const user = {
-    name: authUser?.name || 'User',
-    email: authUser?.email || '',
-    subscriberNumber: subscription?.subscriberNumber || '—',
-    distributionCompany: subscription?.distributionCompany || 'JEPCO',
-    householdSize: subscription?.householdSize || 1,
-  };
+  const name = au?.name || 'User';
+  const email = au?.email || '';
+  const subNum = sub?.subscriberNumber || '—';
+  const co = sub?.distributionCompany || 'JEPCO';
+  const hh = sub?.householdSize || 1;
 
-  // ─── Handlers ────────────────────────────────────────────
-
-  const handleSaveSubscriberNumber = async () => {
-    if (!editSubscriberNum.trim()) return;
-    setSaving(true);
-    try {
-      await updateSubscription({ subscriberNumber: editSubscriberNum.trim() });
-      setSubscriberModal(false);
-    } catch (e: any) {
-      Alert.alert(t('errorSaving'), e.message);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleSelectCompany = async (company: string) => {
-    setSaving(true);
-    try {
-      await updateSubscription({ distributionCompany: company });
-      setCompanyModal(false);
-    } catch (e: any) {
-      Alert.alert(t('errorSaving'), e.message);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleSelectHousehold = async (size: number) => {
-    setSaving(true);
-    try {
-      await updateSubscription({ householdSize: size });
-      setHouseholdModal(false);
-    } catch (e: any) {
-      Alert.alert(t('errorSaving'), e.message);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleSelectLanguage = async (lang: 'en' | 'ar') => {
-    setLanguage(lang);
-    try {
-      await updateUser({ language: lang === 'ar' ? 'AR' : 'EN' });
-    } catch {
-      // Local language change still works even if API fails
-    }
-    setLanguageModal(false);
-  };
-
-  const handleToggleNotifications = async () => {
-    const newVal = !notificationsOn;
-    setNotificationsOn(newVal);
-    await AsyncStorage.setItem('diaa_notifications', newVal ? 'on' : 'off');
-  };
-
-  const handleAppearance = () => {
-    Alert.alert(t('comingSoon'), t('comingSoonDesc'));
-  };
-
-  const handleExportData = () => {
-    Alert.alert(t('comingSoon'), t('comingSoonDesc'));
-  };
-
-  const handleAbout = () => {
-    Alert.alert(t('aboutCpaTitle'), t('aboutCpaDesc'));
-  };
-
-  const handleTerms = () => {
-    Alert.alert(t('termsTitle'), t('termsDesc'));
-  };
-
-  const handleHelp = () => {
-    Alert.alert(t('helpTitle2'), t('helpDesc2'));
-  };
-
-  const handleLogout = () => {
-    Alert.alert(t('logoutTitle'), t('logoutConfirm'), [
-      { text: t('cancel'), style: 'cancel' },
-      {
-        text: t('logOut'),
-        style: 'destructive',
-        onPress: async () => {
-          await logout();
-          router.replace('/auth/login');
-        },
-      },
-    ]);
-  };
-
-  // ─── Render ──────────────────────────────────────────────
+  const saveSub = async () => { if (!editNum.trim()) return; setSaving(true); try { await updateSubscription({ subscriberNumber: editNum.trim() }); setSubModal(false); } catch {} finally { setSaving(false); } };
+  const pickCo = async (v: string) => { setSaving(true); try { await updateSubscription({ distributionCompany: v }); setCoModal(false); } catch {} finally { setSaving(false); } };
+  const pickHh = async (n: number) => { setSaving(true); try { await updateSubscription({ householdSize: n }); setHhModal(false); } catch {} finally { setSaving(false); } };
+  const pickLang = async (l: 'en' | 'ar') => { setLanguage(l); try { await updateUser({ language: l === 'ar' ? 'AR' : 'EN' }); } catch {} setLangModal(false); };
+  const toggleNotif = async () => { const v = !notifOn; setNotifOn(v); await AsyncStorage.setItem('diaa_notifications', v ? 'on' : 'off'); };
+  const doLogout = () => Alert.alert(t('logoutTitle'), t('logoutConfirm'), [{ text: t('cancel'), style: 'cancel' }, { text: t('logOut'), style: 'destructive', onPress: async () => { await logout(); router.replace('/auth/login'); } }]);
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        {/* User Header */}
-        <View style={styles.userHeader}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {user.name.split(' ').map(n => n[0]).join('')}
-            </Text>
-          </View>
-          <Text style={styles.userName}>{user.name}</Text>
-          <Text style={styles.userEmail}>{user.email}</Text>
+    <SafeAreaView style={s.safe} edges={['top']}>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Identity — no avatar circle, just clean text */}
+        <View style={s.identity}>
+          <Text style={[s.name, { fontFamily: fonts.bold }]}>{name}</Text>
+          <Text style={[s.email, { fontFamily: fonts.regular }]}>{email}</Text>
         </View>
 
-        {/* Account Section */}
-        <Text style={styles.sectionLabel}>{t('account')}</Text>
-        <View style={styles.menuCard}>
-          <MenuItem
-            icon="flash-outline"
-            label={t('subscriberNumber')}
-            value={user.subscriberNumber}
-            onPress={() => {
-              setEditSubscriberNum(subscription?.subscriberNumber || '');
-              setSubscriberModal(true);
-            }}
-          />
-          <View style={styles.menuDivider} />
-          <MenuItem
-            icon="business-outline"
-            label={t('distributionCompany')}
-            value={user.distributionCompany}
-            onPress={() => setCompanyModal(true)}
-          />
-          <View style={styles.menuDivider} />
-          <MenuItem
-            icon="people-outline"
-            label={t('householdSize')}
-            value={`${user.householdSize} ${t('people')}`}
-            onPress={() => setHouseholdModal(true)}
-          />
+        {/* Account */}
+        <Text style={[s.section, { fontFamily: fonts.medium }]}>{t('account')}</Text>
+        <View style={s.group}>
+          <Row icon="flash-outline" label={t('subscriberNumber')} value={subNum} onPress={() => { setEditNum(sub?.subscriberNumber || ''); setSubModal(true); }} />
+          <Row icon="business-outline" label={t('distributionCompany')} value={co} onPress={() => setCoModal(true)} />
+          <Row icon="people-outline" label={t('householdSize')} value={`${hh} ${t('people')}`} onPress={() => setHhModal(true)} />
         </View>
 
-        {/* Settings Section */}
-        <Text style={styles.sectionLabel}>{t('settings')}</Text>
-        <View style={styles.menuCard}>
-          <MenuItem
-            icon="globe-outline"
-            label={t('languageSetting')}
-            value={language === 'ar' ? t('arabic') : t('english')}
-            onPress={() => setLanguageModal(true)}
-          />
-          <View style={styles.menuDivider} />
-          <MenuItem
-            icon="notifications-outline"
-            label={t('notifications')}
-            value={notificationsOn ? t('notifOn') : t('notifOff')}
-            onPress={handleToggleNotifications}
-          />
-          <View style={styles.menuDivider} />
-          <MenuItem
-            icon="moon-outline"
-            label={t('appearance')}
-            value={t('light')}
-            onPress={handleAppearance}
-          />
+        {/* Settings */}
+        <Text style={[s.section, { fontFamily: fonts.medium }]}>{t('settings')}</Text>
+        <View style={s.group}>
+          <Row icon="globe-outline" label={t('languageSetting')} value={language === 'ar' ? t('arabic') : t('english')} onPress={() => setLangModal(true)} />
+          <Row icon="notifications-outline" label={t('notifications')} value={notifOn ? t('notifOn') : t('notifOff')} onPress={toggleNotif} />
         </View>
 
-        {/* Data Section */}
-        <Text style={styles.sectionLabel}>{t('data')}</Text>
-        <View style={styles.menuCard}>
-          <MenuItem
-            icon="receipt-outline"
-            label={t('billHistory')}
-            value={`${billCount} ${t('bills')}`}
-            onPress={() => router.push('/bill')}
-          />
-          <View style={styles.menuDivider} />
-          <MenuItem
-            icon="download-outline"
-            label={t('exportData')}
-            onPress={handleExportData}
-          />
+        {/* Data */}
+        <Text style={[s.section, { fontFamily: fonts.medium }]}>{t('data')}</Text>
+        <View style={s.group}>
+          <Row icon="receipt-outline" label={t('billHistory')} value={`${billCount}`} onPress={() => router.push('/bill')} />
         </View>
 
-        {/* About Section */}
-        <Text style={styles.sectionLabel}>{t('about')}</Text>
-        <View style={styles.menuCard}>
-          <MenuItem
-            icon="shield-checkmark-outline"
-            label={t('aboutCpa')}
-            onPress={handleAbout}
-          />
-          <View style={styles.menuDivider} />
-          <MenuItem
-            icon="document-text-outline"
-            label={t('termsPrivacy')}
-            onPress={handleTerms}
-          />
-          <View style={styles.menuDivider} />
-          <MenuItem
-            icon="help-circle-outline"
-            label={t('helpSupport')}
-            onPress={handleHelp}
-          />
+        {/* About */}
+        <Text style={[s.section, { fontFamily: fonts.medium }]}>{t('about')}</Text>
+        <View style={s.group}>
+          <Row icon="information-circle-outline" label={t('aboutCpa')} onPress={() => Alert.alert(t('aboutCpaTitle'), t('aboutCpaDesc'))} />
+          <Row icon="document-text-outline" label={t('termsPrivacy')} onPress={() => Alert.alert(t('termsTitle'), t('termsDesc'))} />
+          <Row icon="help-circle-outline" label={t('helpSupport')} onPress={() => Alert.alert(t('helpTitle2'), t('helpDesc2'))} />
         </View>
 
         {/* Logout */}
-        <View style={[styles.menuCard, { marginTop: Spacing.lg }]}>
-          <MenuItem
-            icon="log-out-outline"
-            label={t('logOut')}
-            danger
-            onPress={handleLogout}
-          />
-        </View>
+        <TouchableOpacity style={s.logoutRow} onPress={doLogout}>
+          <Ionicons name="log-out-outline" size={18} color={C.red} />
+          <Text style={[s.logoutText, { fontFamily: fonts.medium }]}>{t('logOut')}</Text>
+        </TouchableOpacity>
 
-        {/* Version */}
-        <Text style={styles.version}>{t('version')}</Text>
-        <Text style={styles.versionSub}>{t('builtForCpa')}</Text>
-
+        <Text style={[s.ver, { fontFamily: fonts.regular }]}>{t('version')}</Text>
         <View style={{ height: 32 }} />
       </ScrollView>
 
-      {/* ─── Subscriber Number Modal ─────────────────────── */}
-      <BottomSheet
-        visible={subscriberModal}
-        onClose={() => setSubscriberModal(false)}
-        title={t('editSubscriberNumber')}
-      >
-        <Text style={styles.modalHint}>{t('enterSubscriberNumber')}</Text>
-        <TextInput
-          style={styles.modalInput}
-          value={editSubscriberNum}
-          onChangeText={setEditSubscriberNum}
-          placeholder="2018080012345"
-          placeholderTextColor={Colors.textMuted}
-          keyboardType="number-pad"
-          maxLength={13}
-          autoFocus
-        />
-        <View style={styles.modalButtons}>
-          <TouchableOpacity
-            style={styles.modalBtnCancel}
-            onPress={() => setSubscriberModal(false)}
-          >
-            <Text style={styles.modalBtnCancelText}>{t('cancel')}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.modalBtnSave, saving && { opacity: 0.6 }]}
-            onPress={handleSaveSubscriberNumber}
-            disabled={saving}
-          >
-            {saving ? (
-              <ActivityIndicator color={Colors.white} size="small" />
-            ) : (
-              <Text style={styles.modalBtnSaveText}>{t('save')}</Text>
-            )}
+      {/* Modals */}
+      <Sheet visible={subModal} onClose={() => setSubModal(false)} title={t('editSubscriberNumber')}>
+        <TextInput style={s.input} value={editNum} onChangeText={setEditNum} placeholder="2018080012345" placeholderTextColor={C.gray400} keyboardType="number-pad" maxLength={13} autoFocus />
+        <View style={s.sheetBtns}>
+          <TouchableOpacity onPress={() => setSubModal(false)}><Text style={s.cancelText}>{t('cancel')}</Text></TouchableOpacity>
+          <TouchableOpacity style={s.saveBtn} onPress={saveSub} disabled={saving}>
+            {saving ? <ActivityIndicator color="#fff" size="small" /> : <Text style={s.saveText}>{t('save')}</Text>}
           </TouchableOpacity>
         </View>
-      </BottomSheet>
-
-      {/* ─── Distribution Company Modal ──────────────────── */}
-      <BottomSheet
-        visible={companyModal}
-        onClose={() => setCompanyModal(false)}
-        title={t('selectCompany')}
-      >
-        {COMPANIES.map((c) => (
-          <OptionRow
-            key={c}
-            label={isAr ? COMPANY_LABELS_AR[c] : COMPANY_LABELS[c]}
-            selected={user.distributionCompany === c}
-            onPress={() => handleSelectCompany(c)}
-          />
-        ))}
-        {saving && (
-          <ActivityIndicator style={{ marginTop: Spacing.md }} color={Colors.primary} />
-        )}
-      </BottomSheet>
-
-      {/* ─── Household Size Modal ────────────────────────── */}
-      <BottomSheet
-        visible={householdModal}
-        onClose={() => setHouseholdModal(false)}
-        title={t('selectHouseholdSize')}
-      >
-        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-          <OptionRow
-            key={n}
-            label={`${n} ${n === 1 ? t('person') : t('people')}`}
-            selected={user.householdSize === n}
-            onPress={() => handleSelectHousehold(n)}
-          />
-        ))}
-        {saving && (
-          <ActivityIndicator style={{ marginTop: Spacing.md }} color={Colors.primary} />
-        )}
-      </BottomSheet>
-
-      {/* ─── Language Modal ──────────────────────────────── */}
-      <BottomSheet
-        visible={languageModal}
-        onClose={() => setLanguageModal(false)}
-        title={t('selectLanguage')}
-      >
-        <OptionRow
-          label="English"
-          selected={language === 'en'}
-          onPress={() => handleSelectLanguage('en')}
-        />
-        <OptionRow
-          label="العربية"
-          selected={language === 'ar'}
-          onPress={() => handleSelectLanguage('ar')}
-        />
-      </BottomSheet>
+      </Sheet>
+      <Sheet visible={coModal} onClose={() => setCoModal(false)} title={t('selectCompany')}>
+        {COMPANIES.map((c) => <Pick key={c} label={c} selected={co === c} onPress={() => pickCo(c)} />)}
+      </Sheet>
+      <Sheet visible={hhModal} onClose={() => setHhModal(false)} title={t('selectHouseholdSize')}>
+        {[1,2,3,4,5,6,7,8,9,10].map((n) => <Pick key={n} label={`${n} ${n === 1 ? t('person') : t('people')}`} selected={hh === n} onPress={() => pickHh(n)} />)}
+      </Sheet>
+      <Sheet visible={langModal} onClose={() => setLangModal(false)} title={t('selectLanguage')}>
+        <Pick label="English" selected={language === 'en'} onPress={() => pickLang('en')} />
+        <Pick label="العربية" selected={language === 'ar'} onPress={() => pickLang('ar')} />
+      </Sheet>
     </SafeAreaView>
   );
 }
 
-// ─── Styles ──────────────────────────────────────────────
+const s = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: C.offWhite },
+  identity: { paddingHorizontal: 20, paddingTop: 28, paddingBottom: 8 },
+  name: { fontSize: 22, color: C.gray800, letterSpacing: -0.3 },
+  email: { fontSize: 13, color: C.gray400, marginTop: 3 },
+  section: { fontSize: 11, color: C.gray400, textTransform: 'uppercase', letterSpacing: 0.8, paddingHorizontal: 20, marginTop: 22, marginBottom: 6 },
+  group: { marginHorizontal: 16, backgroundColor: C.white, borderRadius: 12, overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 4, elevation: 1 },
+  row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: C.gray100, gap: 10 },
+  rowLabel: { flex: 1, fontSize: 14, fontFamily: 'Inter-Regular', color: C.gray800 },
+  rowValue: { fontSize: 13, fontFamily: 'Inter-Regular', color: C.gray400 },
+  logoutRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginHorizontal: 16, marginTop: 28, backgroundColor: C.redBg, borderRadius: 10, paddingVertical: 13, gap: 8 },
+  logoutText: { fontSize: 14, color: C.red },
+  ver: { textAlign: 'center', fontSize: 11, color: C.gray400, marginTop: 20 },
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
-  container: { flex: 1, paddingHorizontal: Spacing.xl },
-
-  // User Header
-  userHeader: {
-    alignItems: 'center',
-    paddingTop: Spacing.xxxl,
-    paddingBottom: Spacing.xl,
-  },
-  avatar: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: Colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing.md,
-  },
-  avatarText: {
-    fontSize: FontSize.xxl,
-    fontWeight: '700',
-    color: Colors.white,
-  },
-  userName: {
-    fontSize: FontSize.xl,
-    fontWeight: '700',
-    color: Colors.text,
-  },
-  userEmail: {
-    fontSize: FontSize.sm,
-    color: Colors.textMuted,
-    marginTop: 2,
-  },
-
-  // Sections
-  sectionLabel: {
-    fontSize: FontSize.xs,
-    fontWeight: '600',
-    color: Colors.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginTop: Spacing.xl,
-    marginBottom: Spacing.sm,
-    marginLeft: Spacing.xs,
-  },
-
-  // Menu
-  menuCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.lg,
-    ...Shadows.sm,
-    overflow: 'hidden',
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: Spacing.lg,
-    paddingHorizontal: Spacing.lg,
-  },
-  menuLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-  },
-  menuLabel: {
-    fontSize: FontSize.md,
-    color: Colors.text,
-  },
-  menuRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  menuValue: {
-    fontSize: FontSize.sm,
-    color: Colors.textMuted,
-  },
-  menuDivider: {
-    height: 1,
-    backgroundColor: Colors.borderLight,
-    marginLeft: 52,
-  },
-
-  // Version
-  version: {
-    textAlign: 'center',
-    fontSize: FontSize.xs,
-    color: Colors.textMuted,
-    marginTop: Spacing.xxl,
-  },
-  versionSub: {
-    textAlign: 'center',
-    fontSize: 10,
-    color: Colors.textMuted,
-    marginTop: 2,
-  },
-
-  // Modal
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: Colors.surface,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingHorizontal: Spacing.xl,
-    paddingBottom: 40,
-    paddingTop: Spacing.md,
-    maxHeight: '70%',
-  },
-  modalHandle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: Colors.borderLight,
-    alignSelf: 'center',
-    marginBottom: Spacing.lg,
-  },
-  modalTitle: {
-    fontSize: FontSize.lg,
-    fontWeight: '700',
-    color: Colors.text,
-    marginBottom: Spacing.lg,
-  },
-  modalHint: {
-    fontSize: FontSize.sm,
-    color: Colors.textMuted,
-    marginBottom: Spacing.md,
-  },
-  modalInput: {
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    borderRadius: Radius.md,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    fontSize: FontSize.md,
-    color: Colors.text,
-    backgroundColor: Colors.background,
-    marginBottom: Spacing.lg,
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    gap: Spacing.md,
-  },
-  modalBtnCancel: {
-    flex: 1,
-    paddingVertical: Spacing.md,
-    borderRadius: Radius.md,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    alignItems: 'center',
-  },
-  modalBtnCancelText: {
-    fontSize: FontSize.md,
-    color: Colors.textSecondary,
-    fontWeight: '600',
-  },
-  modalBtnSave: {
-    flex: 1,
-    paddingVertical: Spacing.md,
-    borderRadius: Radius.md,
-    backgroundColor: Colors.primary,
-    alignItems: 'center',
-  },
-  modalBtnSaveText: {
-    fontSize: FontSize.md,
-    color: Colors.white,
-    fontWeight: '600',
-  },
-
-  // Option rows
-  optionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: Spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-  },
-  optionLabel: {
-    fontSize: FontSize.md,
-    color: Colors.text,
-  },
-  optionLabelSelected: {
-    color: Colors.primary,
-    fontWeight: '600',
-  },
+  // Sheet
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'flex-end' },
+  sheet: { backgroundColor: C.white, borderTopLeftRadius: 18, borderTopRightRadius: 18, paddingHorizontal: 20, paddingBottom: 36, paddingTop: 10, maxHeight: '70%' },
+  handle: { width: 36, height: 4, borderRadius: 2, backgroundColor: C.gray200, alignSelf: 'center', marginBottom: 14 },
+  sheetTitle: { fontSize: 16, fontFamily: 'Inter-Bold', color: C.gray800, marginBottom: 14 },
+  input: { borderWidth: 1, borderColor: C.gray200, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 11, fontSize: 15, fontFamily: 'Inter-Regular', color: C.gray800, backgroundColor: C.offWhite },
+  sheetBtns: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: 14, marginTop: 18 },
+  cancelText: { fontSize: 14, fontFamily: 'Inter-Medium', color: C.gray400 },
+  saveBtn: { backgroundColor: C.navy, borderRadius: 8, paddingHorizontal: 20, paddingVertical: 10 },
+  saveText: { fontSize: 14, fontFamily: 'Inter-Bold', color: C.white },
+  pick: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 13, borderBottomWidth: 1, borderBottomColor: C.gray100 },
+  pickText: { fontSize: 14, fontFamily: 'Inter-Regular', color: C.gray800 },
+  pickTextActive: { fontFamily: 'Inter-Bold', color: C.navy },
 });

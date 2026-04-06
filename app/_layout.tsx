@@ -4,6 +4,7 @@ import { useFonts } from 'expo-font';
 import { ActivityIndicator, View } from 'react-native';
 import { LanguageProvider } from '../src/i18n/LanguageContext';
 import { AuthProvider } from '../src/contexts/AuthContext';
+import { Colors } from '../src/constants/theme';
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -20,64 +21,38 @@ export default function RootLayout() {
 
   if (!fontsLoaded) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#0a0f1c', alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator size="large" color="#62B6CB" />
+      <View style={{ flex: 1, backgroundColor: Colors.background, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator size="large" color={Colors.primary} />
       </View>
     );
   }
 
   return (
     <AuthProvider>
-    <LanguageProvider>
-      <StatusBar style="light" />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: '#0a0f1c' },
-        }}
-        initialRouteName="auth/login"
-      >
-        <Stack.Screen name="auth/login" />
-        <Stack.Screen
-          name="auth/register"
-          options={{ presentation: 'fullScreenModal' }}
-        />
-        <Stack.Screen name="onboarding/index" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen
-          name="bill/scan"
-          options={{ presentation: 'modal', headerShown: true, title: 'Scan Bill' }}
-        />
-        <Stack.Screen
-          name="bill/manual"
-          options={{ presentation: 'modal', headerShown: true, title: 'Enter Bill' }}
-        />
-        <Stack.Screen
-          name="bill/[id]"
-          options={{ headerShown: true, title: 'Bill Details' }}
-        />
-        <Stack.Screen
-          name="bill/index"
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="chat/index"
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="outage/index"
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="complaints/index"
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="energy-friend/index"
-          options={{ headerShown: false }}
-        />
-      </Stack>
-    </LanguageProvider>
+      <LanguageProvider>
+        <StatusBar style="dark" />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: Colors.background },
+          }}
+          initialRouteName="auth/login"
+        >
+          <Stack.Screen name="auth/login" />
+          <Stack.Screen name="auth/register" options={{ presentation: 'fullScreenModal' }} />
+          <Stack.Screen name="onboarding/index" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="bill/scan" options={{ presentation: 'modal', headerShown: true, title: 'Scan Bill' }} />
+          <Stack.Screen name="bill/manual" options={{ presentation: 'modal', headerShown: true, title: 'Enter Bill' }} />
+          <Stack.Screen name="bill/[id]" options={{ headerShown: true, title: 'Bill Details' }} />
+          <Stack.Screen name="bill/index" options={{ headerShown: false }} />
+          <Stack.Screen name="chat/index" options={{ headerShown: false }} />
+          <Stack.Screen name="outage/index" options={{ headerShown: false }} />
+          <Stack.Screen name="complaints/index" options={{ headerShown: false }} />
+          <Stack.Screen name="energy-friend/index" options={{ headerShown: false }} />
+          <Stack.Screen name="notifications/index" options={{ headerShown: false }} />
+        </Stack>
+      </LanguageProvider>
     </AuthProvider>
   );
 }

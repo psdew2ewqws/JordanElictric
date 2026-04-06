@@ -1,53 +1,44 @@
-import * as SecureStore from 'expo-secure-store';
-import { Platform } from 'react-native';
+/**
+ * API layer — thin wrapper over Supabase.
+ *
+ * Keeps the same function signatures as the old NestJS API so screens
+ * need zero import changes. Under the hood, everything goes through
+ * Supabase Auth, DB, and Edge Functions.
+ */
 
-const API_BASE = __DEV__
-  ? Platform.OS === 'web'
-    ? 'http://localhost:3001'
-    : 'http://10.205.84.39:3001' // Local network IP
-  : 'https://your-production-api.com';
+import { supabase, callEdgeFunction } from './supabase';
 
-const TOKEN_KEY = 'access_token';
-const REFRESH_KEY = 'refresh_token';
+// ─── Cached auth helper (avoids network call on every API request) ──
+let _cachedUserId: string | null = null;
+let _cachedUserIdExpiry = 0;
 
-async function getStoredToken(): Promise<string | null> {
-  if (Platform.OS === 'web') {
-    return localStorage.getItem(TOKEN_KEY);
+async function getCachedUserId(): Promise<string> {
+  const now = Date.now();
+  if (_cachedUserId && now < _cachedUserIdExpiry) return _cachedUserId;
+
+  // Try session first (local, no network call)
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session?.user?.id) {
+    _cachedUserId = session.user.id;
+    _cachedUserIdExpiry = now + 5 * 60 * 1000; // cache 5 min
+    return _cachedUserId;
   }
-  return SecureStore.getItemAsync(TOKEN_KEY);
+
+  throw new ApiError('Not authenticated', 401);
 }
 
-async function storeTokens(access: string, refresh: string): Promise<void> {
-  if (Platform.OS === 'web') {
-    localStorage.setItem(TOKEN_KEY, access);
-    localStorage.setItem(REFRESH_KEY, refresh);
-  } else {
-    await SecureStore.setItemAsync(TOKEN_KEY, access);
-    await SecureStore.setItemAsync(REFRESH_KEY, refresh);
+// Clear cache on sign out
+supabase.auth.onAuthStateChange((event) => {
+  if (event === 'SIGNED_OUT') {
+    _cachedUserId = null;
+    _cachedUserIdExpiry = 0;
   }
-}
+});
 
-async function getRefreshToken(): Promise<string | null> {
-  if (Platform.OS === 'web') {
-    return localStorage.getItem(REFRESH_KEY);
-  }
-  return SecureStore.getItemAsync(REFRESH_KEY);
-}
-
-async function clearTokens(): Promise<void> {
-  if (Platform.OS === 'web') {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(REFRESH_KEY);
-  } else {
-    await SecureStore.deleteItemAsync(TOKEN_KEY);
-    await SecureStore.deleteItemAsync(REFRESH_KEY);
-  }
-}
-
-class ApiError extends Error {
+// ─── Error class (kept for backward compat) ──────────────
+export class ApiError extends Error {
   status: number;
   errors?: string[];
-
   constructor(message: string, status: number, errors?: string[]) {
     super(message);
     this.name = 'ApiError';
@@ -56,174 +47,124 @@ class ApiError extends Error {
   }
 }
 
-async function request<T>(
-  path: string,
-  options: RequestInit = {},
-): Promise<T> {
-  // Don't send auth token on public endpoints (login, register, refresh)
-  const isPublic = path.includes('/auth/login') || path.includes('/auth/register') || path.includes('/auth/refresh') || path.includes('/auth/google');
-  const token = isPublic ? null : await getStoredToken();
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    'ngrok-skip-browser-warning': 'true',
-    ...(options.headers as Record<string, string>),
-  };
-
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  // Don't set Content-Type for FormData (file uploads)
-  if (options.body instanceof FormData) {
-    delete headers['Content-Type'];
-  }
-
-  // Debug: log what we're sending
-  if (__DEV__ && !isPublic) {
-    console.log(`[API] ${options.method || 'GET'} ${path} | token: ${token ? token.substring(0, 20) + '...' : 'NONE'}`);
-  }
-
-  const response = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers,
-  });
-
-  if (response.status === 401 && !isPublic) {
-    // Try refresh (only for protected endpoints, not login/register)
-    const refreshed = await tryRefreshToken();
-    if (refreshed) {
-      const newToken = await getStoredToken();
-      headers['Authorization'] = `Bearer ${newToken}`;
-      const retryResponse = await fetch(`${API_BASE}${path}`, {
-        ...options,
-        headers,
-      });
-      if (!retryResponse.ok) {
-        const err = await retryResponse.json().catch(() => ({}));
-        throw new ApiError(err.message || 'Request failed', retryResponse.status, err.errors);
-      }
-      return retryResponse.json();
-    }
-    // Refresh failed — throw but DON'T clear tokens yet (let AuthContext handle logout)
-    throw new ApiError('Session expired', 401);
-  }
-
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new ApiError(err.message || 'Request failed', response.status, err.errors);
-  }
-
-  // Handle empty responses (204, etc.)
-  const text = await response.text();
-  return text ? JSON.parse(text) : ({} as T);
-}
-
-async function tryRefreshToken(): Promise<boolean> {
-  const refreshToken = await getRefreshToken();
-  if (!refreshToken) return false;
-
-  try {
-    const response = await fetch(`${API_BASE}/api/auth/refresh`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refreshToken }),
-    });
-
-    if (!response.ok) return false;
-
-    const data = await response.json();
-    await storeTokens(data.accessToken, data.refreshToken);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-// ─── Auth API ─────────────────────────────────────────────
-
+// ─── Auth API (now delegates to Supabase Auth) ───────────
+// Note: login/register/logout are handled by AuthContext directly.
+// These are kept as no-ops for any legacy imports.
 export const authApi = {
-  register: (data: { name: string; email: string; password: string }) =>
-    request<{
-      accessToken: string;
-      refreshToken: string;
-      user: { id: string; email: string; name: string; language: string; isVerified: boolean };
-    }>('/api/auth/register', { method: 'POST', body: JSON.stringify(data) }),
-
-  login: (data: { email: string; password: string }) =>
-    request<{
-      accessToken: string;
-      refreshToken: string;
-      user: { id: string; email: string; name: string; language: string; isVerified: boolean };
-    }>('/api/auth/login', { method: 'POST', body: JSON.stringify(data) }),
-
-  google: (idToken: string) =>
-    request<{
-      accessToken: string;
-      refreshToken: string;
-      user: { id: string; email: string; name: string; language: string; isVerified: boolean };
-    }>('/api/auth/google', { method: 'POST', body: JSON.stringify({ idToken }) }),
-
+  login: async (_data: { email: string; password: string }) => {
+    throw new Error('Use useAuth().login() instead');
+  },
+  register: async (_data: { name: string; email: string; password: string }) => {
+    throw new Error('Use useAuth().register() instead');
+  },
+  google: async (_idToken: string) => {
+    throw new Error('Google auth not yet implemented');
+  },
   logout: async () => {
-    const refreshToken = await getRefreshToken();
-    if (refreshToken) {
-      await request('/api/auth/logout', {
-        method: 'POST',
-        body: JSON.stringify({ refreshToken }),
-      }).catch(() => {});
-    }
-    await clearTokens();
+    await supabase.auth.signOut();
   },
 };
 
-// ─── User API ─────────────────────────────────────────────
-
+// ─── User API ────────────────────────────────────────────
 export const userApi = {
-  getMe: () =>
-    request<{
-      id: string;
-      email: string;
-      name: string;
-      phone: string;
-      avatarUrl: string | null;
-      language: string;
-      isVerified: boolean;
-      createdAt: string;
-    }>('/api/users/me'),
-
-  updateMe: (data: { name?: string; phone?: string; language?: 'AR' | 'EN' }) =>
-    request('/api/users/me', { method: 'PATCH', body: JSON.stringify(data) }),
+  getMe: async () => {
+    const userId = await getCachedUserId();
+    const user = { id: userId };
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+    if (error) throw new ApiError(error.message, 500);
+    return {
+      id: profile.id,
+      email: profile.email,
+      name: profile.name,
+      phone: profile.phone || '',
+      avatarUrl: profile.avatar_url,
+      language: profile.language,
+      isVerified: profile.is_verified,
+      createdAt: profile.created_at,
+    };
+  },
+  updateMe: async (data: { name?: string; phone?: string; language?: 'AR' | 'EN' }) => {
+    const userId = await getCachedUserId();
+    const user = { id: userId };
+    const { error } = await supabase
+      .from('profiles')
+      .update(data)
+      .eq('id', user.id);
+    if (error) throw new ApiError(error.message, 500);
+  },
 };
 
-// ─── Subscription API ─────────────────────────────────────
-
+// ─── Subscription API ────────────────────────────────────
 export const subscriptionApi = {
-  create: (data: {
+  create: async (data: {
     subscriberNumber: string;
     distributionCompany: 'JEPCO' | 'IDECO' | 'EDCO';
     householdSize: number;
-  }) =>
-    request('/api/subscriptions', { method: 'POST', body: JSON.stringify(data) }),
-
-  getMine: () => request<{
-    id: string;
+  }) => {
+    const userId = await getCachedUserId();
+    const user = { id: userId };
+    const { data: sub, error } = await supabase
+      .from('subscriptions')
+      .insert({
+        user_id: user.id,
+        file_number: data.subscriberNumber,
+        distribution_company: data.distributionCompany,
+        household_size: data.householdSize,
+      })
+      .select()
+      .single();
+    if (error) throw new ApiError(error.message, 500);
+    return {
+      id: sub.id,
+      subscriberNumber: sub.file_number,
+      distributionCompany: sub.distribution_company,
+      householdSize: sub.household_size,
+      isActive: sub.is_active,
+    };
+  },
+  getMine: async () => {
+    const userId = await getCachedUserId();
+    const user = { id: userId };
+    const { data: sub, error } = await supabase
+      .from('subscriptions')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+    if (error || !sub) throw new ApiError('No subscription found', 404);
+    return {
+      id: sub.id,
+      subscriberNumber: sub.file_number,
+      distributionCompany: sub.distribution_company,
+      householdSize: sub.household_size,
+      isActive: sub.is_active,
+    };
+  },
+  updateMine: async (data: Partial<{
     subscriberNumber: string;
     distributionCompany: string;
     householdSize: number;
-    isActive: boolean;
-  }>('/api/subscriptions/me'),
-
-  updateMine: (data: Partial<{
-    subscriberNumber: string;
-    distributionCompany: string;
-    householdSize: number;
-  }>) =>
-    request('/api/subscriptions/me', { method: 'PATCH', body: JSON.stringify(data) }),
+  }>) => {
+    const userId = await getCachedUserId();
+    const user = { id: userId };
+    const updates: Record<string, unknown> = {};
+    if (data.subscriberNumber !== undefined) updates.file_number = data.subscriberNumber;
+    if (data.distributionCompany !== undefined) updates.distribution_company = data.distributionCompany;
+    if (data.householdSize !== undefined) updates.household_size = data.householdSize;
+    const { error } = await supabase
+      .from('subscriptions')
+      .update(updates)
+      .eq('user_id', user.id);
+    if (error) throw new ApiError(error.message, 500);
+  },
 };
 
-// ─── Bill API ─────────────────────────────────────────────
-
+// ─── Bill API ────────────────────────────────────────────
 export const billApi = {
-  createManual: (data: {
+  createManual: async (data: {
     totalKwh: number;
     totalAmountFils: number;
     billingPeriodStart?: string;
@@ -231,119 +172,275 @@ export const billApi = {
     previousReading?: number;
     currentReading?: number;
     fuelClauseFils?: number;
-  }) =>
-    request('/api/bills/manual', { method: 'POST', body: JSON.stringify(data) }),
+  }) => {
+    const userId = await getCachedUserId();
+    const user = { id: userId };
+    const { data: sub } = await supabase
+      .from('subscriptions')
+      .select('id')
+      .eq('user_id', user.id)
+      .single();
+    if (!sub) throw new ApiError('No subscription', 404);
 
-  list: (limit = 12, offset = 0) =>
-    request<{ bills: any[]; total: number }>(`/api/bills?limit=${limit}&offset=${offset}`),
+    const { data: bill, error } = await supabase
+      .from('bills_cache')
+      .insert({
+        subscription_id: sub.id,
+        source: 'manual',
+        total_kwh: data.totalKwh,
+        total_amount_fils: data.totalAmountFils,
+        billing_period_start: data.billingPeriodStart,
+        billing_period_end: data.billingPeriodEnd,
+        previous_reading: data.previousReading,
+        current_reading: data.currentReading,
+        fuel_clause_fils: data.fuelClauseFils || 0,
+      })
+      .select('id')
+      .single();
+    if (error) throw new ApiError(error.message, 500);
+    return { id: bill.id };
+  },
 
-  getById: (id: string) => request<any>(`/api/bills/${id}`),
+  list: async (limit = 12, offset = 0) => {
+    const userId = await getCachedUserId();
+    const user = { id: userId };
+
+    let sub: { id: string } | null = null;
+    try {
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+      if (!error) sub = data;
+    } catch {
+      // No subscription found — return empty
+    }
+    if (!sub) return { bills: [], total: 0 };
+
+    const { data: bills, error, count } = await supabase
+      .from('bills_cache')
+      .select('*', { count: 'exact' })
+      .eq('subscription_id', sub.id)
+      .order('billing_period_end', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (error) throw new ApiError(error.message, 500);
+    return {
+      bills: (bills || []).map(mapBill),
+      total: count || 0,
+    };
+  },
+
+  getById: async (id: string) => {
+    const { data: bill, error } = await supabase
+      .from('bills_cache')
+      .select('*, bill_line_items(*)')
+      .eq('id', id)
+      .single();
+    if (error) throw new ApiError(error.message, 404);
+    return mapBillDetail(bill);
+  },
 
   scanBill: async (imageUri: string) => {
-    const formData = new FormData();
-    const filename = imageUri.split('/').pop() || 'bill.jpg';
-    formData.append('image', {
-      uri: imageUri,
-      name: filename,
-      type: 'image/jpeg',
-    } as any);
-
-    return request<{ scanResult: any; bill: any }>('/api/ai/scan-bill', {
-      method: 'POST',
-      body: formData,
-    });
+    // Will be implemented when bill-ocr edge function is ready
+    throw new ApiError('Bill scanning not yet available', 501);
   },
 };
 
-// ─── Tariff API ───────────────────────────────────────────
+function mapBill(b: any) {
+  return {
+    id: b.id,
+    billingPeriodStart: b.billing_period_start,
+    billingPeriodEnd: b.billing_period_end,
+    totalAmount: Number(b.total_amount_fils),
+    totalKwh: Number(b.total_kwh),
+    source: b.source?.toUpperCase(),
+    createdAt: b.created_at,
+  };
+}
 
-export const tariffApi = {
-  getTiers: (sector?: string) =>
-    request<any[]>(`/api/tariffs/tiers${sector ? `?sector=${sector}` : ''}`),
+function mapBillDetail(b: any) {
+  return {
+    id: b.id,
+    billingPeriodStart: b.billing_period_start,
+    billingPeriodEnd: b.billing_period_end,
+    totalAmountFils: Number(b.total_amount_fils),
+    totalKwh: Number(b.total_kwh),
+    source: b.source?.toUpperCase(),
+    previousReading: b.previous_reading,
+    currentReading: b.current_reading,
+    lineItems: (b.bill_line_items || []).map((li: any) => ({
+      id: li.id,
+      category: li.category,
+      label: li.label,
+      labelAr: li.label_ar,
+      amountFils: Number(li.amount_fils),
+      kwh: li.kwh ? Number(li.kwh) : undefined,
+      ratePerKwh: li.rate_per_kwh ? Number(li.rate_per_kwh) : undefined,
+    })),
+    createdAt: b.created_at,
+  };
+}
 
-  calculate: (kwh: number, sector?: string) =>
-    request<any>(`/api/tariffs/calculate?kwh=${kwh}${sector ? `&sector=${sector}` : ''}`),
-};
-
-// ─── Analytics API ────────────────────────────────────────
-
-export const analyticsApi = {
-  getCurrentUsage: () => request<{
-    currentKwh: number;
-    currentAmountJd: number;
-    tierProgress: { tier: number; percentage: number; label: string };
-    billingPeriod: { start: string; end: string; dueDate: string } | null;
-  }>('/api/analytics/current-usage'),
-
-  getUsageTrends: (period: 'monthly' | 'quarterly' | 'yearly' = 'monthly') =>
-    request<{ trend: { date: string; kwh: number; costJd: number }[]; average: number }>(
-      `/api/analytics/usage?period=${period}`,
-    ),
-
-  getTierBreakdown: () => request<{
-    totalKwh: number;
-    tiers: { category: string; label: string; kwh: number; ratePerKwh: number; amountFils: number; costJd: number; color: string }[];
-    totalEnergyChargeFils: number;
-  }>('/api/analytics/tier-breakdown'),
-
-  getComparison: () => request<{
-    consumption: { current: number; previous: number; diff: number; percentChange: number };
-    cost: { currentJd: number; previousJd: number; diffJd: number; percentChange: number };
-    avgCost: { currentFils: number; previousFils: number };
-  } | null>('/api/analytics/comparison'),
-
-  getInsights: () => request<{
-    costPerKwh: number;
-    projectedNextBillJd: number;
-    comparisonToAverage: number;
-    peakOffPeakSplit: { peak: number; offPeak: number };
-    applianceEstimates: { name: string; nameAr: string; icon: string; estimatedKwh: number; percentage: number }[];
-    environmentalImpact: { co2Kg: number; treesNeeded: number; waterLiters: number; co2ChangeFromLastMonth: number };
-  }>('/api/analytics/insights'),
-};
-
-// ─── Notification API ─────────────────────────────────────
-
+// ─── Notification API ────────────────────────────────────
 export const notificationApi = {
-  list: (limit = 20) => request<any[]>(`/api/notifications?limit=${limit}`),
-  getUnreadCount: () => request<{ count: number }>('/api/notifications/unread-count'),
-  markRead: (id: string) => request(`/api/notifications/${id}/read`, { method: 'PATCH' }),
-  markAllRead: () => request('/api/notifications/read-all', { method: 'PATCH' }),
+  list: async (limit = 20) => {
+    let userId: string;
+    try { userId = await getCachedUserId(); } catch { return []; }
+    const { data } = await supabase
+      .from('notifications')
+      .select('*')
+      .or(`user_id.eq.${userId},user_id.is.null`)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    return data || [];
+  },
+
+  getUnreadCount: async () => {
+    let userId: string;
+    try { userId = await getCachedUserId(); } catch { return { count: 0 }; }
+    const { count } = await supabase
+      .from('notifications')
+      .select('*', { count: 'exact', head: true })
+      .or(`user_id.eq.${userId},user_id.is.null`)
+      .eq('is_read', false);
+    return { count: count || 0 };
+  },
+
+  markRead: async (id: string) => {
+    await supabase.from('notifications').update({ is_read: true }).eq('id', id);
+  },
+
+  markAllRead: async () => {
+    let userId: string;
+    try { userId = await getCachedUserId(); } catch { return; }
+    await supabase
+      .from('notifications')
+      .update({ is_read: true })
+      .eq('user_id', userId)
+      .eq('is_read', false);
+  },
 };
 
-// ─── Complaint API ────────────────────────────────────────
-
+// ─── Complaint API ───────────────────────────────────────
 export const complaintApi = {
-  create: (data: {
+  create: async (data: {
     complaintType: 'OUTAGE' | 'BILLING' | 'METER' | 'VOLTAGE' | 'OTHER';
     description: string;
     descriptionAr?: string;
-  }) =>
-    request<any>('/api/complaints', { method: 'POST', body: JSON.stringify(data) }),
+  }) => {
+    const userId = await getCachedUserId();
+    const user = { id: userId };
+    const { data: sub } = await supabase
+      .from('subscriptions')
+      .select('id')
+      .eq('user_id', user.id)
+      .single();
 
-  list: () => request<any[]>('/api/complaints'),
+    const { data: complaint, error } = await supabase
+      .from('complaints')
+      .insert({
+        user_id: user.id,
+        subscription_id: sub?.id || null,
+        complaint_type: data.complaintType,
+        description: data.description,
+        description_ar: data.descriptionAr,
+      })
+      .select()
+      .single();
+    if (error) throw new ApiError(error.message, 500);
+    return complaint;
+  },
+
+  list: async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
+    const { data } = await supabase
+      .from('complaints')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+    return (data || []).map((c) => ({
+      id: c.id,
+      referenceNumber: c.reference_number,
+      complaintType: c.complaint_type,
+      status: c.status,
+      description: c.description,
+      createdAt: c.created_at,
+    }));
+  },
 };
 
-// ─── JEPCO Real Data API ─────────────────────────────────
-
+// ─── JEPCO API (via Edge Functions) ──────────────────────
 export const jepcoApi = {
-  getSmartMeter: () => request<{ fileNumber: string; data: any }>('/api/jepco/smart-meter'),
-  getBills: () => request<{ fileNumber: string; data: any }>('/api/jepco/bills'),
-  getSubscriberInfo: () => request<{ fileNumber: string; data: any }>('/api/jepco/subscriber-info'),
-  getComparison: () => request<{ fileNumber: string; data: any }>('/api/jepco/comparison'),
-  getBillHeader: () => request<{ fileNumber: string; data: any }>('/api/jepco/bill-header'),
-  getAccountStatement: () => request<{ fileNumber: string; data: any }>('/api/jepco/account-statement'),
-  getAccountSummary: () => request<{
-    fileNumber: string;
-    smartMeter: any;
-    sapInfo: any;
-    bills: any;
-    accountStatement: any;
-    comparison: any;
-    billHeader: any;
-  }>('/api/jepco/account-summary'),
+  getSmartMeter: () =>
+    callEdgeFunction<{ fileNumber: string; data: any }>('jepco-proxy', { action: 'smart_meter' }),
+  getBills: () =>
+    callEdgeFunction<{ fileNumber: string; data: any }>('jepco-proxy', { action: 'bills' }),
+  getSubscriberInfo: () =>
+    callEdgeFunction<{ fileNumber: string; data: any }>('jepco-proxy', { action: 'sap_info' }),
+  getComparison: () =>
+    callEdgeFunction<{ fileNumber: string; data: any }>('jepco-proxy', { action: 'comparison' }),
+  getBillHeader: () =>
+    callEdgeFunction<{ fileNumber: string; data: any }>('jepco-proxy', { action: 'bill_header' }),
+  getAccountStatement: () =>
+    callEdgeFunction<{ fileNumber: string; data: any }>('jepco-proxy', { action: 'statement' }),
+  getAccountSummary: async () => {
+    // Fetch smart_meter which contains comparison data inline
+    const sm = await callEdgeFunction<{ fileNumber: string; data: any }>('jepco-proxy', { action: 'smart_meter' });
+    return {
+      fileNumber: sm.fileNumber,
+      smartMeter: sm.data,
+      sapInfo: null,
+      bills: null,
+      accountStatement: null,
+      comparison: sm.data?.comparazinConsumption || null,
+      billHeader: null,
+    };
+  },
 };
 
-// ─── Exports ──────────────────────────────────────────────
+// ─── Analytics API (via Edge Functions) ──────────────────
+export const analyticsApi = {
+  getCurrentUsage: () =>
+    callEdgeFunction<any>('analytics-engine', { action: 'current_usage' }),
+  getUsageTrends: (period: string = 'monthly') =>
+    callEdgeFunction<any>('analytics-engine', { action: 'trends' }),
+  getTierBreakdown: () =>
+    callEdgeFunction<any>('analytics-engine', { action: 'tier_breakdown' }),
+  getComparison: () =>
+    callEdgeFunction<any>('analytics-engine', { action: 'comparison' }),
+  getInsights: () =>
+    callEdgeFunction<any>('analytics-engine', { action: 'footprint' }),
+  refresh: () =>
+    callEdgeFunction<any>('analytics-engine', { action: 'refresh' }),
+};
 
-export { storeTokens, clearTokens, getStoredToken, ApiError, API_BASE };
+// ─── Tariff API (pure client-side computation) ───────────
+export const tariffApi = {
+  getTiers: async (_sector?: string) => {
+    return [
+      { tier: 1, minKwh: 0, maxKwh: 300, ratePerKwh: 50, label: 'Tier 1', labelAr: 'الشريحة الأولى', type: 'subsidized' },
+      { tier: 2, minKwh: 301, maxKwh: 600, ratePerKwh: 100, label: 'Tier 2', labelAr: 'الشريحة الثانية', type: 'subsidized' },
+      { tier: 3, minKwh: 601, maxKwh: 999999, ratePerKwh: 200, label: 'Tier 3', labelAr: 'الشريحة الثالثة', type: 'non_subsidized' },
+    ];
+  },
+  calculate: async (kwh: number, _sector?: string) => {
+    const t1 = Math.min(kwh, 300);
+    const t2 = Math.min(Math.max(kwh - 300, 0), 300);
+    const t3 = Math.max(kwh - 600, 0);
+    return {
+      tier1: { kwh: t1, cost: t1 * 50 },
+      tier2: { kwh: t2, cost: t2 * 100 },
+      tier3: { kwh: t3, cost: t3 * 200 },
+      totalFils: t1 * 50 + t2 * 100 + t3 * 200,
+    };
+  },
+};
+
+// ─── Legacy exports (for any remaining imports) ──────────
+export const storeTokens = async () => {};
+export const clearTokens = async () => {};
+export const getStoredToken = async () => null;
+export const API_BASE = '';

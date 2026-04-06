@@ -47,8 +47,8 @@ export default function UsageScreen() {
       const res = await jepcoApi.getSmartMeter();
       setSmartMeter(res.data);
       // Stagger animations after data loads
-      const actual = parseInt(res.data?.currentElectricityConsumptionQuntity || '0');
-      const tierPct = Math.min(100, (actual / 600) * 100);
+      const projected = parseInt(res.data?.expectedElectricityConsumptionQuntity || res.data?.currentElectricityConsumptionQuntity || '0');
+      const tierPct = Math.min(100, (projected / 600) * 100);
       Animated.stagger(200, [
         // 1. Line chart draws in
         Animated.timing(chartAnim, { toValue: 1, duration: 1000, useNativeDriver: false }),
@@ -71,8 +71,10 @@ export default function UsageScreen() {
 
   // Extract real data from JEPCO SmartMeter response
   const sm = smartMeter || {};
-  const currentKwh = parseInt(sm.currentElectricityConsumptionQuntity || '0');
+  const actualKwh = parseInt(sm.currentElectricityConsumptionQuntity || '0');
   const expectedKwh = parseInt(sm.expectedElectricityConsumptionQuntity || '0');
+  // Use projected kWh as the main figure (matches Home screen)
+  const currentKwh = expectedKwh || actualKwh;
   const currentBillJd = parseFloat(sm.currentElectricityConsumptionValue || '0');
   const expectedBillJd = parseFloat(sm.expectedElectricityEndofMonthBillAmount || '0');
   const lastReading = parseInt(sm.lastBillReading || '0');
@@ -80,7 +82,7 @@ export default function UsageScreen() {
   const lastReadingDate = sm.lastBillReadingDate || '';
   const daysInCycle = parseInt(sm.numberOfConsumptionDaysSinceLastRead || '1');
 
-  // Comparison data — use ACTUAL current usage, not JEPCO projected
+  // Comparison data — use projected kWh for fair comparison
   const comp = sm.comparazinConsumption || {};
   const lastMonth = parseInt(comp.lastMonthconsumption || '0');
   const lastYear = parseInt(comp.lastYearconsumption || '0');
@@ -162,21 +164,21 @@ export default function UsageScreen() {
             {/* Summary cards — animated counters */}
             <View style={styles.sumRow}>
               <View style={styles.sumCard}>
-                <Text style={[styles.sumLabel, { fontFamily: fonts.medium }]}>This Month</Text>
+                <Text style={[styles.sumLabel, { fontFamily: fonts.medium }]}>{isAr ? 'المتوقع' : 'Projected'}</Text>
                 <AnimatedCounter value={currentKwh} style={[styles.sumVal, { fontFamily: fonts.bold }]} duration={1000} />
                 <Text style={[styles.sumUnit, { fontFamily: fonts.medium }]}>kWh</Text>
                 {daysInCycle > 0 && (
                   <Text style={[styles.sumChange, { fontFamily: fonts.semibold, color: '#6EE7B7' }]}>
-                    {daysInCycle} day{daysInCycle > 1 ? 's' : ''}
+                    {isAr ? `${daysInCycle} يوم` : `${daysInCycle} day${daysInCycle > 1 ? 's' : ''}`}
                   </Text>
                 )}
               </View>
               <View style={styles.sumCard}>
-                <Text style={[styles.sumLabel, { fontFamily: fonts.medium }]}>Cost So Far</Text>
-                <AnimatedCounter value={actualCostJd} decimals={2} style={[styles.sumVal, { fontFamily: fonts.bold }]} duration={1200} />
+                <Text style={[styles.sumLabel, { fontFamily: fonts.medium }]}>{isAr ? 'التكلفة المتوقعة' : 'Projected Cost'}</Text>
+                <AnimatedCounter value={expectedBillJd > 0 ? expectedBillJd : actualCostJd} decimals={2} style={[styles.sumVal, { fontFamily: fonts.bold }]} duration={1200} />
                 <Text style={[styles.sumUnit, { fontFamily: fonts.medium }]}>JD</Text>
                 <Text style={[styles.sumChange, { fontFamily: fonts.semibold, color: '#6EE7B7' }]}>
-                  Tier {currentTier} rate
+                  {isAr ? `الشريحة ${currentTier}` : `Tier ${currentTier}`}
                 </Text>
               </View>
               <View style={styles.sumCard}>

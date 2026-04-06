@@ -1,0 +1,181 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --sidebar-width: 240px;
+  --header-height: 56px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: #060E16;
+  color: #E8ECF0;
+  font-family: 'IBM Plex Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar — industrial thin */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #1E3A50; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #3B9ECF; }
+
+/* Selection */
+::selection { background: rgba(59, 158, 207, 0.3); color: #E8ECF0; }
+
+/* Input reset */
+input, textarea, select {
+  background: #0F2536;
+  border: 1px solid #1E3A50;
+  color: #E8ECF0;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-family: inherit;
+  font-size: 0.875rem;
+  transition: border-color 0.15s;
+}
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: #3B9ECF;
+  box-shadow: 0 0 0 1px rgba(59, 158, 207, 0.2);
+}
+input::placeholder, textarea::placeholder {
+  color: #566A7A;
+}
+
+/* Table styling */
+table { width: 100%; border-collapse: collapse; }
+th {
+  text-align: left;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #566A7A;
+  padding: 10px 16px;
+  border-bottom: 1px solid #1E3A50;
+  font-family: 'IBM Plex Mono', monospace;
+}
+td {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(30, 58, 80, 0.4);
+  font-size: 0.875rem;
+  color: #E8ECF0;
+  vertical-align: middle;
+}
+tr:hover td { background: rgba(15, 37, 54, 0.6); }
+
+/* Status badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-family: 'IBM Plex Mono', monospace;
+}
+.badge::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+.badge-pending { background: rgba(245, 158, 11, 0.12); color: #F59E0B; }
+.badge-pending::before { background: #F59E0B; }
+.badge-review { background: rgba(59, 158, 207, 0.12); color: #3B9ECF; }
+.badge-review::before { background: #3B9ECF; }
+.badge-resolved { background: rgba(34, 197, 94, 0.12); color: #22C55E; }
+.badge-resolved::before { background: #22C55E; }
+.badge-closed { background: rgba(86, 106, 122, 0.12); color: #8899A6; }
+.badge-closed::before { background: #8899A6; }
+.badge-reported { background: rgba(239, 68, 68, 0.12); color: #EF4444; }
+.badge-reported::before { background: #EF4444; }
+.badge-dispatched { background: rgba(168, 85, 247, 0.12); color: #A855F7; }
+.badge-dispatched::before { background: #A855F7; }
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: none;
+  font-family: inherit;
+}
+.btn-primary {
+  background: #3B9ECF;
+  color: #060E16;
+}
+.btn-primary:hover { background: #2D8ABB; }
+.btn-ghost {
+  background: transparent;
+  color: #8899A6;
+  border: 1px solid #1E3A50;
+}
+.btn-ghost:hover { border-color: #3B9ECF; color: #E8ECF0; }
+.btn-danger {
+  background: rgba(239, 68, 68, 0.12);
+  color: #EF4444;
+}
+.btn-danger:hover { background: rgba(239, 68, 68, 0.2); }
+
+/* Card */
+.card {
+  background: #0F2536;
+  border: 1px solid #1E3A50;
+  border-radius: 8px;
+  padding: 20px;
+}
+.card-hover:hover {
+  border-color: rgba(59, 158, 207, 0.3);
+  background: #122B3E;
+}
+
+/* Metric card accent bar */
+.metric-card {
+  position: relative;
+  overflow: hidden;
+}
+.metric-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+}
+.metric-accent-blue::before { background: #3B9ECF; }
+.metric-accent-green::before { background: #22C55E; }
+.metric-accent-amber::before { background: #F59E0B; }
+.metric-accent-red::before { background: #EF4444; }
+.metric-accent-purple::before { background: #A855F7; }
+.metric-accent-cyan::before { background: #06B6D4; }
+
+/* Map container */
+.leaflet-container {
+  background: #0C1F2E !important;
+  border-radius: 8px;
+}
+.leaflet-tile-pane { filter: brightness(0.7) saturate(0.6) hue-rotate(180deg) invert(1); }
+.leaflet-control-zoom { border: none !important; }
+.leaflet-control-zoom a {
+  background: #0F2536 !important;
+  color: #E8ECF0 !important;
+  border: 1px solid #1E3A50 !important;
+}
+
+/* RTL support */
+[dir="rtl"] th { text-align: right; }
+[dir="rtl"] td { text-align: right; }
