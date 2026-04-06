@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,64 +8,59 @@ import {
   FlatList,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useLanguage } from '../../src/i18n/LanguageContext';
+import { useAuth } from '../../src/contexts/AuthContext';
 import { Colors, FontSize, Radius, Spacing, Shadows } from '../../src/constants/theme';
+import { supabase } from '../../src/services/supabase';
 
 interface ChatMessage {
   id: string;
   text: string;
   sender: 'user' | 'bot';
   timestamp: Date;
-}
-
-function generateRefNumber(): string {
-  const num = Math.floor(100000 + Math.random() * 900000);
-  return `REF-${num}`;
+  isStreaming?: boolean;
 }
 
 export default function ChatScreen() {
   const router = useRouter();
   const { t, fonts, language } = useLanguage();
+  const { user } = useAuth();
   const isAr = language === 'ar';
   const sz = (en: number) => (isAr ? Math.max(11, en * 0.85) : en);
 
   const flatListRef = useRef<FlatList>(null);
   const [inputText, setInputText] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'welcome',
-      text: t('chatWelcome'),
+      text: isAr
+        ? 'أهلاً! أنا ضياء، مساعدك الكهربائي. كيف بقدر أساعدك؟'
+        : "Hi! I'm Diaa, your electricity assistant. How can I help?",
       sender: 'bot',
       timestamp: new Date(),
     },
   ]);
 
   const quickActions = [
-    t('reportIssue'),
-    t('billingQuestion'),
-    t('generalInquiry'),
+    { label: isAr ? 'سؤال عن فاتورتي' : 'Billing question', key: 'billing' },
+    { label: isAr ? 'نصائح توفير' : 'Savings tips', key: 'savings' },
+    { label: isAr ? 'بدي أشتكي' : 'File complaint', key: 'complaint' },
+    { label: isAr ? 'شو التعرفة؟' : 'Tariff info', key: 'tariff' },
   ];
 
-  const addBotResponse = useCallback(() => {
-    const ref = generateRefNumber();
-    const botMsg: ChatMessage = {
-      id: `bot-${Date.now()}`,
-      text: `${t('chatThankYou')} ${ref}`,
-      sender: 'bot',
-      timestamp: new Date(),
-    };
-    setMessages((prev) => [...prev, botMsg]);
-  }, [t]);
-
   const sendMessage = useCallback(
-    (text: string) => {
+    async (text: string) => {
       const trimmed = text.trim();
-      if (!trimmed) return;
+      if (!trimmed || isLoading) return;
 
+      // Add user message
       const userMsg: ChatMessage = {
         id: `user-${Date.now()}`,
         text: trimmed,
@@ -74,19 +69,101 @@ export default function ChatScreen() {
       };
       setMessages((prev) => [...prev, userMsg]);
       setInputText('');
+      setIsLoading(true);
 
-      setTimeout(() => {
-        addBotResponse();
-      }, 1000);
-    },
-    [addBotResponse],
-  );
+      // Add streaming placeholder
+      const botMsgId = `bot-${Date.now()}`;
+      setMessages((prev) => [
+        ...prev,
+        { id: botMsgId, text: '', sender: 'bot', timestamp: new Date(), isStreaming: true },
+      ]);
 
-  const handleQuickAction = useCallback(
-    (action: string) => {
-      sendMessage(action);
+      try {
+        // Use direct fetch instead of supabase.functions.invoke to handle SSE streaming
+        const { data: { session: authSession } } = await supabase.auth.getSession();
+        const token = authSession?.access_token;
+        const fnUrl = `${(supabase as any).supabaseUrl}/functions/v1/chat`;
+
+        const response = await fetch(fnUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+            'apikey': (supabase as any).supabaseKey,
+          },
+          body: JSON.stringify({ message: trimmed, session_id: sessionId }),
+        });
+
+        const contentType = response.headers.get('content-type') || '';
+
+        if (contentType.includes('text/event-stream')) {
+          // Stream SSE chunks
+          const reader = response.body?.getReader();
+          const decoder = new TextDecoder();
+          let fullText = '';
+
+          if (reader) {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              const chunk = decoder.decode(value, { stream: true });
+              const lines = chunk.split('\n');
+              for (const line of lines) {
+                if (!line.startsWith('data: ')) continue;
+                try {
+                  const parsed = JSON.parse(line.slice(6));
+                  if (parsed.text) {
+                    fullText += parsed.text;
+                    setMessages((prev) =>
+                      prev.map((m) =>
+                        m.id === botMsgId ? { ...m, text: fullText, isStreaming: true } : m
+                      )
+                    );
+                  }
+                  if (parsed.done && parsed.session_id) {
+                    setSessionId(parsed.session_id);
+                  }
+                } catch {}
+              }
+            }
+          }
+
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === botMsgId
+                ? { ...m, text: fullText || (isAr ? 'عذراً، حدث خطأ.' : 'Sorry, an error occurred.'), isStreaming: false }
+                : m
+            )
+          );
+        } else {
+          // JSON response (complaint flow, templates, errors)
+          const data = await response.json();
+          const text = data.reply || data.error || (isAr ? 'عذراً، حدث خطأ.' : 'Sorry, an error occurred.');
+          if (data.session_id) setSessionId(data.session_id);
+
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === botMsgId ? { ...m, text, isStreaming: false } : m
+            )
+          );
+        }
+      } catch (err: any) {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === botMsgId
+              ? {
+                  ...m,
+                  text: isAr ? 'عذراً، حدث خطأ. حاول مرة ثانية.' : 'Sorry, an error occurred. Please try again.',
+                  isStreaming: false,
+                }
+              : m
+          )
+        );
+      } finally {
+        setIsLoading(false);
+      }
     },
-    [sendMessage],
+    [isLoading, sessionId, isAr]
   );
 
   const renderMessage = useCallback(
@@ -105,15 +182,19 @@ export default function ChatScreen() {
               isUser ? styles.userBubble : styles.botBubble,
             ]}
           >
-            <Text
-              style={[
-                styles.messageText,
-                isUser ? styles.userText : styles.botText,
-                { fontFamily: fonts.regular, fontSize: sz(14) },
-              ]}
-            >
-              {item.text}
-            </Text>
+            {item.isStreaming && !item.text ? (
+              <ActivityIndicator size="small" color={Colors.primary} />
+            ) : (
+              <Text
+                style={[
+                  styles.messageText,
+                  isUser ? styles.userText : styles.botText,
+                  { fontFamily: fonts.regular, fontSize: sz(14) },
+                ]}
+              >
+                {item.text}
+              </Text>
+            )}
           </View>
           <Text
             style={[
@@ -130,7 +211,7 @@ export default function ChatScreen() {
         </View>
       );
     },
-    [fonts, sz],
+    [fonts, sz]
   );
 
   const showQuickActions = messages.length <= 1;
@@ -140,25 +221,16 @@ export default function ChatScreen() {
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backBtn}
-            onPress={() => router.back()}
-          >
+          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={22} color={Colors.text} />
           </TouchableOpacity>
           <View style={styles.headerCenter}>
             <View style={styles.onlineDot} />
-            <Text
-              style={[
-                styles.headerTitle,
-                { fontFamily: fonts.bold, fontSize: sz(18) },
-              ]}
-            >
-              {t('chatTitle')}
+            <Text style={[styles.headerTitle, { fontFamily: fonts.bold, fontSize: sz(18) }]}>
+              {isAr ? 'ضياء' : 'Diaa'}
             </Text>
           </View>
           <View style={styles.headerSpacer} />
@@ -171,34 +243,22 @@ export default function ChatScreen() {
           keyExtractor={(item) => item.id}
           renderItem={renderMessage}
           contentContainerStyle={styles.messageList}
-          onContentSizeChange={() =>
-            flatListRef.current?.scrollToEnd({ animated: true })
-          }
+          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
           ListFooterComponent={
             showQuickActions ? (
               <View style={styles.quickActionsWrap}>
-                <Text
-                  style={[
-                    styles.quickActionsLabel,
-                    { fontFamily: fonts.medium, fontSize: sz(12) },
-                  ]}
-                >
-                  {isAr ? 'اختر موضوعًا:' : 'Choose a topic:'}
+                <Text style={[styles.quickActionsLabel, { fontFamily: fonts.medium, fontSize: sz(12) }]}>
+                  {isAr ? 'اختر موضوع:' : 'Choose a topic:'}
                 </Text>
                 <View style={styles.quickActionsRow}>
                   {quickActions.map((action) => (
                     <TouchableOpacity
-                      key={action}
+                      key={action.key}
                       style={styles.quickActionChip}
-                      onPress={() => handleQuickAction(action)}
+                      onPress={() => sendMessage(action.label)}
                     >
-                      <Text
-                        style={[
-                          styles.quickActionText,
-                          { fontFamily: fonts.medium, fontSize: sz(13) },
-                        ]}
-                      >
-                        {action}
+                      <Text style={[styles.quickActionText, { fontFamily: fonts.medium, fontSize: sz(13) }]}>
+                        {action.label}
                       </Text>
                     </TouchableOpacity>
                   ))}
@@ -211,31 +271,31 @@ export default function ChatScreen() {
         {/* Input */}
         <View style={styles.inputBar}>
           <TextInput
-            style={[
-              styles.textInput,
-              { fontFamily: fonts.regular, fontSize: sz(14) },
-            ]}
-            placeholder={t('typeMessage')}
+            style={[styles.textInput, { fontFamily: fonts.regular, fontSize: sz(14) }]}
+            placeholder={isAr ? 'اكتب رسالتك...' : 'Type a message...'}
             placeholderTextColor={Colors.textMuted}
             value={inputText}
             onChangeText={setInputText}
             multiline
             maxLength={500}
             textAlign={isAr ? 'right' : 'left'}
+            editable={!isLoading}
+            onSubmitEditing={() => sendMessage(inputText)}
           />
           <TouchableOpacity
-            style={[
-              styles.sendBtn,
-              !inputText.trim() && styles.sendBtnDisabled,
-            ]}
+            style={[styles.sendBtn, (!inputText.trim() || isLoading) && styles.sendBtnDisabled]}
             onPress={() => sendMessage(inputText)}
-            disabled={!inputText.trim()}
+            disabled={!inputText.trim() || isLoading}
           >
-            <Ionicons
-              name="send"
-              size={20}
-              color={inputText.trim() ? Colors.white : Colors.textMuted}
-            />
+            {isLoading ? (
+              <ActivityIndicator size="small" color={Colors.white} />
+            ) : (
+              <Ionicons
+                name="send"
+                size={20}
+                color={inputText.trim() ? Colors.white : Colors.textMuted}
+              />
+            )}
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -247,7 +307,6 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
   flex: { flex: 1 },
 
-  // Header
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -282,7 +341,6 @@ const styles = StyleSheet.create({
   },
   headerSpacer: { width: 36 },
 
-  // Messages
   messageList: {
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.lg,
@@ -334,7 +392,6 @@ const styles = StyleSheet.create({
     textAlign: 'left',
   },
 
-  // Quick actions
   quickActionsWrap: {
     marginTop: Spacing.lg,
     padding: Spacing.lg,
@@ -364,7 +421,6 @@ const styles = StyleSheet.create({
     color: Colors.primary,
   },
 
-  // Input
   inputBar: {
     flexDirection: 'row',
     alignItems: 'flex-end',

@@ -17,7 +17,7 @@ import { billApi } from '../../src/services/api';
 
 interface Bill {
   id: string;
-  totalAmountFils: number;
+  totalAmount: number;
   totalKwh: number;
   billingPeriodStart: string;
   billingPeriodEnd: string;
@@ -100,7 +100,7 @@ export default function BillHistoryScreen() {
         : isAr
           ? 'غير محدد'
           : 'Unknown';
-      const amountJd = filsToJd(item.totalAmountFils);
+      const amountJd = filsToJd(item.totalAmount);
       const isScanned = item.source === 'SCAN';
 
       return (
@@ -194,50 +194,7 @@ export default function BillHistoryScreen() {
     [fonts, sz, t, isAr, router],
   );
 
-  const renderHeader = useCallback(
-    () => (
-      <View style={styles.actionRow}>
-        <TouchableOpacity
-          style={styles.actionBtn}
-          onPress={() => router.push('/bill/scan')}
-        >
-          <View style={styles.actionIconWrap}>
-            <Ionicons name="scan-outline" size={22} color={Colors.primary} />
-          </View>
-          <Text
-            style={[
-              styles.actionBtnText,
-              { fontFamily: fonts.semibold, fontSize: sz(13) },
-            ]}
-          >
-            {t('scanBillBtn')}
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.actionBtn}
-          onPress={() => router.push('/bill/manual')}
-        >
-          <View style={styles.actionIconWrap}>
-            <Ionicons
-              name="create-outline"
-              size={22}
-              color={Colors.success}
-            />
-          </View>
-          <Text
-            style={[
-              styles.actionBtnText,
-              { fontFamily: fonts.semibold, fontSize: sz(13) },
-            ]}
-          >
-            {t('enterManuallyBtn')}
-          </Text>
-        </TouchableOpacity>
-      </View>
-    ),
-    [fonts, sz, t, router],
-  );
+  const renderHeader = useCallback(() => null, []);
 
   const renderEmpty = useCallback(
     () => (

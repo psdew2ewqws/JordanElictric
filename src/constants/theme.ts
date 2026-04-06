@@ -1,92 +1,116 @@
+// ─── Brand Palette ───────────────────────────────────────
+
 export const Colors = {
-  primary: '#1B4965',
-  primaryLight: '#2D6A8F',
-  primaryDark: '#0F2F44',
-  accent: '#62B6CB',
-  accentLight: '#BEE9E8',
+  // Brand
+  primary: '#143D5C',
+  primaryLight: '#4A8DA8',
+  primaryDark: '#0C2D42',
+  primaryContainer: '#D6E8F4',
+  accent: '#4A8DA8',
+  accentLight: '#DAF0F7',
 
-  success: '#059669',
-  successLight: '#D1FAE5',
-  warning: '#D97706',
-  warningLight: '#FEF3C7',
-  danger: '#DC2626',
-  dangerLight: '#FEE2E2',
-
-  white: '#FFFFFF',
-  background: '#F8FAFB',
+  // Surfaces
+  background: '#F5F6F8',
   surface: '#FFFFFF',
-  surfaceAlt: '#F1F5F9',
-  border: '#E2E8F0',
-  borderLight: '#F1F5F9',
+  surfaceVariant: '#EDF0F4',
+  surfaceAlt: '#EDF0F4',
 
-  text: '#0F172A',
-  textSecondary: '#64748B',
-  textMuted: '#94A3B8',
+  // Feedback
+  success: '#1A7A54',
+  successContainer: '#D4EDDF',
+  successLight: '#D4EDDF',
+  warning: '#B8860B',
+  warningContainer: '#FFF3CD',
+  warningLight: '#FFF3CD',
+  error: '#B3261E',
+  errorContainer: '#F9DEDC',
+  danger: '#B3261E',
+  dangerLight: '#F9DEDC',
+
+  // Text
+  text: '#1A1C1E',
+  onSurface: '#1A1C1E',
+  textSecondary: '#44474E',
+  onSurfaceVariant: '#44474E',
+  textMuted: '#74777F',
+  outline: '#74777F',
+  outlineVariant: '#C4C6CF',
   textOnPrimary: '#FFFFFF',
+  white: '#FFFFFF',
 
-  tierGreen: '#059669',
-  tierYellow: '#D97706',
-  tierRed: '#DC2626',
+  // Borders
+  border: '#C4C6CF',
+  borderLight: '#EDF0F4',
 
-  envGreen: '#059669',
-  envBlue: '#0284C7',
-  envTeal: '#0D9488',
+  // Tier
+  tierGreen: '#1A7A54',
+  tierYellow: '#B8860B',
+  tierRed: '#B3261E',
 
-  chart1: '#1B4965',
-  chart2: '#62B6CB',
-  chart3: '#059669',
-  chart4: '#D97706',
-  chart5: '#DC2626',
+  // Chart
+  chart1: '#143D5C',
+  chart2: '#4A8DA8',
+  chart3: '#1A7A54',
+  chart4: '#B8860B',
+  chart5: '#B3261E',
 };
+
+// ─── Spacing (8pt grid) ──────────────────────────────────
 
 export const Spacing = {
   xs: 4,
   sm: 8,
   md: 12,
   lg: 16,
-  xl: 20,
-  xxl: 24,
-  xxxl: 32,
+  xl: 24,
+  xxl: 32,
+  xxxl: 48,
 };
+
+// ─── Shadows ─────────────────────────────────────────────
+
+export const Shadows = {
+  sm: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  md: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  lg: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
+    elevation: 4,
+  },
+} as const;
+
+// ─── Radius ──────────────────────────────────────────────
 
 export const Radius = {
   sm: 8,
   md: 12,
   lg: 16,
-  xl: 20,
+  xl: 28,
   full: 9999,
 };
+
+// ─── Font Size ───────────────────────────────────────────
 
 export const FontSize = {
   xs: 11,
   sm: 13,
-  md: 15,
-  lg: 17,
+  md: 14,
+  lg: 16,
   xl: 20,
-  xxl: 26,
-  hero: 34,
+  xxl: 24,
+  hero: 32,
 };
-
-export const Shadows = {
-  sm: {
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 1,
-  },
-  md: {
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  lg: {
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
-    elevation: 6,
-  },
-} as const;

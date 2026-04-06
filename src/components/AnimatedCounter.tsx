@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Animated, Text, TextStyle } from 'react-native';
+import { Animated, Text, TextStyle, StyleProp } from 'react-native';
 
 interface Props {
   value: number;
@@ -7,7 +7,7 @@ interface Props {
   decimals?: number;
   suffix?: string;
   prefix?: string;
-  style?: TextStyle;
+  style?: StyleProp<TextStyle>;
 }
 
 export function AnimatedCounter({ value, duration = 1200, decimals = 0, suffix = '', prefix = '', style }: Props) {

@@ -33,7 +33,8 @@ export default function InsightsScreen() {
     setError(null);
     try {
       const res = await jepcoApi.getSmartMeter();
-      setSmartMeter(res.data);
+      const raw = res.data;
+      setSmartMeter(raw?.body || raw);
     } catch (e: any) {
       // On 401, show empty state instead of error
       if (e?.status !== 401) {

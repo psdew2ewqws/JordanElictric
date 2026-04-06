@@ -31,7 +31,13 @@ yarn-error.*
 *.pem
 
 # local env files
+.env
+.env.*
 .env*.local
+
+# Supabase
+supabase/.env
+supabase/.temp/
 
 # typescript
 *.tsbuildinfo
@@ -42,3 +48,9 @@ yarn-error.*
 
 # superpowers brainstorm sessions
 .superpowers/
+
+# Playwright MCP logs
+.playwright-mcp/
+
+# Next.js build output
+.next/

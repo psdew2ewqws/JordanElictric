@@ -1,23 +1,29 @@
 import React from 'react';
-import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Colors, FontSize, Spacing, Radius, Shadows } from '../../src/constants/theme';
 import { useLanguage } from '../../src/i18n/LanguageContext';
 import { useAuth } from '../../src/contexts/AuthContext';
 
-const { width: SW } = Dimensions.get('window');
-const CARD_W = (SW - 36 - 10) / 2;
+const C = {
+  white: '#FFFFFF',
+  offWhite: '#F4F6F8',
+  gray100: '#EAEDF0',
+  gray200: '#D1D5DB',
+  gray400: '#9CA3AF',
+  gray600: '#4B5563',
+  gray800: '#1F2937',
+  navy: '#1B4965',
+  green: '#157A3B',
+};
 
-const SERVICES = [
-  { key: 'chat', icon: 'chat-processing' as const, catKey: 'liveChat' as const, nameKey: 'inquiriesComplaints' as const, descKey: 'chatWelcome' as const, color: '#3B82F6', badge: '24/7' },
-  { key: 'outage', icon: 'flash-alert' as const, catKey: 'requests' as const, nameKey: 'reportOutage' as const, descKey: 'reportOutageDesc' as const, color: '#E8930C', badge: 'URGENT' },
-  { key: 'report', icon: 'clipboard-text-clock' as const, catKey: 'requests' as const, nameKey: 'reportTrack' as const, descKey: 'noReportsDesc' as const, color: '#6366F1', badge: null },
-  { key: 'safety', icon: 'shield-account' as const, catKey: 'safety' as const, nameKey: 'energyFriend' as const, descKey: 'energyFriendDesc' as const, color: '#E05A3A', badge: 'NEW' },
-  { key: 'billing', icon: 'receipt' as const, catKey: 'billing' as const, nameKey: 'viewPayBills' as const, descKey: 'noBillsDesc' as const, color: '#10B981', badge: null },
+const ITEMS = [
+  { key: 'chat', icon: 'chatbubble-ellipses-outline' as const, route: '/chat/' },
+  { key: 'outage', icon: 'flash-off-outline' as const, route: '/outage/' },
+  { key: 'report', icon: 'document-text-outline' as const, route: '/complaints/' },
+  { key: 'safety', icon: 'shield-outline' as const, route: '/energy-friend/' },
+  { key: 'billing', icon: 'receipt-outline' as const, route: '/bill/' },
 ] as const;
 
 export default function ServicesScreen() {
@@ -25,196 +31,75 @@ export default function ServicesScreen() {
   const { t, fonts, language } = useLanguage();
   const { subscription } = useAuth();
   const isAr = language === 'ar';
-  const sz = (en: number) => isAr ? Math.max(11, en * 0.85) : en;
 
-  const handlePress = (key: string) => {
-    switch (key) {
-      case 'chat': router.push('/chat/'); break;
-      case 'outage': router.push('/outage/'); break;
-      case 'report': router.push('/complaints/'); break;
-      case 'safety': router.push('/energy-friend/'); break;
-      case 'billing': router.push('/bill/'); break;
-    }
+  const labels: Record<string, { title: string; desc: string }> = {
+    chat: { title: t('inquiriesComplaints'), desc: isAr ? 'محادثة مباشرة على مدار الساعة' : '24/7 live support' },
+    outage: { title: t('reportOutage'), desc: isAr ? 'الإبلاغ عن انقطاع الكهرباء' : 'Report power interruptions' },
+    report: { title: t('reportTrack'), desc: isAr ? 'متابعة الشكاوى والبلاغات' : 'Track complaints & reports' },
+    safety: { title: t('energyFriend'), desc: isAr ? 'الإبلاغ عن مخاطر كهربائية' : 'Report electrical hazards' },
+    billing: { title: t('viewPayBills'), desc: isAr ? 'عرض الفواتير وتفاصيلها' : 'View bills & payment details' },
   };
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={[styles.title, { fontFamily: fonts.bold, fontSize: sz(24) }]}>
-            {t('services')}
-          </Text>
-          <Text style={[styles.subtitle, { fontFamily: fonts.regular, fontSize: sz(13) }]}>
-            {isAr ? 'جميع الخدمات في مكان واحد' : 'All services in one place'}
-          </Text>
+    <SafeAreaView style={s.safe} edges={['top']}>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <View style={s.header}>
+          <Text style={[s.title, { fontFamily: fonts.bold }]}>{t('services')}</Text>
         </View>
 
-        {/* Service Cards Grid */}
-        <View style={styles.grid}>
-          {SERVICES.map((svc) => (
+        <View style={s.list}>
+          {ITEMS.map((item, i) => (
             <TouchableOpacity
-              key={svc.key}
-              style={styles.serviceCard}
-              activeOpacity={0.7}
-              onPress={() => handlePress(svc.key)}
+              key={item.key}
+              style={[s.row, i === ITEMS.length - 1 && { borderBottomWidth: 0 }]}
+              activeOpacity={0.6}
+              onPress={() => router.push(item.route as any)}
             >
-              {svc.badge && (
-                <View style={[
-                  styles.badge,
-                  svc.key === 'outage' && styles.badgeAmber,
-                  svc.key === 'safety' && styles.badgeNew,
-                ]}>
-                  <Text style={[
-                    styles.badgeText,
-                    svc.key === 'outage' && styles.badgeTextAmber,
-                    svc.key === 'safety' && styles.badgeTextNew,
-                    { fontFamily: fonts.bold },
-                  ]}>
-                    {svc.key === 'outage' && isAr ? 'عاجل' : svc.key === 'safety' && isAr ? 'جديد' : svc.badge}
-                  </Text>
-                </View>
-              )}
-              <View style={[styles.iconCircle, { backgroundColor: svc.color + '12' }]}>
-                <MaterialCommunityIcons name={svc.icon} size={28} color={svc.color} />
+              <Ionicons name={item.icon} size={20} color={C.navy} style={s.rowIcon} />
+              <View style={s.rowText}>
+                <Text style={[s.rowTitle, { fontFamily: fonts.medium }]}>
+                  {labels[item.key].title}
+                </Text>
+                <Text style={[s.rowDesc, { fontFamily: fonts.regular }]}>
+                  {labels[item.key].desc}
+                </Text>
               </View>
-              <Text style={[styles.cardCat, { fontFamily: fonts.medium, fontSize: sz(10) }]}>
-                {t(svc.catKey)}
-              </Text>
-              <Text style={[styles.cardName, { fontFamily: fonts.bold, fontSize: sz(14) }]}>
-                {t(svc.nameKey)}
-              </Text>
+              <Ionicons name="chevron-forward" size={16} color={C.gray200} />
             </TouchableOpacity>
           ))}
         </View>
 
-        {/* Subscriber Info Card */}
+        {/* Subscriber */}
         {subscription && (
-          <View style={styles.subSection}>
-            <TouchableOpacity style={styles.subCard} activeOpacity={0.7}>
-              <View style={styles.subIcon}>
-                <Ionicons name="flash" size={16} color="#1B4965" />
-              </View>
-              <View style={styles.subText}>
-                <Text style={[styles.subNum, { fontFamily: fonts.semibold }]}>
-                  {subscription.subscriberNumber}
-                </Text>
-                <View style={styles.subStatus}>
-                  <View style={styles.subDot} />
-                  <Text style={[styles.subStatusText, { fontFamily: fonts.regular }]}>
-                    {subscription.distributionCompany} · {t('connected')}
-                  </Text>
-                </View>
-              </View>
-              <Ionicons name="chevron-forward" size={16} color="#B8C5D0" />
-            </TouchableOpacity>
+          <View style={s.subCard}>
+            <View style={s.subDot} />
+            <View style={{ flex: 1 }}>
+              <Text style={[s.subNum, { fontFamily: fonts.bold }]}>{subscription.subscriberNumber}</Text>
+              <Text style={[s.subLabel, { fontFamily: fonts.regular }]}>
+                {subscription.distributionCompany} · {t('connected')}
+              </Text>
+            </View>
           </View>
         )}
 
-        <View style={{ height: 32 }} />
+        <View style={{ height: 24 }} />
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F2F5F7' },
-  container: { flex: 1 },
-
-  header: {
-    paddingHorizontal: 22,
-    paddingTop: Spacing.xl,
-    paddingBottom: Spacing.md,
-  },
-  title: {
-    color: Colors.text,
-    letterSpacing: -0.3,
-  },
-  subtitle: {
-    color: Colors.textMuted,
-    marginTop: 4,
-  },
-
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    paddingHorizontal: 18,
-    paddingTop: Spacing.md,
-  },
-
-  serviceCard: {
-    width: CARD_W,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 20,
-    minHeight: 140,
-    borderWidth: 1,
-    borderColor: '#E8ECF0',
-  },
-  iconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 14,
-  },
-  cardCat: {
-    color: '#6BA3BE',
-    marginBottom: 3,
-    textAlign: 'left',
-    writingDirection: 'ltr',
-  },
-  cardName: {
-    color: '#0A2744',
-    lineHeight: 21,
-    textAlign: 'left',
-    writingDirection: 'ltr',
-  },
-
-  badge: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    backgroundColor: 'rgba(27,73,101,0.06)',
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  badgeText: {
-    fontSize: 7,
-    letterSpacing: 0.6,
-    color: '#1B4965',
-    textTransform: 'uppercase',
-  },
-  badgeAmber: { backgroundColor: 'rgba(232,147,12,0.08)' },
-  badgeTextAmber: { color: '#B45309' },
-  badgeNew: { backgroundColor: 'rgba(232,90,58,0.06)' },
-  badgeTextNew: { color: '#C0392B' },
-
-  subSection: { paddingHorizontal: 18, paddingTop: 20 },
-  subCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 13,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 11,
-    borderWidth: 1,
-    borderColor: '#E8ECF0',
-  },
-  subIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 9,
-    backgroundColor: 'rgba(27,73,101,0.06)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  subText: { flex: 1 },
-  subNum: { fontSize: 11, color: '#0C1E2D', letterSpacing: 0.5 },
-  subStatus: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 1 },
-  subDot: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: '#4ADE80' },
-  subStatusText: { fontSize: 9, color: '#94A9B8' },
+const s = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: C.offWhite },
+  header: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 12 },
+  title: { fontSize: 22, color: C.gray800, letterSpacing: -0.3 },
+  list: { marginHorizontal: 16, backgroundColor: C.white, borderRadius: 12, overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 4, elevation: 1 },
+  row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 16, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: C.gray100 },
+  rowIcon: { width: 28 },
+  rowText: { flex: 1, gap: 2 },
+  rowTitle: { fontSize: 14, color: C.gray800 },
+  rowDesc: { fontSize: 12, color: C.gray400 },
+  subCard: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 16, marginTop: 14, backgroundColor: C.white, borderRadius: 10, paddingHorizontal: 16, paddingVertical: 13, gap: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 4, elevation: 1 },
+  subDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: C.green },
+  subNum: { fontSize: 13, color: C.gray800, letterSpacing: 0.5 },
+  subLabel: { fontSize: 11, color: C.gray400, marginTop: 1 },
 });

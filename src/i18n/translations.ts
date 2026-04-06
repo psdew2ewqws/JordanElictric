@@ -107,7 +107,6 @@ export const translations = {
     expectedBill: 'Expected Bill',
     projectedKwh: 'Projected kWh',
     yourTier: 'Your Tier',
-    tier: 'Tier',
 
     // Card 1: Money Left on Table
     moneyLeftOnTable: 'Money Left on the Table',
@@ -162,7 +161,6 @@ export const translations = {
     smartRecommendations: 'Smart Recommendations',
     basedOnYourData: 'Based on your actual consumption data',
     save: 'Save',
-    jdUnit: 'JD',
 
     // Card 7: Bill Breakdown
     whereMoneyGoes: 'Where Your Money Goes',
@@ -204,7 +202,6 @@ export const translations = {
     builtForCpa: 'Built for CPA Jordan',
 
     // Profile Edit
-    save: 'Save',
     cancel: 'Cancel',
     editSubscriberNumber: 'Edit Subscriber Number',
     enterSubscriberNumber: 'Enter your 13-digit subscriber number',
@@ -269,7 +266,6 @@ export const translations = {
     manual: 'Manual',
     period: 'Period',
     avgCostLabel: 'Avg Cost',
-    energyCharges: 'Energy Charges',
     howKwhPriced: 'How your kWh is priced across tariff tiers',
     energySubtotal: 'Energy Subtotal',
     tierUsage: 'Tier Usage',
@@ -464,7 +460,6 @@ export const translations = {
     expectedBill: 'الفاتورة المتوقعة',
     projectedKwh: 'الاستهلاك المتوقع',
     yourTier: 'شريحتك',
-    tier: 'شريحة',
 
     // Card 1: Money Left on Table
     moneyLeftOnTable: 'فلوس تضيع عليك',
@@ -519,7 +514,6 @@ export const translations = {
     smartRecommendations: 'توصيات ذكية',
     basedOnYourData: 'بناءً على بيانات استهلاكك الحقيقية',
     save: 'وفّر',
-    jdUnit: 'د.أ',
 
     // Card 7: Bill Breakdown
     whereMoneyGoes: 'أين تذهب فلوسك',
@@ -561,7 +555,6 @@ export const translations = {
     builtForCpa: 'مطوّر لجمعية حماية المستهلك الأردنية',
 
     // Profile Edit
-    save: 'حفظ',
     cancel: 'إلغاء',
     editSubscriberNumber: 'تعديل رقم الاشتراك',
     enterSubscriberNumber: 'أدخل رقم الاشتراك المكون من 13 رقم',
@@ -626,7 +619,6 @@ export const translations = {
     manual: 'يدوية',
     period: 'الفترة',
     avgCostLabel: 'متوسط التكلفة',
-    energyCharges: 'رسوم الطاقة',
     howKwhPriced: 'كيف يُسعّر استهلاكك عبر شرائح التعرفة',
     energySubtotal: 'إجمالي رسوم الطاقة',
     tierUsage: 'استخدام الشرائح',
