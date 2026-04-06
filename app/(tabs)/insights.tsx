@@ -20,9 +20,8 @@ import {
 const { width: SW } = Dimensions.get('window');
 
 export default function InsightsScreen() {
-  const { t, fonts, language } = useLanguage();
+  const { t, fonts, language, sz } = useLanguage();
   const isAr = language === 'ar';
-  const sz = (en: number) => isAr ? Math.max(11, en * 0.85) : en;
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -77,7 +76,7 @@ export default function InsightsScreen() {
     return (
       <View style={styles.screen}>
         <View style={{ paddingHorizontal: 16, paddingTop: 100 }}>
-          <Text style={{ color: '#6B8499', fontSize: 12, fontFamily: fonts.regular, textAlign: 'center', marginBottom: 16 }}>
+          <Text style={{ color: '#3D5468', fontSize: 12, fontFamily: fonts.regular, textAlign: 'center', marginBottom: 16 }}>
             {isAr ? 'جاري جلب بياناتك من جيبكو...' : 'Fetching your data from JEPCO...'}
           </Text>
           <Shimmer radius={14} height={100} />
@@ -93,8 +92,8 @@ export default function InsightsScreen() {
   if (error && !smartMeter) {
     return (
       <View style={[styles.screen, { justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32 }]}>
-        <Ionicons name="refresh-circle-outline" size={48} color="#94A9B8" />
-        <Text style={{ color: '#6B8499', fontSize: 14, fontFamily: fonts.medium, textAlign: 'center', marginTop: 12 }}>
+        <Ionicons name="refresh-circle-outline" size={48} color="#4A5E6D" />
+        <Text style={{ color: '#3D5468', fontSize: 14, fontFamily: fonts.medium, textAlign: 'center', marginTop: 12 }}>
           {isAr ? 'تعذر تحميل الرؤى. اسحب للأسفل لإعادة المحاولة.' : "Couldn't load insights. Pull down to retry."}
         </Text>
         <TouchableOpacity onPress={loadData} style={{ marginTop: 16, paddingHorizontal: 24, paddingVertical: 10, backgroundColor: '#1B4965', borderRadius: 8 }}>
@@ -114,7 +113,7 @@ export default function InsightsScreen() {
           <SafeAreaView edges={['top']} style={styles.headerPad}>
             <View style={styles.topRow}>
               <View>
-                <Text style={[styles.headerTitle, { fontFamily: fonts.bold, fontSize: sz(22) }]}>
+                <Text style={[styles.headerTitle, { fontFamily: fonts.bold, fontSize: sz(22), letterSpacing: isAr ? 0 : -0.3 }]}>
                   {t('insightsTitle')}
                 </Text>
                 <Text style={[styles.headerSub, { fontFamily: fonts.regular, fontSize: sz(11) }]}>
@@ -147,7 +146,7 @@ export default function InsightsScreen() {
                   <Text style={[{ fontSize: sz(12), color: '#0C1E2D', fontFamily: fonts.semibold, writingDirection: 'ltr' as const, textAlign: 'left' as const }]}>
                     {tr.range} kWh
                   </Text>
-                  <Text style={[{ fontSize: sz(9), color: '#94A9B8', fontFamily: fonts.regular, writingDirection: 'ltr' as const, textAlign: 'left' as const }]}>
+                  <Text style={[{ fontSize: sz(9), color: '#4A5E6D', fontFamily: fonts.regular, writingDirection: 'ltr' as const, textAlign: 'left' as const }]}>
                     {tr.rate} JD/{isAr ? 'ك.و.س' : 'kWh'}
                   </Text>
                 </View>
@@ -156,7 +155,7 @@ export default function InsightsScreen() {
                     <Text style={[{ fontSize: sz(13), color: '#0C1E2D', fontFamily: fonts.bold }]}>
                       {tr.kwh} kWh
                     </Text>
-                    <Text style={[{ fontSize: sz(9), color: '#94A9B8', fontFamily: fonts.regular }]}>
+                    <Text style={[{ fontSize: sz(9), color: '#4A5E6D', fontFamily: fonts.regular }]}>
                       {tr.cost.toFixed(2)} JD
                     </Text>
                   </View>
@@ -185,13 +184,13 @@ export default function InsightsScreen() {
             {/* Row 1 */}
             <View style={styles.fpRow}>
               <View style={styles.fpItem}>
-                <MaterialCommunityIcons name="molecule-co2" size={20} color="#94A9B8" />
+                <MaterialCommunityIcons name="molecule-co2" size={20} color="#B8C8D4" />
                 <AnimatedCounter value={env.co2Kg} decimals={0} duration={900}
                   style={[styles.fpVal, { fontFamily: fonts.bold }]} />
                 <Text style={[styles.fpUnit, { fontFamily: fonts.regular, fontSize: sz(9) }]}>kg CO₂</Text>
               </View>
               <View style={styles.fpItem}>
-                <MaterialCommunityIcons name="car" size={20} color="#94A9B8" />
+                <MaterialCommunityIcons name="car" size={20} color="#B8C8D4" />
                 <AnimatedCounter value={env.drivingKm} duration={900}
                   style={[styles.fpVal, { fontFamily: fonts.bold }]} />
                 <Text style={[styles.fpUnit, { fontFamily: fonts.regular, fontSize: sz(9) }]}>{t('km')} {t('likeDriving')}</Text>
@@ -249,7 +248,7 @@ export default function InsightsScreen() {
                     <Text style={[{ fontSize: sz(12), color: '#0C1E2D', fontFamily: fonts.semibold, writingDirection: 'ltr' as const, textAlign: 'left' as const }]}>
                       {isAr ? tip.titleAr : tip.titleEn}
                     </Text>
-                    <Text style={[{ fontSize: sz(10), color: '#94A9B8', fontFamily: fonts.regular, marginTop: 2, writingDirection: 'ltr' as const, textAlign: 'left' as const }]}>
+                    <Text style={[{ fontSize: sz(10), color: '#4A5E6D', fontFamily: fonts.regular, marginTop: 2, writingDirection: 'ltr' as const, textAlign: 'left' as const }]}>
                       {isAr ? tip.descAr : tip.descEn}
                     </Text>
                   </View>
@@ -283,7 +282,7 @@ function BillLine({ label, val, color, fonts, sz }: any) {
 const blStyles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 7, gap: 8 },
   dot: { width: 9, height: 9, borderRadius: 5 },
-  label: { flex: 1, color: '#6B8499', writingDirection: 'ltr', textAlign: 'left' },
+  label: { flex: 1, color: '#3D5468', writingDirection: 'ltr', textAlign: 'left' },
   val: { writingDirection: 'ltr', textAlign: 'right' },
 });
 
@@ -296,8 +295,8 @@ const styles = StyleSheet.create({
   header: { borderBottomLeftRadius: 24, borderBottomRightRadius: 24 },
   headerPad: { paddingHorizontal: 22, paddingBottom: 22 },
   topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingTop: 8 },
-  headerTitle: { color: '#fff', letterSpacing: -0.3, writingDirection: 'ltr', textAlign: 'left' },
-  headerSub: { color: 'rgba(255,255,255,0.4)', marginTop: 2, writingDirection: 'ltr', textAlign: 'left' },
+  headerTitle: { color: '#fff', writingDirection: 'ltr', textAlign: 'left' },
+  headerSub: { color: 'rgba(255,255,255,0.6)', marginTop: 2, writingDirection: 'ltr', textAlign: 'left' },
 
   // Body
   body: { paddingHorizontal: 16, paddingTop: 14 },
@@ -311,7 +310,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#0F2440', borderRadius: 16, padding: 18, marginBottom: 10,
   },
   title: { color: '#0C1E2D', writingDirection: 'ltr', textAlign: 'left' },
-  sub: { color: '#94A9B8', marginTop: 2, writingDirection: 'ltr', textAlign: 'left' },
+  sub: { color: '#4A5E6D', marginTop: 2, writingDirection: 'ltr', textAlign: 'left' },
   darkTitle: { color: '#fff', marginBottom: 14, writingDirection: 'ltr', textAlign: 'left' },
 
   // Tier card
@@ -334,7 +333,7 @@ const styles = StyleSheet.create({
   fpRow: { flexDirection: 'row' },
   fpItem: { flex: 1, alignItems: 'center', gap: 4 },
   fpVal: { fontSize: 22, color: '#fff', letterSpacing: -0.5 },
-  fpUnit: { color: 'rgba(255,255,255,0.4)', textAlign: 'center', writingDirection: 'ltr' },
+  fpUnit: { color: 'rgba(255,255,255,0.6)', textAlign: 'center', writingDirection: 'ltr' },
 
   // Bill
   billTotal: {

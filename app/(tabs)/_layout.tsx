@@ -8,7 +8,8 @@ import { useLanguage } from '../../src/i18n/LanguageContext';
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
-  const { t, fonts } = useLanguage();
+  const { t, fonts, language } = useLanguage();
+  const isAr = language === 'ar';
   const bottomPadding = Platform.OS === 'ios' ? insets.bottom : 8;
 
   return (
@@ -30,7 +31,7 @@ export default function TabLayout() {
         tabBarLabelStyle: {
           fontFamily: fonts.medium,
           fontSize: 11,
-          letterSpacing: 0.2,
+          letterSpacing: isAr ? 0 : 0.2,
         },
       }}
     >

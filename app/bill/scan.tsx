@@ -36,9 +36,8 @@ interface OcrResult {
 }
 
 export default function ScanBillScreen() {
-  const { t, fonts, language } = useLanguage();
+  const { t, fonts, language, sz } = useLanguage();
   const isAr = language === 'ar';
-  const sz = (en: number) => isAr ? Math.max(11, en * 0.85) : en;
   const router = useRouter();
   const [state, setState] = useState<ScanState>('idle');
   const [imageUri, setImageUri] = useState<string | null>(null);

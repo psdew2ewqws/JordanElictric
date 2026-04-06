@@ -17,7 +17,7 @@ const C = {
   offWhite: '#F4F6F8',
   gray100: '#EAEDF0',
   gray200: '#D1D5DB',
-  gray400: '#9CA3AF',
+  gray400: '#4A5E6D',
   gray600: '#4B5563',
   gray800: '#1F2937',
   navy: '#1B4965',
@@ -112,12 +112,12 @@ export default function ProfileScreen() {
       <ScrollView showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
         {/* Identity — no avatar circle, just clean text */}
         <View style={s.identity}>
-          <Text style={[s.name, { fontFamily: fonts.bold }]}>{name}</Text>
+          <Text style={[s.name, { fontFamily: fonts.bold, letterSpacing: isAr ? 0 : -0.3 }]}>{name}</Text>
           <Text style={[s.email, { fontFamily: fonts.regular }]}>{email}</Text>
         </View>
 
         {/* Account */}
-        <Text style={[s.section, { fontFamily: fonts.medium }]}>{t('account')}</Text>
+        <Text style={[s.section, { fontFamily: fonts.medium, letterSpacing: isAr ? 0 : 0.8 }]}>{t('account')}</Text>
         <View style={s.group}>
           <Row icon="flash-outline" label={t('subscriberNumber')} value={subNum} onPress={() => { setEditNum(sub?.subscriberNumber || ''); setSubModal(true); }} />
           <Row icon="business-outline" label={t('distributionCompany')} value={co} onPress={() => setCoModal(true)} />
@@ -125,20 +125,20 @@ export default function ProfileScreen() {
         </View>
 
         {/* Settings */}
-        <Text style={[s.section, { fontFamily: fonts.medium }]}>{t('settings')}</Text>
+        <Text style={[s.section, { fontFamily: fonts.medium, letterSpacing: isAr ? 0 : 0.8 }]}>{t('settings')}</Text>
         <View style={s.group}>
           <Row icon="globe-outline" label={t('languageSetting')} value={language === 'ar' ? t('arabic') : t('english')} onPress={() => setLangModal(true)} />
           <Row icon="notifications-outline" label={t('notifications')} value={notifOn ? t('notifOn') : t('notifOff')} onPress={toggleNotif} />
         </View>
 
         {/* Data */}
-        <Text style={[s.section, { fontFamily: fonts.medium }]}>{t('data')}</Text>
+        <Text style={[s.section, { fontFamily: fonts.medium, letterSpacing: isAr ? 0 : 0.8 }]}>{t('data')}</Text>
         <View style={s.group}>
           <Row icon="receipt-outline" label={t('billHistory')} value={`${billCount}`} onPress={() => router.push('/bill')} />
         </View>
 
         {/* About */}
-        <Text style={[s.section, { fontFamily: fonts.medium }]}>{t('about')}</Text>
+        <Text style={[s.section, { fontFamily: fonts.medium, letterSpacing: isAr ? 0 : 0.8 }]}>{t('about')}</Text>
         <View style={s.group}>
           <Row icon="information-circle-outline" label={t('aboutCpa')} onPress={() => Alert.alert(t('aboutCpaTitle'), t('aboutCpaDesc'))} />
           <Row icon="document-text-outline" label={t('termsPrivacy')} onPress={() => Alert.alert(t('termsTitle'), t('termsDesc'))} />
@@ -190,9 +190,9 @@ export default function ProfileScreen() {
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: C.offWhite },
   identity: { paddingHorizontal: 20, paddingTop: 28, paddingBottom: 8 },
-  name: { fontSize: 22, color: C.gray800, letterSpacing: -0.3 },
+  name: { fontSize: 22, color: C.gray800 },
   email: { fontSize: 13, color: C.gray400, marginTop: 3 },
-  section: { fontSize: 11, color: C.gray400, textTransform: 'uppercase', letterSpacing: 0.8, paddingHorizontal: 20, marginTop: 22, marginBottom: 6 },
+  section: { fontSize: 11, color: C.gray400, textTransform: 'uppercase', paddingHorizontal: 20, marginTop: 22, marginBottom: 6 },
   group: { marginHorizontal: 16, backgroundColor: C.white, borderRadius: 12, overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 4, elevation: 1 },
   row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: C.gray100, gap: 10 },
   rowLabel: { flex: 1, fontSize: 14, fontFamily: 'Inter-Regular', color: C.gray800 },

@@ -30,10 +30,9 @@ interface ChatMessage {
 
 export default function ChatScreen() {
   const router = useRouter();
-  const { t, fonts, language } = useLanguage();
+  const { t, fonts, language, sz } = useLanguage();
   const { user } = useAuth();
   const isAr = language === 'ar';
-  const sz = (en: number) => (isAr ? Math.max(11, en * 0.85) : en);
 
   const flatListRef = useRef<FlatList>(null);
   const [inputText, setInputText] = useState('');
@@ -125,7 +124,7 @@ export default function ChatScreen() {
                     // Claude is calling a tool — show thinking state
                     setMessages((prev) =>
                       prev.map((m) =>
-                        m.id === botMsgId ? { ...m, text: isAr ? 'عم أتحقق من بياناتك...' : 'Checking your data...', isStreaming: true } : m
+                        m.id === botMsgId ? { ...m, text: t('checkingYourData'), isStreaming: true } : m
                       )
                     );
                   } else if (parsed.text) {
@@ -147,14 +146,14 @@ export default function ChatScreen() {
           setMessages((prev) =>
             prev.map((m) =>
               m.id === botMsgId
-                ? { ...m, text: fullText || (isAr ? 'عذراً، حدث خطأ.' : 'Sorry, an error occurred.'), isStreaming: false }
+                ? { ...m, text: fullText || t('sorryError'), isStreaming: false }
                 : m
             )
           );
         } else {
           // JSON response (complaint flow, templates, errors)
           const data = await response.json();
-          const text = data.reply || data.error || (isAr ? 'عذراً، حدث خطأ.' : 'Sorry, an error occurred.');
+          const text = data.reply || data.error || t('sorryError');
           if (data.session_id) setSessionId(data.session_id);
 
           setMessages((prev) =>
@@ -169,7 +168,7 @@ export default function ChatScreen() {
             m.id === botMsgId
               ? {
                   ...m,
-                  text: isAr ? 'عذراً، حدث خطأ. حاول مرة ثانية.' : 'Sorry, an error occurred. Please try again.',
+                  text: t('sorryErrorRetry'),
                   isStreaming: false,
                 }
               : m
@@ -180,7 +179,7 @@ export default function ChatScreen() {
         Keyboard.dismiss();
       }
     },
-    [isLoading, sessionId, isAr]
+    [isLoading, sessionId, t]
   );
 
   const renderMessage = useCallback(
@@ -265,7 +264,7 @@ export default function ChatScreen() {
             showQuickActions ? (
               <View style={styles.quickActionsWrap}>
                 <Text style={[styles.quickActionsLabel, { fontFamily: fonts.medium, fontSize: sz(12) }]}>
-                  {isAr ? 'اختر موضوع:' : 'Choose a topic:'}
+                  {t('chooseTopic')}
                 </Text>
                 <View style={styles.quickActionsRow}>
                   {quickActions.map((action) => (
@@ -290,7 +289,7 @@ export default function ChatScreen() {
           <View style={{ flex: 1 }}>
             <TextInput
               style={[styles.textInput, { fontFamily: fonts.regular, fontSize: sz(14) }]}
-              placeholder={isAr ? 'اكتب رسالتك...' : 'Type a message...'}
+              placeholder={t('typeMessage')}
               placeholderTextColor={Colors.textMuted}
               value={inputText}
               onChangeText={setInputText}

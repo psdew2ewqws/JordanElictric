@@ -32,7 +32,7 @@ export const Colors = {
   onSurface: '#1A1C1E',
   textSecondary: '#44474E',
   onSurfaceVariant: '#44474E',
-  textMuted: '#74777F',
+  textMuted: '#4A5E6D',
   outline: '#74777F',
   outlineVariant: '#C4C6CF',
   textOnPrimary: '#FFFFFF',
@@ -69,8 +69,8 @@ export const Colors = {
   statusGray: '#94A9B8',
 
   // Muted text (used across screens)
-  muted: '#5C7080',
-  mutedDark: '#4A6275',
+  muted: '#4A5E6D',
+  mutedDark: '#3D5468',
   cardBorder: '#E8ECF0',
   bodyBg: '#F2F5F7',
 };

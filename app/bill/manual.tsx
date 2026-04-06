@@ -21,9 +21,8 @@ import { billApi } from '../../src/services/api';
 import { useLanguage } from '../../src/i18n/LanguageContext';
 
 export default function ManualEntryScreen() {
-  const { t, fonts, language } = useLanguage();
+  const { t, fonts, language, sz } = useLanguage();
   const isAr = language === 'ar';
-  const sz = (en: number) => isAr ? Math.max(11, en * 0.85) : en;
   const router = useRouter();
   const [totalKwh, setTotalKwh] = useState('');
   const [totalAmount, setTotalAmount] = useState('');

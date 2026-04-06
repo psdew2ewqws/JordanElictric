@@ -9,6 +9,7 @@ interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
   t: (key: TranslationKey) => string;
+  sz: (en: number) => number;
   isRTL: boolean;
   fonts: {
     regular: string;
@@ -42,6 +43,7 @@ const LanguageContext = createContext<LanguageContextType>({
   language: 'en',
   setLanguage: () => {},
   t: (key) => key,
+  sz: (en) => en,
   isRTL: false,
   fonts: fontMap.en,
 });
@@ -72,12 +74,17 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     return translations[language][key] || translations.en[key] || key;
   }, [language]);
 
+  // Arabic text needs to be ~12% larger than English for equivalent readability
+  // (Apple WWDC 2022, Google Material Design, University of Jordan research)
+  const sz = useCallback((en: number) => language === 'ar' ? Math.round(en * 1.12) : en, [language]);
+
   return (
     <LanguageContext.Provider
       value={{
         language,
         setLanguage,
         t,
+        sz,
         isRTL: false,
         fonts: fontMap[language],
       }}

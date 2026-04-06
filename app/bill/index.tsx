@@ -53,9 +53,8 @@ function filsToJd(fils: number): string {
 
 export default function BillHistoryScreen() {
   const router = useRouter();
-  const { t, fonts, language } = useLanguage();
+  const { t, fonts, language, sz } = useLanguage();
   const isAr = language === 'ar';
-  const sz = (en: number) => (isAr ? Math.max(11, en * 0.85) : en);
 
   const [bills, setBills] = useState<Bill[]>([]);
   const [total, setTotal] = useState(0);

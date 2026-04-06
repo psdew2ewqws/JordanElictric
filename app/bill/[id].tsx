@@ -58,9 +58,8 @@ interface BillData {
 
 export default function BillDetailScreen() {
   const { id } = useLocalSearchParams();
-  const { t, fonts, language } = useLanguage();
+  const { t, fonts, language, sz } = useLanguage();
   const isAr = language === 'ar';
-  const sz = (en: number) => isAr ? Math.max(11, en * 0.85) : en;
   const [bill, setBill] = useState<BillData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

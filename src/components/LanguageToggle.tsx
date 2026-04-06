@@ -7,7 +7,7 @@ interface Props {
 }
 
 export function LanguageToggle({ variant = 'dark' }: Props) {
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, fonts } = useLanguage();
   const isDark = variant === 'dark';
 
   return (
@@ -29,6 +29,7 @@ export function LanguageToggle({ variant = 'dark' }: Props) {
       >
         <Text style={[
           styles.text,
+          { fontFamily: fonts.medium, fontWeight: '600' },
           language === 'ar' ? styles.activeText : (isDark ? styles.inactiveTextDark : styles.inactiveTextLight),
         ]}>
           عر
@@ -67,9 +68,9 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   inactiveTextDark: {
-    color: 'rgba(255,255,255,0.5)',
+    color: 'rgba(255,255,255,0.6)',
   },
   inactiveTextLight: {
-    color: '#94A3B8',
+    color: '#4A5E6D',
   },
 });

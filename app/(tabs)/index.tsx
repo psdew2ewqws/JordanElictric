@@ -14,7 +14,7 @@ import { jepcoApi, notificationApi, billApi, complaintApi } from '../../src/serv
 const C = {
   navy: '#0C1F2E', navyMid: '#14354D', navyLight: '#1B4965',
   white: '#FFFFFF', offWhite: '#F4F6F8',
-  gray100: '#EAEDF0', gray200: '#D1D5DB', gray400: '#9CA3AF', gray600: '#4B5563', gray800: '#1F2937',
+  gray100: '#EAEDF0', gray200: '#D1D5DB', gray400: '#4A5E6D', gray600: '#4B5563', gray800: '#1F2937',
   green: '#157A3B', amber: '#92680A', red: '#A82020',
 };
 
@@ -73,7 +73,7 @@ export default function HomeScreen() {
       <View style={s.screen}>
         <View style={{ paddingHorizontal: 16, paddingTop: 120 }}>
           <Text style={{ color: C.gray400, fontSize: 12, fontFamily: f.regular, textAlign: 'center', marginBottom: 16 }}>
-            {isAr ? 'جاري جلب بياناتك من جيبكو...' : 'Fetching your data from JEPCO...'}
+            {t('fetchingFromJepco')}
           </Text>
           <Shimmer radius={14} height={120} />
           <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
@@ -108,7 +108,7 @@ export default function HomeScreen() {
             <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, lineHeight: 18, marginTop: 24, fontFamily: f.regular }}>
               {t('welcomeBack')}
             </Text>
-            <Text style={{ color: C.white, fontSize: 24, lineHeight: 32, letterSpacing: -0.3, marginTop: 4, fontFamily: f.bold }}>
+            <Text style={{ color: C.white, fontSize: 24, lineHeight: 32, letterSpacing: isAr ? 0 : -0.3, marginTop: 4, fontFamily: f.bold }}>
               {user?.name || 'Guest'}
             </Text>
 
@@ -120,7 +120,7 @@ export default function HomeScreen() {
                 </View>
                 <TouchableOpacity style={s.editBtn} onPress={() => router.push('/(tabs)/profile')}>
                   <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11, lineHeight: 16, fontFamily: f.medium }}>
-                    {isAr ? 'تعديل' : 'Edit'}
+                    {t('edit')}
                   </Text>
                   <Ionicons name="pencil" size={11} color="rgba(255,255,255,0.6)" />
                 </TouchableOpacity>
@@ -134,7 +134,7 @@ export default function HomeScreen() {
           <View style={s.errorBanner}>
             <Ionicons name="cloud-offline-outline" size={16} color={C.red} />
             <Text style={{ fontSize: 12, color: C.gray600, fontFamily: f.medium, flex: 1 }}>
-              {isAr ? 'تعذر تحميل البيانات. اسحب للتحديث.' : "Couldn't load data. Pull to refresh."}
+              {t('couldntLoadData')}
             </Text>
           </View>
         )}
@@ -143,7 +143,7 @@ export default function HomeScreen() {
         <View style={s.billWrap}>
           <View style={s.billCard}>
             <Text style={{ fontSize: 13, color: C.gray400, fontFamily: f.medium }}>
-              {isAr ? 'فاتورتك الحالية' : 'Your bill this month'}
+              {t('yourBillThisMonth')}
             </Text>
             <View style={s.billAmountRow}>
               <Text style={{ fontSize: 38, color: C.gray800, letterSpacing: -1.5, fontFamily: f.bold }}>
@@ -155,7 +155,7 @@ export default function HomeScreen() {
             <View style={s.billTable}>
               <View style={s.billTableRow}>
                 <Text style={{ fontSize: 13, color: C.gray400, fontFamily: f.regular }}>
-                  {isAr ? 'الاستهلاك' : 'Consumption'}
+                  {t('consumption')}
                 </Text>
                 <Text style={{ fontSize: 13, color: C.gray800, fontFamily: f.bold }}>
                   {kwh} kWh
@@ -163,7 +163,7 @@ export default function HomeScreen() {
               </View>
               <View style={s.billTableRow}>
                 <Text style={{ fontSize: 13, color: C.gray400, fontFamily: f.regular }}>
-                  {isAr ? 'الشريحة' : 'Tariff tier'}
+                  {t('tariffTier')}
                 </Text>
                 <Text style={{ fontSize: 13, fontFamily: f.bold, color: tier === 1 ? C.green : tier === 2 ? C.amber : C.red }}>
                   {isAr ? `الشريحة ${tier}` : `Tier ${tier}`}
@@ -171,7 +171,7 @@ export default function HomeScreen() {
               </View>
               <View style={s.billTableRow}>
                 <Text style={{ fontSize: 13, color: C.gray400, fontFamily: f.regular }}>
-                  {isAr ? 'دورة الفوترة' : 'Billing cycle'}
+                  {t('billingCycle')}
                 </Text>
                 <Text style={{ fontSize: 13, color: C.gray800, fontFamily: f.regular }}>
                   {sm.lastElectricityReadDate
@@ -183,7 +183,7 @@ export default function HomeScreen() {
 
             <TouchableOpacity style={s.viewBillsBtn} onPress={() => router.push('/bill/')} activeOpacity={0.8}>
               <Text style={{ color: C.white, fontSize: 14, fontFamily: f.bold }}>
-                {isAr ? 'عرض الفواتير' : 'View Bills'}
+                {t('viewBills')}
               </Text>
               <Ionicons name="arrow-forward" size={16} color={C.white} />
             </TouchableOpacity>
@@ -197,12 +197,12 @@ export default function HomeScreen() {
         <View style={s.summaryRow}>
           <TouchableOpacity style={s.summaryItem} onPress={() => router.push('/bill/')}>
             <Text style={{ fontSize: 18, color: C.gray800, fontFamily: f.bold }}>{bills}</Text>
-            <Text style={{ fontSize: 11, color: C.gray400, fontFamily: f.regular }}>{isAr ? 'فواتير' : 'Bills'}</Text>
+            <Text style={{ fontSize: 11, color: C.gray400, fontFamily: f.regular }}>{t('bills')}</Text>
           </TouchableOpacity>
           <View style={s.summaryDiv} />
           <TouchableOpacity style={s.summaryItem} onPress={() => router.push('/complaints/')}>
             <Text style={{ fontSize: 18, color: C.gray800, fontFamily: f.bold }}>{tickets}</Text>
-            <Text style={{ fontSize: 11, color: C.gray400, fontFamily: f.regular }}>{isAr ? 'تذاكر' : 'Tickets'}</Text>
+            <Text style={{ fontSize: 11, color: C.gray400, fontFamily: f.regular }}>{t('tickets')}</Text>
           </TouchableOpacity>
           <View style={s.summaryDiv} />
           <TouchableOpacity style={s.summaryItem} onPress={() => router.push('/(tabs)/usage')}>

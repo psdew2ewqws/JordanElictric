@@ -351,6 +351,34 @@ export const translations = {
     submitHazard: 'Submit Report',
     thankYouSafety: 'Thank you for keeping Jordan safe!',
     hazardSubmitted: 'Your report has been submitted. We\'ll notify the relevant authorities.',
+
+    // Home screen (additional)
+    yourBillThisMonth: 'Your bill this month',
+    tariffTier: 'Tariff tier',
+    billingCycle: 'Billing cycle',
+    viewBills: 'View Bills',
+    tickets: 'Tickets',
+    edit: 'Edit',
+    couldntLoadData: "Couldn't load data. Pull to refresh.",
+    fetchingFromJepco: 'Fetching your data from JEPCO...',
+
+    // Chat screen (additional)
+    checkingYourData: 'Checking your data...',
+    sorryError: 'Sorry, an error occurred.',
+    sorryErrorRetry: 'Sorry, an error occurred. Please try again.',
+    chooseTopic: 'Choose a topic:',
+
+    // Energy Friend (additional)
+    cameraPermission: 'Camera Permission Needed',
+    allowCameraAccess: 'Please allow camera access in settings',
+    camera: 'Camera',
+    gallery: 'Gallery',
+    backToHome: 'Back to Home',
+    hazardType: 'Hazard Type',
+    yourCurrentLocation: 'Your Current Location',
+
+    // General
+    error: 'Error',
   },
   ar: {
     // App
@@ -704,6 +732,34 @@ export const translations = {
     submitHazard: 'إرسال البلاغ',
     thankYouSafety: 'شكرًا لمساهمتك في سلامة الأردن!',
     hazardSubmitted: 'تم إرسال بلاغك. سنُبلغ الجهات المعنية.',
+
+    // Home screen (additional)
+    yourBillThisMonth: 'فاتورتك هذا الشهر',
+    tariffTier: 'شريحة التعرفة',
+    billingCycle: 'دورة الفوترة',
+    viewBills: 'عرض الفواتير',
+    tickets: 'بلاغات',
+    edit: 'تعديل',
+    couldntLoadData: 'تعذر تحميل البيانات. اسحب للتحديث.',
+    fetchingFromJepco: 'جاري جلب بياناتك من جيبكو...',
+
+    // Chat screen (additional)
+    checkingYourData: 'عم أتحقق من بياناتك...',
+    sorryError: 'عذراً، حدث خطأ.',
+    sorryErrorRetry: 'عذراً، حدث خطأ. حاول مرة ثانية.',
+    chooseTopic: 'اختر موضوع:',
+
+    // Energy Friend (additional)
+    cameraPermission: 'مطلوب صلاحية الكاميرا',
+    allowCameraAccess: 'يرجى السماح بالوصول للكاميرا من الإعدادات',
+    camera: 'كاميرا',
+    gallery: 'معرض الصور',
+    backToHome: 'العودة للرئيسية',
+    hazardType: 'نوع الخطر',
+    yourCurrentLocation: 'موقعك الحالي',
+
+    // General
+    error: 'خطأ',
   },
 } as const;
 

@@ -11,7 +11,7 @@ const C = {
   offWhite: '#F4F6F8',
   gray100: '#EAEDF0',
   gray200: '#D1D5DB',
-  gray400: '#9CA3AF',
+  gray400: '#4A5E6D',
   gray600: '#4B5563',
   gray800: '#1F2937',
   navy: '#1B4965',
@@ -44,7 +44,7 @@ export default function ServicesScreen() {
     <SafeAreaView style={s.safe} edges={['top']}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={s.header}>
-          <Text style={[s.title, { fontFamily: fonts.bold }]}>{t('services')}</Text>
+          <Text style={[s.title, { fontFamily: fonts.bold, letterSpacing: isAr ? 0 : -0.3 }]}>{t('services')}</Text>
         </View>
 
         <View style={s.list}>
@@ -91,7 +91,7 @@ export default function ServicesScreen() {
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: C.offWhite },
   header: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 12 },
-  title: { fontSize: 22, color: C.gray800, letterSpacing: -0.3 },
+  title: { fontSize: 22, color: C.gray800 },
   list: { marginHorizontal: 16, backgroundColor: C.white, borderRadius: 12, overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 4, elevation: 1 },
   row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 16, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: C.gray100 },
   rowIcon: { width: 28 },

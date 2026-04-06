@@ -43,9 +43,8 @@ function buildSmoothPath(points: {x: number, y: number}[]): string {
 }
 
 export default function UsageScreen() {
-  const { t, fonts, language } = useLanguage();
+  const { t, fonts, language, sz } = useLanguage();
   const isAr = language === 'ar';
-  const sz = (en: number) => isAr ? Math.max(11, en * 0.85) : en;
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -182,7 +181,7 @@ export default function UsageScreen() {
     return (
       <View style={styles.screen}>
         <View style={{ paddingHorizontal: 16, paddingTop: 100 }}>
-          <Text style={{ color: '#6B8499', fontSize: 12, fontFamily: fonts.regular, textAlign: 'center', marginBottom: 16 }}>
+          <Text style={{ color: '#3D5468', fontSize: 12, fontFamily: fonts.regular, textAlign: 'center', marginBottom: 16 }}>
             {isAr ? 'جاري جلب بياناتك من جيبكو...' : 'Fetching your data from JEPCO...'}
           </Text>
           <Shimmer radius={14} height={140} />
@@ -204,7 +203,7 @@ export default function UsageScreen() {
           <SafeAreaView edges={['top']} style={styles.headerPad}>
             <View style={styles.topRow}>
               <View>
-                <Text style={[styles.hdrTitle, { fontFamily: fonts.bold, fontSize: sz(20) }]}>
+                <Text style={[styles.hdrTitle, { fontFamily: fonts.bold, fontSize: sz(20), letterSpacing: isAr ? 0 : -0.3 }]}>
                   {t('usageTitle')}
                 </Text>
                 <Text style={[styles.hdrSub, { fontFamily: fonts.regular, fontSize: sz(11) }]}>
@@ -217,7 +216,7 @@ export default function UsageScreen() {
             {/* Summary cards — animated counters */}
             <View style={styles.sumRow}>
               <View style={styles.sumCard}>
-                <Text style={[styles.sumLabel, { fontFamily: fonts.medium }]}>{isAr ? 'المتوقع' : 'Projected'}</Text>
+                <Text style={[styles.sumLabel, { fontFamily: fonts.medium, letterSpacing: isAr ? 0 : 0.3 }]}>{isAr ? 'المتوقع' : 'Projected'}</Text>
                 <AnimatedCounter value={currentKwh} style={[styles.sumVal, { fontFamily: fonts.bold }]} duration={1000} />
                 <Text style={[styles.sumUnit, { fontFamily: fonts.medium }]}>kWh</Text>
                 {daysInCycle > 0 && (
@@ -227,7 +226,7 @@ export default function UsageScreen() {
                 )}
               </View>
               <View style={styles.sumCard}>
-                <Text style={[styles.sumLabel, { fontFamily: fonts.medium }]}>{isAr ? 'التكلفة المتوقعة' : 'Projected Cost'}</Text>
+                <Text style={[styles.sumLabel, { fontFamily: fonts.medium, letterSpacing: isAr ? 0 : 0.3 }]}>{isAr ? 'التكلفة المتوقعة' : 'Projected Cost'}</Text>
                 <AnimatedCounter value={expectedBillJd > 0 ? expectedBillJd : actualCostJd} decimals={2} style={[styles.sumVal, { fontFamily: fonts.bold }]} duration={1200} />
                 <Text style={[styles.sumUnit, { fontFamily: fonts.medium }]}>JD</Text>
                 <Text style={[styles.sumChange, { fontFamily: fonts.semibold, color: '#6EE7B7' }]}>
@@ -235,7 +234,7 @@ export default function UsageScreen() {
                 </Text>
               </View>
               <View style={styles.sumCard}>
-                <Text style={[styles.sumLabel, { fontFamily: fonts.medium }]}>Daily Avg</Text>
+                <Text style={[styles.sumLabel, { fontFamily: fonts.medium, letterSpacing: 0.3 }]}>Daily Avg</Text>
                 <AnimatedCounter value={dailyAvg} style={[styles.sumVal, { fontFamily: fonts.bold }]} duration={1000} />
                 <Text style={[styles.sumUnit, { fontFamily: fonts.medium }]}>kWh/day</Text>
               </View>
@@ -275,7 +274,7 @@ export default function UsageScreen() {
                         <Line key={i} x1={0} y1={CHART_H * (1 - pct)} x2={CHART_W} y2={CHART_H * (1 - pct)} stroke="#E8ECF0" strokeWidth={0.5} />
                       ))}
                       <Line x1={0} y1={avgY} x2={CHART_W} y2={avgY} stroke="#94A9B8" strokeWidth={0.8} strokeDasharray="4,3" />
-                      <SvgText x={CHART_W - 30} y={avgY - 4} fontSize={7} fill="#94A9B8">{dailyAvg} avg</SvgText>
+                      <SvgText x={CHART_W - 30} y={avgY - 4} fontSize={7} fill="#4A5E6D">{dailyAvg} avg</SvgText>
                       {lastMonthDailyAvg > 0 && (
                         <>
                           <Line
@@ -292,8 +291,8 @@ export default function UsageScreen() {
                             x={4}
                             y={CHART_H - (lastMonthDailyAvg / maxVal) * (CHART_H - 10) - 4}
                             fontSize={6}
-                            fill="#94A9B8"
-                            opacity={0.6}
+                            fill="#4A5E6D"
+                            opacity={0.8}
                           >Last month avg</SvgText>
                         </>
                       )}
@@ -469,7 +468,7 @@ export default function UsageScreen() {
             {/* Cheapest / Most Expensive chips */}
             <View style={styles.dcChips}>
               <View style={[styles.dcChip, { backgroundColor: 'rgba(5,150,105,0.05)' }]}>
-                <Text style={[styles.dcChipLabel, { fontFamily: fonts.medium }]}>CHEAPEST DAY</Text>
+                <Text style={[styles.dcChipLabel, { fontFamily: fonts.medium, letterSpacing: 0.3 }]}>CHEAPEST DAY</Text>
                 <Text style={[styles.dcChipVal, { fontFamily: fonts.bold, color: '#059669' }]}>
                   {(dailyCostJd * 0.6).toFixed(2)} JD
                 </Text>
@@ -478,7 +477,7 @@ export default function UsageScreen() {
                 </Text>
               </View>
               <View style={[styles.dcChip, { backgroundColor: 'rgba(220,38,38,0.05)' }]}>
-                <Text style={[styles.dcChipLabel, { fontFamily: fonts.medium }]}>MOST EXPENSIVE</Text>
+                <Text style={[styles.dcChipLabel, { fontFamily: fonts.medium, letterSpacing: 0.3 }]}>MOST EXPENSIVE</Text>
                 <Text style={[styles.dcChipVal, { fontFamily: fonts.bold, color: '#DC2626' }]}>
                   {(dailyCostJd * 1.65).toFixed(2)} JD
                 </Text>
@@ -507,25 +506,25 @@ const styles = StyleSheet.create({
   header: { borderBottomLeftRadius: 24, borderBottomRightRadius: 24 },
   headerPad: { paddingHorizontal: 20, paddingBottom: 22 },
   topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingTop: 8 },
-  hdrTitle: { color: '#fff', letterSpacing: -0.3, textAlign: 'left', writingDirection: 'ltr' },
-  hdrSub: { color: 'rgba(255,255,255,0.4)', marginTop: 2, textAlign: 'left', writingDirection: 'ltr' },
+  hdrTitle: { color: '#fff', textAlign: 'left', writingDirection: 'ltr' },
+  hdrSub: { color: 'rgba(255,255,255,0.6)', marginTop: 2, textAlign: 'left', writingDirection: 'ltr' },
 
   sumRow: { flexDirection: 'row', gap: 6, marginTop: 18 },
   sumCard: { flex: 1, backgroundColor: 'rgba(255,255,255,0.06)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: 10, alignItems: 'center' },
-  sumLabel: { fontSize: 8, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: 0.3 },
+  sumLabel: { fontSize: 8, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase' },
   sumVal: { fontSize: 20, color: '#fff', marginTop: 2, letterSpacing: -0.5 },
-  sumUnit: { fontSize: 8, color: 'rgba(255,255,255,0.3)', marginTop: 1 },
+  sumUnit: { fontSize: 8, color: 'rgba(255,255,255,0.55)', marginTop: 1 },
   sumChange: { fontSize: 8, marginTop: 3 },
 
   body: { paddingHorizontal: 16, paddingTop: 16 },
 
   card: { backgroundColor: '#fff', borderRadius: 14, padding: 16, marginBottom: 10, borderWidth: 1, borderColor: '#E8ECF0' },
   cardTitle: { color: '#0C1E2D', marginBottom: 2, textAlign: 'left', writingDirection: 'ltr' },
-  cardSub: { color: '#94A9B8', marginBottom: 10, textAlign: 'left', writingDirection: 'ltr' },
+  cardSub: { color: '#4A5E6D', marginBottom: 10, textAlign: 'left', writingDirection: 'ltr' },
 
   chartWrap: { flexDirection: 'row', marginTop: 8 },
   yAxis: { width: 28, justifyContent: 'space-between', paddingRight: 4 },
-  yLabel: { fontSize: 7, color: '#94A9B8', textAlign: 'right' },
+  yLabel: { fontSize: 7, color: '#4A5E6D', textAlign: 'right' },
   chartSvg: { flex: 1 },
 
   tierTrack: { height: 22, borderRadius: 11, flexDirection: 'row', overflow: 'hidden', position: 'relative', marginTop: 10 },
@@ -533,52 +532,52 @@ const styles = StyleSheet.create({
   tierSegLabel: { fontSize: 7, color: '#fff' },
   tierNeedle: { position: 'absolute', top: -3, width: 2, height: 28, backgroundColor: '#0C1E2D', borderRadius: 1 },
   tierLabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 3 },
-  tierLabel: { fontSize: 7, color: '#94A9B8' },
+  tierLabel: { fontSize: 7, color: '#4A5E6D' },
   tierInfo: { flexDirection: 'row', gap: 6, marginTop: 10 },
   tierInfoCard: { flex: 1, borderRadius: 8, padding: 8, alignItems: 'center' },
-  ticLabel: { fontSize: 7, color: '#6B8499', textTransform: 'uppercase' },
+  ticLabel: { fontSize: 7, color: '#3D5468', textTransform: 'uppercase' },
   ticVal: { fontSize: 14, marginTop: 2 },
-  ticSub: { fontSize: 7, color: '#94A9B8', marginTop: 1 },
+  ticSub: { fontSize: 7, color: '#4A5E6D', marginTop: 1 },
 
   billCard: { borderRadius: 14, padding: 14, marginBottom: 10 },
-  billLabel: { fontSize: 10, color: 'rgba(255,255,255,0.5)' },
+  billLabel: { fontSize: 10, color: 'rgba(255,255,255,0.6)' },
   billRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
   billVal: { fontSize: 26, color: '#fff', letterSpacing: -0.5 },
   billJd: { fontSize: 11 },
   billBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
   billBadgeText: { fontSize: 9, color: 'rgba(255,255,255,0.7)' },
-  billSub: { fontSize: 9, color: 'rgba(255,255,255,0.4)', marginTop: 6 },
+  billSub: { fontSize: 9, color: 'rgba(255,255,255,0.6)', marginTop: 6 },
 
   cmpGrid: { flexDirection: 'row', gap: 10, marginTop: 12 },
   cmpItem: { flex: 1, alignItems: 'center' },
-  cmpLabel: { fontSize: 9, color: '#94A9B8', marginBottom: 6 },
+  cmpLabel: { fontSize: 9, color: '#4A5E6D', marginBottom: 6 },
   cmpVal: { fontSize: 20, letterSpacing: -0.5 },
-  cmpUnit: { fontSize: 8, color: '#94A9B8', marginTop: 1 },
+  cmpUnit: { fontSize: 8, color: '#4A5E6D', marginTop: 1 },
   cmpBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, marginTop: 4 },
   cmpPct: { fontSize: 9 },
 
   meterRow: { flexDirection: 'row', gap: 8, marginTop: 8 },
   meterCard: { flex: 1, backgroundColor: '#F2F5F7', borderRadius: 10, padding: 10, alignItems: 'center' },
-  meterLabel: { fontSize: 8, color: '#94A9B8', textTransform: 'uppercase' },
+  meterLabel: { fontSize: 8, color: '#4A5E6D', textTransform: 'uppercase' },
   meterVal: { fontSize: 15, color: '#0C1E2D', marginTop: 2, letterSpacing: 0.5 },
-  meterDate: { fontSize: 7, color: '#94A9B8', marginTop: 2 },
+  meterDate: { fontSize: 7, color: '#4A5E6D', marginTop: 2 },
 
   dcRow: { flexDirection: 'row', alignItems: 'center', gap: 16, marginTop: 4 },
   dcMain: { flex: 1, alignItems: 'center' },
   dcVal: { fontSize: 30, color: '#1B4965', letterSpacing: -1 },
-  dcUnit: { fontSize: 9, color: '#94A9B8', marginTop: 2 },
+  dcUnit: { fontSize: 9, color: '#4A5E6D', marginTop: 2 },
   dcSep: { width: 1, height: 44, backgroundColor: '#E8ECF0' },
   dcBreakdown: { flex: 1.5 },
   dcLine: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  dcLineLabel: { fontSize: 10, color: '#6B8499' },
+  dcLineLabel: { fontSize: 10, color: '#3D5468' },
   dcLineVal: { fontSize: 12, color: '#0C1E2D' },
   dcBar: { height: 4, backgroundColor: '#F2F5F7', borderRadius: 2, overflow: 'hidden' },
   dcBarFill: { height: '100%', borderRadius: 2 },
   dcChips: { flexDirection: 'row', gap: 8, marginTop: 14 },
   dcChip: { flex: 1, borderRadius: 10, padding: 10, alignItems: 'center' },
-  dcChipLabel: { fontSize: 7, color: '#6B8499', textTransform: 'uppercase', letterSpacing: 0.3 },
+  dcChipLabel: { fontSize: 7, color: '#3D5468', textTransform: 'uppercase' },
   dcChipVal: { fontSize: 14, marginTop: 3 },
-  dcChipDate: { fontSize: 8, color: '#94A9B8', marginTop: 2 },
+  dcChipDate: { fontSize: 8, color: '#4A5E6D', marginTop: 2 },
 
   retryBtn: { alignItems: 'center', padding: 12, marginTop: 8 },
   retryText: { fontSize: 13, color: '#1B4965' },

@@ -99,10 +99,9 @@ function formatDate(dateStr: string, isAr: boolean): string {
 
 export default function ComplaintsScreen() {
   const router = useRouter();
-  const { t, fonts, language } = useLanguage();
+  const { t, fonts, language, sz } = useLanguage();
   const { showToast } = useToast();
   const isAr = language === 'ar';
-  const sz = (en: number) => (isAr ? Math.max(11, en * 0.85) : en);
 
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [loading, setLoading] = useState(true);

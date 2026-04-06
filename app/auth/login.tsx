@@ -43,11 +43,9 @@ function GoogleLogo() {
 export default function LoginScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { t, fonts, language } = useLanguage();
+  const { t, fonts, language, sz } = useLanguage();
   const { login } = useAuth();
   const isAr = language === 'ar';
-  // Arabic font renders larger — scale down but never below 11px for readability
-  const sz = (en: number) => isAr ? Math.max(11, en * 0.82) : en;
 
   const passwordRef = useRef<TextInput>(null);
 
@@ -184,7 +182,7 @@ export default function LoginScreen() {
           <ReanimatedAnimated.View style={shakeStyle}>
             {/* Brand */}
             <View style={[styles.brand, isAr && { marginBottom: 16 }]}>
-              <Text style={[styles.appName, { fontFamily: fonts.extrabold, fontSize: sz(26) }]}>
+              <Text style={[styles.appName, { fontFamily: fonts.extrabold, fontSize: sz(26), letterSpacing: isAr ? 0 : -0.5 }]}>
                 {t('appName')}
               </Text>
               <Text style={[styles.tagline, { fontFamily: fonts.medium, fontSize: 13 }]}>
@@ -301,7 +299,7 @@ export default function LoginScreen() {
               </TouchableOpacity>
             </View>
 
-            <Text style={[styles.cpaText, { fontFamily: fonts.regular, fontSize: sz(10) }]}>
+            <Text style={[styles.cpaText, { fontFamily: fonts.regular, fontSize: sz(10), letterSpacing: isAr ? 0 : 0.2 }]}>
               {t('cpaInitiative')}
             </Text>
           </ReanimatedAnimated.View>
@@ -371,7 +369,6 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: 26,
     color: Colors.primary,
-    letterSpacing: -0.5,
   },
   tagline: {
     fontSize: 12,
@@ -460,7 +457,7 @@ const styles = StyleSheet.create({
   },
   dividerText: {
     fontSize: 12,
-    color: '#94A3B8',
+    color: '#4A5E6D',
   },
 
   // Google
@@ -508,7 +505,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#A0ADB8',
     marginTop: 14,
-    letterSpacing: 0.2,
     writingDirection: 'ltr',
   },
 });

@@ -38,9 +38,8 @@ type GpsState = 'idle' | 'detecting' | 'done' | 'denied' | 'error';
 
 export default function OutageScreen() {
   const router = useRouter();
-  const { t, fonts, language } = useLanguage();
+  const { t, fonts, language, sz } = useLanguage();
   const isAr = language === 'ar';
-  const sz = (en: number) => (isAr ? Math.max(11, en * 0.85) : en);
 
   const [screenState, setScreenState] = useState<ScreenState>('form');
   const [location, setLocation] = useState('');
@@ -159,7 +158,7 @@ export default function OutageScreen() {
       const message =
         err instanceof Error ? err.message : 'Failed to submit report';
       setScreenState('form');
-      Alert.alert(isAr ? 'خطأ' : 'Error', message);
+      Alert.alert(t('error'), message);
     }
   }, [canSubmit, location, startTime, details, affectedArea, t, isAr, locationLat, locationLng, gpsAddress]);
 

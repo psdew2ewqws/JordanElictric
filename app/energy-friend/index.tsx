@@ -40,9 +40,8 @@ type GpsState = 'idle' | 'detecting' | 'done' | 'denied' | 'error';
 
 export default function EnergyFriendScreen() {
   const router = useRouter();
-  const { t, fonts, language } = useLanguage();
+  const { t, fonts, language, sz } = useLanguage();
   const isAr = language === 'ar';
-  const sz = (en: number) => (isAr ? Math.max(11, en * 0.85) : en);
 
   const [screenState, setScreenState] = useState<ScreenState>('form');
   const [selectedHazard, setSelectedHazard] = useState<string | null>(null);
@@ -122,10 +121,8 @@ export default function EnergyFriendScreen() {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
       Alert.alert(
-        isAr ? 'تحتاج إذن الكاميرا' : 'Camera Permission Needed',
-        isAr
-          ? 'يرجى السماح بالوصول للكاميرا من الإعدادات'
-          : 'Please allow camera access in settings',
+        t('cameraPermission'),
+        t('allowCameraAccess'),
       );
       return;
     }
@@ -137,7 +134,7 @@ export default function EnergyFriendScreen() {
     if (!result.canceled && result.assets[0]) {
       setPhotoUri(result.assets[0].uri);
     }
-  }, [isAr]);
+  }, [t]);
 
   const handlePhotoPress = useCallback(() => {
     Alert.alert(
@@ -145,20 +142,20 @@ export default function EnergyFriendScreen() {
       '',
       [
         {
-          text: isAr ? 'الكاميرا' : 'Camera',
+          text: t('camera'),
           onPress: takePhoto,
         },
         {
-          text: isAr ? 'المعرض' : 'Gallery',
+          text: t('gallery'),
           onPress: pickPhoto,
         },
         {
-          text: isAr ? 'إلغاء' : 'Cancel',
+          text: t('cancel'),
           style: 'cancel',
         },
       ],
     );
-  }, [t, isAr, takePhoto, pickPhoto]);
+  }, [t, takePhoto, pickPhoto]);
 
   const handleSubmit = useCallback(async () => {
     if (!canSubmit) return;
@@ -210,7 +207,7 @@ export default function EnergyFriendScreen() {
       const message =
         err instanceof Error ? err.message : 'Failed to submit report';
       setScreenState('form');
-      Alert.alert(isAr ? 'خطأ' : 'Error', message);
+      Alert.alert(t('error'), message);
     }
   }, [canSubmit, selectedHazard, detailsText, locationText, t, isAr, locationLat, locationLng, gpsAddress, photoUri]);
 
@@ -247,7 +244,7 @@ export default function EnergyFriendScreen() {
                 { fontFamily: fonts.semibold, fontSize: sz(15) },
               ]}
             >
-              {isAr ? 'العودة للرئيسية' : 'Back to Home'}
+              {t('backToHome')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -313,7 +310,7 @@ export default function EnergyFriendScreen() {
             { fontFamily: fonts.semibold, fontSize: sz(14) },
           ]}
         >
-          {isAr ? 'نوع الخطر' : 'Hazard Type'}
+          {t('hazardType')}
         </Text>
         <View style={styles.hazardChipsRow}>
           {HAZARD_TYPES.map((hazard) => {
@@ -395,7 +392,7 @@ export default function EnergyFriendScreen() {
             { fontFamily: fonts.semibold, fontSize: sz(14) },
           ]}
         >
-          {isAr ? 'موقعك الحالي' : 'Your Current Location'}
+          {t('yourCurrentLocation')}
         </Text>
         <View style={styles.gpsCard}>
           <View style={styles.gpsHeader}>
