@@ -3,7 +3,7 @@ import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || "https://pehberdmrsnaeqtlopbq.supabase.co";
-const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || "sb_publishable_4scYTjZPs8EVA8hE7TUXBA_Zfk9vMie";
+const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlaGJlcmRtcnNuYWVxdGxvcGJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0MDg5MDksImV4cCI6MjA5MDk4NDkwOX0.mcASJPYipg-139n6CTpnxY0EEZ8cevHX0wq7mRRsvD4";
 
 // Custom storage adapter for React Native (SecureStore on native, localStorage on web)
 const ExpoSecureStoreAdapter = {
