@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Alert,
-  ActivityIndicator, TextInput,
+  ActivityIndicator, TextInput, RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../../src/contexts/AuthContext';
+import { useToast } from '../../src/contexts/ToastContext';
 import { billApi } from '../../src/services/api';
 import { useLanguage } from '../../src/i18n/LanguageContext';
 
@@ -67,9 +68,11 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { user: au, subscription: sub, logout, updateSubscription, updateUser } = useAuth();
   const { t, language, setLanguage, fonts } = useLanguage();
+  const { showToast } = useToast();
   const isAr = language === 'ar';
 
   const [billCount, setBillCount] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
   const [notifOn, setNotifOn] = useState(true);
   const [saving, setSaving] = useState(false);
   const [subModal, setSubModal] = useState(false);
@@ -78,10 +81,18 @@ export default function ProfileScreen() {
   const [langModal, setLangModal] = useState(false);
   const [editNum, setEditNum] = useState('');
 
-  useEffect(() => {
+  const fetchProfileData = () => {
     billApi.list(0, 0).then((r) => setBillCount(r.total)).catch(() => {});
     AsyncStorage.getItem('diaa_notifications').then((v) => { if (v !== null) setNotifOn(v === 'on'); });
-  }, []);
+  };
+
+  useEffect(() => { fetchProfileData(); }, []);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    fetchProfileData();
+    setTimeout(() => setRefreshing(false), 1000);
+  };
 
   const name = au?.name || 'User';
   const email = au?.email || '';
@@ -89,7 +100,7 @@ export default function ProfileScreen() {
   const co = sub?.distributionCompany || 'JEPCO';
   const hh = sub?.householdSize || 1;
 
-  const saveSub = async () => { if (!editNum.trim()) return; setSaving(true); try { await updateSubscription({ subscriberNumber: editNum.trim() }); setSubModal(false); } catch {} finally { setSaving(false); } };
+  const saveSub = async () => { if (!editNum.trim()) return; setSaving(true); try { await updateSubscription({ subscriberNumber: editNum.trim() }); setSubModal(false); showToast(isAr ? 'تم الحفظ!' : 'Saved!', 'success'); } catch { showToast(isAr ? 'فشل الحفظ' : 'Save failed', 'error'); } finally { setSaving(false); } };
   const pickCo = async (v: string) => { setSaving(true); try { await updateSubscription({ distributionCompany: v }); setCoModal(false); } catch {} finally { setSaving(false); } };
   const pickHh = async (n: number) => { setSaving(true); try { await updateSubscription({ householdSize: n }); setHhModal(false); } catch {} finally { setSaving(false); } };
   const pickLang = async (l: 'en' | 'ar') => { setLanguage(l); try { await updateUser({ language: l === 'ar' ? 'AR' : 'EN' }); } catch {} setLangModal(false); };
@@ -98,7 +109,7 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={s.safe} edges={['top']}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
         {/* Identity — no avatar circle, just clean text */}
         <View style={s.identity}>
           <Text style={[s.name, { fontFamily: fonts.bold }]}>{name}</Text>
@@ -144,26 +155,34 @@ export default function ProfileScreen() {
         <View style={{ height: 32 }} />
       </ScrollView>
 
-      {/* Modals */}
-      <Sheet visible={subModal} onClose={() => setSubModal(false)} title={t('editSubscriberNumber')}>
-        <TextInput style={s.input} value={editNum} onChangeText={setEditNum} placeholder="2018080012345" placeholderTextColor={C.gray400} keyboardType="number-pad" maxLength={13} autoFocus />
-        <View style={s.sheetBtns}>
-          <TouchableOpacity onPress={() => setSubModal(false)}><Text style={s.cancelText}>{t('cancel')}</Text></TouchableOpacity>
-          <TouchableOpacity style={s.saveBtn} onPress={saveSub} disabled={saving}>
-            {saving ? <ActivityIndicator color="#fff" size="small" /> : <Text style={s.saveText}>{t('save')}</Text>}
-          </TouchableOpacity>
-        </View>
-      </Sheet>
-      <Sheet visible={coModal} onClose={() => setCoModal(false)} title={t('selectCompany')}>
-        {COMPANIES.map((c) => <Pick key={c} label={c} selected={co === c} onPress={() => pickCo(c)} />)}
-      </Sheet>
-      <Sheet visible={hhModal} onClose={() => setHhModal(false)} title={t('selectHouseholdSize')}>
-        {[1,2,3,4,5,6,7,8,9,10].map((n) => <Pick key={n} label={`${n} ${n === 1 ? t('person') : t('people')}`} selected={hh === n} onPress={() => pickHh(n)} />)}
-      </Sheet>
-      <Sheet visible={langModal} onClose={() => setLangModal(false)} title={t('selectLanguage')}>
-        <Pick label="English" selected={language === 'en'} onPress={() => pickLang('en')} />
-        <Pick label="العربية" selected={language === 'ar'} onPress={() => pickLang('ar')} />
-      </Sheet>
+      {/* Modals — lazy: only mount when open */}
+      {subModal && (
+        <Sheet visible={subModal} onClose={() => setSubModal(false)} title={t('editSubscriberNumber')}>
+          <TextInput style={s.input} value={editNum} onChangeText={setEditNum} placeholder="2018080012345" placeholderTextColor={C.gray400} keyboardType="number-pad" maxLength={13} autoFocus />
+          <View style={s.sheetBtns}>
+            <TouchableOpacity onPress={() => setSubModal(false)}><Text style={s.cancelText}>{t('cancel')}</Text></TouchableOpacity>
+            <TouchableOpacity style={s.saveBtn} onPress={saveSub} disabled={saving}>
+              {saving ? <ActivityIndicator color="#fff" size="small" /> : <Text style={s.saveText}>{t('save')}</Text>}
+            </TouchableOpacity>
+          </View>
+        </Sheet>
+      )}
+      {coModal && (
+        <Sheet visible={coModal} onClose={() => setCoModal(false)} title={t('selectCompany')}>
+          {COMPANIES.map((c) => <Pick key={c} label={c} selected={co === c} onPress={() => pickCo(c)} />)}
+        </Sheet>
+      )}
+      {hhModal && (
+        <Sheet visible={hhModal} onClose={() => setHhModal(false)} title={t('selectHouseholdSize')}>
+          {[1,2,3,4,5,6,7,8,9,10].map((n) => <Pick key={n} label={`${n} ${n === 1 ? t('person') : t('people')}`} selected={hh === n} onPress={() => pickHh(n)} />)}
+        </Sheet>
+      )}
+      {langModal && (
+        <Sheet visible={langModal} onClose={() => setLangModal(false)} title={t('selectLanguage')}>
+          <Pick label="English" selected={language === 'en'} onPress={() => pickLang('en')} />
+          <Pick label="العربية" selected={language === 'ar'} onPress={() => pickLang('ar')} />
+        </Sheet>
+      )}
     </SafeAreaView>
   );
 }

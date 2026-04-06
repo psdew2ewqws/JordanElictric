@@ -4,8 +4,10 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   TextInput,
   ScrollView,
+  Keyboard,
   Image,
   ActivityIndicator,
   Alert,
@@ -274,6 +276,7 @@ export default function EnergyFriendScreen() {
         <View style={styles.headerSpacer} />
       </View>
 
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
@@ -577,6 +580,7 @@ export default function EnergyFriendScreen() {
           )}
         </TouchableOpacity>
       </ScrollView>
+      </TouchableWithoutFeedback>
     </SafeAreaView>
   );
 }

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -27,15 +27,38 @@ export default function HomeScreen() {
   const [unread, setUnread] = useState(0);
   const [bills, setBills] = useState(0);
   const [tickets, setTickets] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    jepcoApi.getSmartMeter().then((r) => setSmartMeter(r.data)).catch(() => {});
-    notificationApi.getUnreadCount().then((r) => setUnread(r.count)).catch(() => {});
-    billApi.list(1, 0).then((r) => setBills(r.total)).catch(() => {});
-    complaintApi.list().then((r) => setTickets(Array.isArray(r) ? r.length : 0)).catch(() => {});
-  }, []);
+  const fetchAll = async () => {
+    setError(false);
+    try {
+      const results = await Promise.allSettled([
+        jepcoApi.getSmartMeter().then((r) => setSmartMeter(r.data)),
+        notificationApi.getUnreadCount().then((r) => setUnread(r.count)),
+        billApi.list(1, 0).then((r) => setBills(r.total)),
+        complaintApi.list().then((r) => setTickets(Array.isArray(r) ? r.length : 0)),
+      ]);
+      const allFailed = results.every((r) => r.status === 'rejected');
+      if (allFailed) setError(true);
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const sm = smartMeter || {};
+  useEffect(() => { fetchAll(); }, []);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchAll();
+    setRefreshing(false);
+  };
+
+  const rawSm = smartMeter || {};
+  const sm = rawSm.body || rawSm;
   const kwh = parseInt(sm.expectedElectricityConsumptionQuntity || '0');
   const expectedJd = parseFloat(sm.expectedElectricityEndofMonthBillAmount || '0');
   const costJd = expectedJd > 0 ? expectedJd : (Math.min(kwh, 300) * 0.050) + (kwh > 300 ? Math.min(kwh - 300, 300) * 0.100 : 0) + (kwh > 600 ? (kwh - 600) * 0.200 : 0);
@@ -43,9 +66,17 @@ export default function HomeScreen() {
   const subNum = subscription?.subscriberNumber || '';
   const co = subscription?.distributionCompany || 'JEPCO';
 
+  if (loading) {
+    return (
+      <View style={[s.screen, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={C.navyLight} />
+      </View>
+    );
+  }
+
   return (
     <View style={s.screen}>
-      <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
+      <ScrollView showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
         {/* ═══ HEADER ═══ */}
         <LinearGradient colors={[C.navy, C.navyMid, C.navyLight]} style={s.header}>
           <SafeAreaView edges={['top']} style={s.headerInner}>
@@ -85,6 +116,16 @@ export default function HomeScreen() {
             ) : null}
           </SafeAreaView>
         </LinearGradient>
+
+        {/* ═══ ERROR BANNER ═══ */}
+        {error && (
+          <View style={s.errorBanner}>
+            <Ionicons name="cloud-offline-outline" size={16} color={C.red} />
+            <Text style={{ fontSize: 12, color: C.gray600, fontFamily: f.medium, flex: 1 }}>
+              {isAr ? 'تعذر تحميل البيانات. اسحب للتحديث.' : "Couldn't load data. Pull to refresh."}
+            </Text>
+          </View>
+        )}
 
         {/* ═══ BILL CARD ═══ */}
         <View style={s.billWrap}>
@@ -179,4 +220,5 @@ const s = StyleSheet.create({
   summaryRow: { flexDirection: 'row', marginHorizontal: 16, marginTop: 14, backgroundColor: C.white, borderRadius: 12, paddingVertical: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 4, elevation: 1 },
   summaryItem: { flex: 1, alignItems: 'center', gap: 2 },
   summaryDiv: { width: 1, backgroundColor: C.gray100, marginVertical: 4 },
+  errorBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 16, marginTop: -36, marginBottom: 4, backgroundColor: '#FEF2F2', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10 },
 });

@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useLanguage } from '../../src/i18n/LanguageContext';
+import { useToast } from '../../src/contexts/ToastContext';
 import { Colors, FontSize, Radius, Spacing, Shadows } from '../../src/constants/theme';
 import { complaintApi } from '../../src/services/api';
 
@@ -99,6 +100,7 @@ function formatDate(dateStr: string, isAr: boolean): string {
 export default function ComplaintsScreen() {
   const router = useRouter();
   const { t, fonts, language } = useLanguage();
+  const { showToast } = useToast();
   const isAr = language === 'ar';
   const sz = (en: number) => (isAr ? Math.max(11, en * 0.85) : en);
 
@@ -146,18 +148,23 @@ export default function ComplaintsScreen() {
 
     setSubmitting(true);
     try {
-      await complaintApi.create({
+      const result = await complaintApi.create({
         complaintType: formType,
         description: formDescription.trim(),
       });
       setShowForm(false);
       setFormType(null);
       setFormDescription('');
+      const ref = result?.reference_number || result?.id?.slice(0, 8) || '';
+      showToast(
+        isAr ? `تم تقديم الشكوى: ${ref}` : `Complaint filed: ${ref}`,
+        'success',
+      );
       fetchComplaints();
     } catch (err: unknown) {
       const message =
-        err instanceof Error ? err.message : 'Failed to submit complaint';
-      Alert.alert(isAr ? 'خطأ' : 'Error', message);
+        err instanceof Error ? err.message : isAr ? 'فشل تقديم الشكوى' : 'Failed to submit complaint';
+      showToast(message, 'error');
     } finally {
       setSubmitting(false);
     }
@@ -350,12 +357,12 @@ export default function ComplaintsScreen() {
         visible={showForm}
         animationType="slide"
         presentationStyle="pageSheet"
-        onRequestClose={() => setShowForm(false)}
+        onRequestClose={() => { setShowForm(false); setFormType(null); setFormDescription(''); }}
       >
         <SafeAreaView style={styles.modalSafe} edges={['top', 'bottom']}>
           {/* Modal header */}
           <View style={styles.modalHeader}>
-            <TouchableOpacity onPress={() => setShowForm(false)}>
+            <TouchableOpacity onPress={() => { setShowForm(false); setFormType(null); setFormDescription(''); }}>
               <Ionicons name="close" size={24} color={Colors.text} />
             </TouchableOpacity>
             <Text
@@ -389,6 +396,8 @@ export default function ComplaintsScreen() {
                 style={[styles.chip, styles.chipOutage]}
                 onPress={() => {
                   setShowForm(false);
+                  setFormType(null);
+                  setFormDescription('');
                   router.push('/outage/');
                 }}
               >
@@ -446,9 +455,15 @@ export default function ComplaintsScreen() {
               onChangeText={setFormDescription}
               multiline
               numberOfLines={5}
+              maxLength={500}
               textAlignVertical="top"
               textAlign={isAr ? 'right' : 'left'}
             />
+            {formDescription.length > 300 && (
+              <Text style={[styles.charCounter, { fontFamily: fonts.regular, fontSize: sz(11) }]}>
+                {formDescription.length}/500
+              </Text>
+            )}
 
             {/* Submit */}
             <TouchableOpacity
@@ -699,6 +714,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
     minHeight: 120,
+  },
+  charCounter: {
+    color: Colors.textMuted,
+    textAlign: 'right',
+    marginTop: 4,
   },
   submitBtn: {
     backgroundColor: Colors.primary,

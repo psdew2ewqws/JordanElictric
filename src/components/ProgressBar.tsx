@@ -10,7 +10,7 @@ interface ProgressBarProps {
   rightLabel?: string;
 }
 
-export function ProgressBar({ label, value, maxValue, color, rightLabel }: ProgressBarProps) {
+export const ProgressBar = React.memo(function ProgressBar({ label, value, maxValue, color, rightLabel }: ProgressBarProps) {
   const percentage = Math.min((value / maxValue) * 100, 100);
 
   return (
@@ -24,7 +24,7 @@ export function ProgressBar({ label, value, maxValue, color, rightLabel }: Progr
       </View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

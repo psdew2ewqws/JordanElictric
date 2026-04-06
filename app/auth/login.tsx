@@ -4,7 +4,9 @@ import {
   Text,
   StyleSheet,
   TextInput,
+  Keyboard,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -45,6 +47,8 @@ export default function LoginScreen() {
   // Arabic font renders larger — scale down but never below 11px for readability
   const sz = (en: number) => isAr ? Math.max(11, en * 0.82) : en;
 
+  const passwordRef = useRef<TextInput>(null);
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -65,6 +69,7 @@ export default function LoginScreen() {
     } catch {}
     try {
       await login(email, password);
+      Keyboard.dismiss();
       router.replace('/(tabs)');
     } catch (err: any) {
       const msg = err.message || '';
@@ -143,6 +148,7 @@ export default function LoginScreen() {
       {/* === CLEAN TRANSITION — no visible gradient band === */}
 
       {/* === FORM AREA === */}
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <KeyboardAvoidingView
         style={styles.formArea}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -176,6 +182,11 @@ export default function LoginScreen() {
                   placeholderTextColor="#B8C5D0"
                   keyboardType="email-address"
                   autoCapitalize="none"
+                  autoFocus={true}
+                  returnKeyType="next"
+                  textContentType="emailAddress"
+                  autoComplete="email"
+                  onSubmitEditing={() => passwordRef.current?.focus()}
                   value={email}
                   onChangeText={setEmail}
                 />
@@ -190,10 +201,15 @@ export default function LoginScreen() {
               <View style={styles.inputWrapper}>
                 <Ionicons name="lock-closed-outline" size={16} color="#9CAFBE" />
                 <TextInput
+                  ref={passwordRef}
                   style={[styles.input, { fontFamily: fonts.regular, fontSize: sz(14.5), paddingVertical: isAr ? 11 : 14 }]}
                   placeholder={t('passwordPlaceholder')}
                   placeholderTextColor="#B8C5D0"
                   secureTextEntry={!showPassword}
+                  returnKeyType="go"
+                  textContentType="password"
+                  autoComplete="password"
+                  onSubmitEditing={() => { if (email && password) handleLogin(); }}
                   value={password}
                   onChangeText={setPassword}
                 />
@@ -268,6 +284,7 @@ export default function LoginScreen() {
           </ScrollView>
         </Animated.View>
       </KeyboardAvoidingView>
+      </TouchableWithoutFeedback>
     </View>
   );
 }

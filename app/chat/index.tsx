@@ -8,6 +8,7 @@ import {
   FlatList,
   KeyboardAvoidingView,
   Platform,
+  Keyboard,
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -174,6 +175,7 @@ export default function ChatScreen() {
         );
       } finally {
         setIsLoading(false);
+        Keyboard.dismiss();
       }
     },
     [isLoading, sessionId, isAr]
@@ -283,18 +285,32 @@ export default function ChatScreen() {
 
         {/* Input */}
         <View style={styles.inputBar}>
-          <TextInput
-            style={[styles.textInput, { fontFamily: fonts.regular, fontSize: sz(14) }]}
-            placeholder={isAr ? 'اكتب رسالتك...' : 'Type a message...'}
-            placeholderTextColor={Colors.textMuted}
-            value={inputText}
-            onChangeText={setInputText}
-            multiline
-            maxLength={500}
-            textAlign={isAr ? 'right' : 'left'}
-            editable={!isLoading}
-            onSubmitEditing={() => sendMessage(inputText)}
-          />
+          <View style={{ flex: 1 }}>
+            <TextInput
+              style={[styles.textInput, { fontFamily: fonts.regular, fontSize: sz(14) }]}
+              placeholder={isAr ? 'اكتب رسالتك...' : 'Type a message...'}
+              placeholderTextColor={Colors.textMuted}
+              value={inputText}
+              onChangeText={setInputText}
+              multiline
+              maxLength={500}
+              textAlign={isAr ? 'right' : 'left'}
+              editable={!isLoading}
+              returnKeyType="send"
+              onSubmitEditing={() => sendMessage(inputText)}
+              {...(Platform.OS === 'web' ? {
+                onKeyPress: (e: any) => {
+                  if (e.nativeEvent.key === 'Enter' && !e.nativeEvent.shiftKey) {
+                    e.preventDefault();
+                    sendMessage(inputText);
+                  }
+                },
+              } : {})}
+            />
+            {inputText.length > 400 && (
+              <Text style={styles.charCounter}>{inputText.length}/500</Text>
+            )}
+          </View>
           <TouchableOpacity
             style={[styles.sendBtn, (!inputText.trim() || isLoading) && styles.sendBtnDisabled]}
             onPress={() => sendMessage(inputText)}
@@ -467,5 +483,12 @@ const styles = StyleSheet.create({
   },
   sendBtnDisabled: {
     backgroundColor: Colors.surfaceAlt,
+  },
+  charCounter: {
+    fontSize: FontSize.xs,
+    color: Colors.textMuted,
+    textAlign: 'right',
+    marginTop: 2,
+    marginRight: 4,
   },
 });

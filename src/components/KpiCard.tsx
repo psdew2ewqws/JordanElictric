@@ -11,7 +11,7 @@ interface KpiCardProps {
   subtitleColor?: string;
 }
 
-export function KpiCard({ label, value, unit, subtitle, valueColor = Colors.primary, subtitleColor = Colors.textMuted }: KpiCardProps) {
+export const KpiCard = React.memo(function KpiCard({ label, value, unit, subtitle, valueColor = Colors.primary, subtitleColor = Colors.textMuted }: KpiCardProps) {
   return (
     <View style={styles.container}>
       <Text style={styles.label}>{label}</Text>
@@ -22,7 +22,7 @@ export function KpiCard({ label, value, unit, subtitle, valueColor = Colors.prim
       {subtitle && <Text style={[styles.subtitle, { color: subtitleColor }]}>{subtitle}</Text>}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

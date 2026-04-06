@@ -171,7 +171,9 @@ async function getOrFetchCache(
 
   if (cached?.data && new Date(cached.expires_at) > new Date()) {
     console.log(`[chat-tool] Cache HIT for ${endpoint}`);
-    return cached.data as Record<string, unknown>;
+    // JEPCO live data is cached as { statusCode, body: {...} } — unwrap
+    const raw = cached.data as Record<string, unknown>;
+    return (raw.body && typeof raw.body === "object") ? raw.body as Record<string, unknown> : raw;
   }
 
   // 2. Cache miss — fetch fresh
@@ -184,8 +186,7 @@ async function getOrFetchCache(
   try {
     if (dataMode === "live") {
       const raw = await fetchJepcoData(endpoint, ctx.fileNumber);
-      // JEPCO returns { statusCode: "Success", body: {...} }
-      freshData = (raw as any)?.body ?? raw;
+      freshData = raw;
     } else {
       // Get household_size for demo generator
       const { data: sub } = await ctx.db
@@ -214,7 +215,9 @@ async function getOrFetchCache(
   }, { onConflict: "subscription_id,endpoint" });
 
   console.log(`[chat-tool] Cached fresh ${endpoint} data`);
-  return freshData as Record<string, unknown>;
+  // Unwrap .body if JEPCO live response
+  const result = freshData as Record<string, unknown>;
+  return (result.body && typeof result.body === "object") ? result.body as Record<string, unknown> : result;
 }
 
 // ─── Executors ────────────────────────────────────────────

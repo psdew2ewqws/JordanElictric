@@ -1,23 +1,30 @@
 /**
  * JEPCO API client — handles auth and endpoint calls.
- * Used only in LIVE mode. In DEMO mode, demo-data.ts handles everything.
+ *
+ * If JEPCO_PROXY_URL is set, routes all calls through a proxy server
+ * (needed because Supabase edge functions can't reach JEPCO directly).
+ * Otherwise calls JEPCO API directly.
  */
 
 const JEPCO_BASE = Deno.env.get("JEPCO_API_BASE") || "";
 const JEPCO_USER = Deno.env.get("JEPCO_USERNAME") || "";
 const JEPCO_PASS = Deno.env.get("JEPCO_PASSWORD") || "";
+const JEPCO_PROXY = Deno.env.get("JEPCO_PROXY_URL") || "";
 
 // In-memory token cache (survives within warm edge function instance)
 let cachedToken: string | null = null;
 let tokenExpiresAt = 0;
 
 async function getToken(): Promise<string> {
-  // Return cached if still valid (refresh 1hr before expiry)
   if (cachedToken && Date.now() < tokenExpiresAt - 3600_000) {
     return cachedToken;
   }
 
-  const res = await fetch(`${JEPCO_BASE}/LoginController/Login`, {
+  const loginUrl = JEPCO_PROXY
+    ? `${JEPCO_PROXY}/jepco-login`
+    : `${JEPCO_BASE}/LoginController/Login`;
+
+  const res = await fetch(loginUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ username: JEPCO_USER, password: JEPCO_PASS }),
@@ -28,24 +35,38 @@ async function getToken(): Promise<string> {
   }
 
   const data = await res.json();
-  cachedToken = data.token || data.Token || data.access_token;
+  cachedToken = data.token || data.Token || data.access_token ||
+    data.body?.token || data.body?.Token;
   if (!cachedToken) throw new Error("No token in JEPCO response");
 
-  // Token valid for 9 hours
   tokenExpiresAt = Date.now() + 9 * 3600_000;
   return cachedToken;
 }
 
 async function jepcoPost(endpoint: string, body: Record<string, unknown>) {
   const token = await getToken();
-  const res = await fetch(`${JEPCO_BASE}/${endpoint}`, {
+
+  const url = JEPCO_PROXY
+    ? `${JEPCO_PROXY}/jepco-forward`
+    : `${JEPCO_BASE}/${endpoint}`;
+
+  const reqBody = JEPCO_PROXY
+    ? { endpoint, body, token }
+    : body;
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (!JEPCO_PROXY) {
+    headers["Authorization"] = `Bearer ${token}`;
+    headers["Cookie"] = `AuthToken=${token}`;
+  }
+
+  const res = await fetch(url, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-      Cookie: `AuthToken=${token}`,
-    },
-    body: JSON.stringify(body),
+    headers,
+    body: JSON.stringify(reqBody),
   });
 
   if (!res.ok) {
@@ -61,14 +82,14 @@ async function jepcoPost(endpoint: string, body: Record<string, unknown>) {
 export async function fetchSmartMeter(fileNumber: string) {
   return jepcoPost("Dashboard/SmartMeterDashboard", {
     FileNumber: fileNumber,
-    LanguageId: 2, // Arabic
+    LanguageId: "AR",
   });
 }
 
 export async function fetchSapInfo(fileNumber: string) {
   return jepcoPost("CustomerInformationDetails/CheckFileNumberinSAP", {
     FileNumber: fileNumber,
-    LanguageId: 2,
+    LanguageId: "AR",
     MobileNumber: "",
   });
 }
@@ -76,7 +97,7 @@ export async function fetchSapInfo(fileNumber: string) {
 export async function fetchBills(fileNumber: string) {
   return jepcoPost("MobileBills/GetBills", {
     FileNumber: fileNumber,
-    LanguageId: 2,
+    LanguageId: "AR",
     MobileNumber: "",
   });
 }
@@ -84,21 +105,21 @@ export async function fetchBills(fileNumber: string) {
 export async function fetchComparison(fileNumber: string) {
   return jepcoPost("Dashboard/ComparazinConsumption", {
     FileNumber: fileNumber,
-    LanguageId: 2,
+    LanguageId: "AR",
   });
 }
 
 export async function fetchBillHeader(fileNumber: string) {
   return jepcoPost("CalculateBills/GetHeaderBills", {
     FileNumber: fileNumber,
-    LanguageId: 2,
+    LanguageId: "AR",
   });
 }
 
 export async function fetchAccountStatement(fileNumber: string) {
   return jepcoPost("MobileBills/AccountStatement", {
     FileNumber: fileNumber,
-    LanguageId: 2,
+    LanguageId: "AR",
     MobileNumber: "",
   });
 }
@@ -106,7 +127,7 @@ export async function fetchAccountStatement(fileNumber: string) {
 export async function fetchSimulation(fileNumber: string) {
   return jepcoPost(
     "SimulateConsumptionCalculation/GetSimulateConsumptionCalculationByFileNumber",
-    { FileNumber: fileNumber, LanguageId: 2 }
+    { FileNumber: fileNumber, LanguageId: "AR" }
   );
 }
 

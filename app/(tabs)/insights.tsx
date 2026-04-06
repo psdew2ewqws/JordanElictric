@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, Dimensions, Animated, ActivityIndicator,
+  View, Text, StyleSheet, ScrollView, Dimensions, Animated, ActivityIndicator, RefreshControl, TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -23,6 +23,7 @@ export default function InsightsScreen() {
   const sz = (en: number) => isAr ? Math.max(11, en * 0.85) : en;
 
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [smartMeter, setSmartMeter] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,7 +34,8 @@ export default function InsightsScreen() {
     setError(null);
     try {
       const res = await jepcoApi.getSmartMeter();
-      setSmartMeter(res.data);
+      const raw = res.data;
+      setSmartMeter(raw?.body || raw);
     } catch (e: any) {
       // On 401, show empty state instead of error
       if (e?.status !== 401) {
@@ -44,21 +46,30 @@ export default function InsightsScreen() {
     }
   };
 
-  // ─── Data ───────────────────────────────────────────────
-  const sm = smartMeter || {};
-  const currentKwh = parseInt(sm.currentElectricityConsumptionQuntity || '0');
-  const expectedKwh = parseInt(sm.expectedElectricityConsumptionQuntity || '0');
-  const daysInCycle = parseInt(sm.numberOfConsumptionDaysSinceLastRead || '1');
-  const comp = sm.comparazinConsumption || {};
-  const lastMonthKwh = parseInt(comp.lastMonthconsumption || '0');
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
+  };
 
-  const projKwh = expectedKwh || currentKwh;
-  const tiers = calcTierBreakdown(projKwh);
-  const bill = calcBillBreakdown(projKwh);
-  const savings = calcSavingsOpportunity(projKwh);
-  const env = calcEnvironmentalImpact(projKwh, lastMonthKwh);
-  const pace = calcDailyPace(currentKwh, daysInCycle);
-  const tips = getRecommendations(projKwh, pace.dailyAvg).slice(0, 2);
+  // ─── Data ───────────────────────────────────────────────
+  const { tiers, bill, savings, env, pace, tips } = useMemo(() => {
+    const sm = smartMeter || {};
+    const currentKwh = parseInt(sm.currentElectricityConsumptionQuntity || '0');
+    const expectedKwh = parseInt(sm.expectedElectricityConsumptionQuntity || '0');
+    const daysInCycle = parseInt(sm.numberOfConsumptionDaysSinceLastRead || '1');
+    const comp = sm.comparazinConsumption || {};
+    const lastMonthKwh = parseInt(comp.lastMonthconsumption || '0');
+
+    const projKwh = expectedKwh || currentKwh;
+    const _tiers = calcTierBreakdown(projKwh);
+    const _bill = calcBillBreakdown(projKwh);
+    const _savings = calcSavingsOpportunity(projKwh);
+    const _env = calcEnvironmentalImpact(projKwh, lastMonthKwh);
+    const _pace = calcDailyPace(currentKwh, daysInCycle);
+    const _tips = getRecommendations(projKwh, _pace.dailyAvg).slice(0, 2);
+    return { tiers: _tiers, bill: _bill, savings: _savings, env: _env, pace: _pace, tips: _tips };
+  }, [smartMeter]);
 
   if (loading) {
     return (
@@ -68,9 +79,25 @@ export default function InsightsScreen() {
     );
   }
 
+  if (error && !smartMeter) {
+    return (
+      <View style={[styles.screen, { justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32 }]}>
+        <Ionicons name="refresh-circle-outline" size={48} color="#94A9B8" />
+        <Text style={{ color: '#6B8499', fontSize: 14, fontFamily: fonts.medium, textAlign: 'center', marginTop: 12 }}>
+          {isAr ? 'تعذر تحميل الرؤى. اسحب للأسفل لإعادة المحاولة.' : "Couldn't load insights. Pull down to retry."}
+        </Text>
+        <TouchableOpacity onPress={loadData} style={{ marginTop: 16, paddingHorizontal: 24, paddingVertical: 10, backgroundColor: '#1B4965', borderRadius: 8 }}>
+          <Text style={{ color: '#fff', fontSize: 13, fontFamily: fonts.semibold }}>
+            {isAr ? 'إعادة المحاولة' : 'Retry'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.screen}>
-      <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
+      <ScrollView showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
         {/* ═══ HEADER — just title, no duplicate stats ═══ */}
         <LinearGradient colors={['#0F2440', '#1B4965']} style={styles.header}>
           <SafeAreaView edges={['top']} style={styles.headerPad}>

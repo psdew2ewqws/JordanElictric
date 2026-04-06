@@ -53,6 +53,23 @@ export const Colors = {
   chart3: '#1A7A54',
   chart4: '#B8860B',
   chart5: '#B3261E',
+
+  // Gradients (header backgrounds)
+  gradientDark: '#0F2440',
+  gradientMid: '#1B4965',
+  gradientLight: '#2A6F8E',
+
+  // Status (complaint/notification badges)
+  statusBlue: '#3B82F6',
+  statusOrange: '#F59E0B',
+  statusGreen: '#10B981',
+  statusGray: '#94A9B8',
+
+  // Muted text (used across screens)
+  muted: '#94A9B8',
+  mutedDark: '#6B8499',
+  cardBorder: '#E8ECF0',
+  bodyBg: '#F2F5F7',
 };
 
 // ─── Spacing (8pt grid) ──────────────────────────────────
