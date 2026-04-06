@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator, Animated,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator, Animated, RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,6 +22,7 @@ export default function UsageScreen() {
   const sz = (en: number) => isAr ? Math.max(11, en * 0.85) : en;
 
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [smartMeter, setSmartMeter] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -63,7 +64,6 @@ export default function UsageScreen() {
     } catch (e: any) {
       // On 401, show empty state instead of error
       if (e?.status !== 401) {
-        console.warn('JEPCO fetch failed:', e?.message);
         setError(e?.message || 'Failed to load data');
       }
     } finally {
@@ -71,70 +71,84 @@ export default function UsageScreen() {
     }
   };
 
-  // Extract real data from JEPCO SmartMeter response
-  const sm = smartMeter || {};
-  const actualKwh = parseInt(sm.currentElectricityConsumptionQuntity || '0');
-  const expectedKwh = parseInt(sm.expectedElectricityConsumptionQuntity || '0');
-  // Use projected kWh as the main figure (matches Home screen)
-  const currentKwh = expectedKwh || actualKwh;
-  const currentBillJd = parseFloat(sm.currentElectricityConsumptionValue || '0');
-  const expectedBillJd = parseFloat(sm.expectedElectricityEndofMonthBillAmount || '0');
-  const lastReading = parseInt(sm.lastBillReading || '0');
-  const currentReading = parseInt(sm.currentReading || '0');
-  const lastReadingDate = sm.lastBillReadingDate || '';
-  const daysInCycle = parseInt(sm.numberOfConsumptionDaysSinceLastRead || '1');
+  // Extract real data from JEPCO SmartMeter response (memoized)
+  const derived = useMemo(() => {
+    const _sm = smartMeter || {};
+    const actualKwh = parseInt(_sm.currentElectricityConsumptionQuntity || '0');
+    const expectedKwh = parseInt(_sm.expectedElectricityConsumptionQuntity || '0');
+    const currentKwh = expectedKwh || actualKwh;
+    const currentBillJd = parseFloat(_sm.currentElectricityConsumptionValue || '0');
+    const expectedBillJd = parseFloat(_sm.expectedElectricityEndofMonthBillAmount || '0');
+    const lastReading = parseInt(_sm.lastBillReading || '0');
+    const currentReading = parseInt(_sm.currentReading || '0');
+    const lastReadingDate = _sm.lastBillReadingDate || '';
+    const daysInCycle = parseInt(_sm.numberOfConsumptionDaysSinceLastRead || '1');
 
-  // Comparison data — use projected kWh for fair comparison
-  const comp = sm.comparazinConsumption || {};
-  const lastMonth = parseInt(comp.lastMonthconsumption || '0');
-  const lastYear = parseInt(comp.lastYearconsumption || '0');
-  const lastMonthDiff = currentKwh - lastMonth;
-  const lastMonthPct = lastMonth > 0 ? +((lastMonthDiff / lastMonth) * 100).toFixed(1) : 0;
-  const lastYearDiff = currentKwh - lastYear;
-  const lastYearPct = lastYear > 0 ? +((lastYearDiff / lastYear) * 100).toFixed(1) : 0;
+    const comp = _sm.comparazinConsumption || {};
+    const lastMonth = parseInt(comp.lastMonthconsumption || '0');
+    const lastYear = parseInt(comp.lastYearconsumption || '0');
+    const lastMonthDiff = currentKwh - lastMonth;
+    const lastMonthPct = lastMonth > 0 ? +((lastMonthDiff / lastMonth) * 100).toFixed(1) : 0;
+    const lastYearDiff = currentKwh - lastYear;
+    const lastYearPct = lastYear > 0 ? +((lastYearDiff / lastYear) * 100).toFixed(1) : 0;
 
-  // Daily consumption from consumptionMonthlyList
-  const dailyList: { date: string; kwh: number }[] = (sm.consumptionMonthlyList || []).map((d: any) => ({
-    date: d.date,
-    kwh: parseInt(d.consumptionAtDate || '0'),
-  }));
+    const dailyList: { date: string; kwh: number }[] = (_sm.consumptionMonthlyList || []).map((d: any) => ({
+      date: d.date,
+      kwh: parseInt(d.consumptionAtDate || '0'),
+    }));
 
-  // Build daily average
-  const dailyAvg = dailyList.length > 0
-    ? +(dailyList.reduce((s, d) => s + d.kwh, 0) / dailyList.length).toFixed(1)
-    : +(currentKwh / Math.max(daysInCycle, 1)).toFixed(1);
+    const dailyAvg = dailyList.length > 0
+      ? +(dailyList.reduce((s, d) => s + d.kwh, 0) / dailyList.length).toFixed(1)
+      : +(currentKwh / Math.max(daysInCycle, 1)).toFixed(1);
 
-  // Tier calculation (subsidized residential)
-  // Tier breakdown uses ACTUAL current usage
-  const tier1Kwh = Math.min(currentKwh, 300);
-  const tier2Kwh = currentKwh > 300 ? Math.min(currentKwh - 300, 300) : 0;
-  const tier3Kwh = currentKwh > 600 ? currentKwh - 600 : 0;
-  // Scale: max bar = 800 kWh for visual purposes
-  const tierMax = Math.max(800, currentKwh + 50);
-  const tierPct = Math.min(100, (currentKwh / tierMax) * 100);
-  const currentTier = currentKwh > 600 ? 3 : currentKwh > 300 ? 2 : 1;
+    const tier1Kwh = Math.min(currentKwh, 300);
+    const tier2Kwh = currentKwh > 300 ? Math.min(currentKwh - 300, 300) : 0;
+    const tier3Kwh = currentKwh > 600 ? currentKwh - 600 : 0;
+    const tierPct = Math.min(100, (currentKwh / Math.max(800, currentKwh + 50)) * 100);
+    const currentTier = currentKwh > 600 ? 3 : currentKwh > 300 ? 2 : 1;
 
-  // Calculate ACTUAL cost based on tier pricing
-  const actualCostJd = (tier1Kwh * 0.050) + (tier2Kwh * 0.100) + (tier3Kwh * 0.200);
-  // Daily cost = actual cost / days elapsed (minimum 1 day)
-  const dailyCostJd = daysInCycle > 0 ? actualCostJd / daysInCycle : actualCostJd;
+    const actualCostJd = (tier1Kwh * 0.050) + (tier2Kwh * 0.100) + (tier3Kwh * 0.200);
+    const dailyCostJd = daysInCycle > 0 ? actualCostJd / daysInCycle : actualCostJd;
 
-  const isSmartMeter = sm.showSmartMeterFeature === true;
+    const isSmartMeter = _sm.showSmartMeterFeature === true;
 
-  // Build SVG line chart from daily data
-  const chartData = dailyList.length > 1 ? dailyList :
-    // If only 1 day, create a simple 2-point chart
-    dailyList.length === 1 ? [{ date: '', kwh: 0 }, ...dailyList] : [{ date: '', kwh: 0 }];
+    const chartData = dailyList.length > 1 ? dailyList :
+      dailyList.length === 1 ? [{ date: '', kwh: 0 }, ...dailyList] : [{ date: '', kwh: 0 }];
 
-  const maxVal = Math.max(...chartData.map(d => d.kwh), 1);
-  const points = chartData.map((d, i) => ({
-    x: chartData.length > 1 ? (i / (chartData.length - 1)) * CHART_W : CHART_W / 2,
-    y: CHART_H - (d.kwh / maxVal) * (CHART_H - 10),
-    val: d.kwh,
-  }));
-  const linePath = points.map((p, i) => i === 0 ? `M${p.x},${p.y}` : `L${p.x},${p.y}`).join(' ');
-  const areaPath = linePath + ` L${points[points.length - 1].x},${CHART_H} L${points[0].x},${CHART_H} Z`;
-  const avgY = dailyAvg > 0 ? CHART_H - (dailyAvg / maxVal) * (CHART_H - 10) : CHART_H;
+    const maxVal = Math.max(...chartData.map(d => d.kwh), 1);
+    const points = chartData.map((d, i) => ({
+      x: chartData.length > 1 ? (i / (chartData.length - 1)) * CHART_W : CHART_W / 2,
+      y: CHART_H - (d.kwh / maxVal) * (CHART_H - 10),
+      val: d.kwh,
+    }));
+    const linePath = points.map((p, i) => i === 0 ? `M${p.x},${p.y}` : `L${p.x},${p.y}`).join(' ');
+    const areaPath = linePath + ` L${points[points.length - 1].x},${CHART_H} L${points[0].x},${CHART_H} Z`;
+    const avgY = dailyAvg > 0 ? CHART_H - (dailyAvg / maxVal) * (CHART_H - 10) : CHART_H;
+
+    return {
+      sm: _sm, currentKwh, currentBillJd, expectedBillJd, expectedKwh,
+      lastReading, currentReading, lastReadingDate, daysInCycle,
+      lastMonth, lastYear, lastMonthDiff, lastMonthPct, lastYearDiff, lastYearPct,
+      dailyList, dailyAvg, tier1Kwh, tier2Kwh, tier3Kwh, tierPct, currentTier,
+      actualCostJd, dailyCostJd, isSmartMeter,
+      chartData, maxVal, points, linePath, areaPath, avgY,
+    };
+  }, [smartMeter]);
+
+  const {
+    sm, currentKwh, currentBillJd, expectedBillJd, expectedKwh,
+    lastReading, currentReading, lastReadingDate, daysInCycle,
+    lastMonth, lastYear, lastMonthDiff, lastMonthPct, lastYearDiff, lastYearPct,
+    dailyList, dailyAvg, tier1Kwh, tier2Kwh, tier3Kwh, tierPct, currentTier,
+    actualCostJd, dailyCostJd, isSmartMeter,
+    chartData, maxVal, points, linePath, areaPath, avgY,
+  } = derived;
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
+  };
 
   if (loading) {
     return (
@@ -147,7 +161,7 @@ export default function UsageScreen() {
 
   return (
     <View style={styles.screen}>
-      <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
+      <ScrollView showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
         {/* === HEADER === */}
         <LinearGradient colors={['#0F2440', '#1B4965']} style={styles.header}>
           <SafeAreaView edges={['top']} style={styles.headerPad}>

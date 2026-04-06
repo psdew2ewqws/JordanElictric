@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
-  View, Text, StyleSheet, TextInput, TouchableOpacity,
-  KeyboardAvoidingView, Platform, ScrollView, Modal, Dimensions,
+  View, Text, StyleSheet, TextInput, TouchableOpacity, TouchableWithoutFeedback,
+  KeyboardAvoidingView, Keyboard, Platform, ScrollView, Modal, Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,6 +21,7 @@ export default function OnboardingScreen() {
   const [subscriber, setSubscriber] = useState('');
   const [phone, setPhone] = useState('');
   const [showHelp, setShowHelp] = useState(false);
+  const phoneRef = useRef<TextInput>(null);
 
   const isValid = subscriber.replace(/\D/g, '').length >= 13 && phone.length >= 10;
 
@@ -48,6 +49,7 @@ export default function OnboardingScreen() {
       </LinearGradient>
 
       {/* Form */}
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <KeyboardAvoidingView
         style={styles.formWrap}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -81,6 +83,9 @@ export default function OnboardingScreen() {
               maxLength={13}
               value={subscriber}
               onChangeText={setSubscriber}
+              autoFocus={true}
+              returnKeyType="next"
+              onSubmitEditing={() => phoneRef.current?.focus()}
             />
             <TouchableOpacity
               style={styles.helpBtn}
@@ -99,12 +104,15 @@ export default function OnboardingScreen() {
             {t('phoneNumber')}
           </Text>
           <TextInput
+            ref={phoneRef}
             style={[styles.input, { fontFamily: fonts.regular }]}
             placeholder={t('phonePlaceholder')}
             placeholderTextColor="#B8C5D0"
             keyboardType="phone-pad"
             value={phone}
             onChangeText={setPhone}
+            returnKeyType="go"
+            onSubmitEditing={() => { if (isValid) router.replace('/(tabs)'); }}
           />
 
           {/* Submit */}
@@ -129,6 +137,7 @@ export default function OnboardingScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      </TouchableWithoutFeedback>
 
       {/* Help Modal */}
       <Modal visible={showHelp} transparent animationType="fade">

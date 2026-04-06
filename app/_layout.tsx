@@ -2,8 +2,9 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import { ActivityIndicator, View } from 'react-native';
-import { LanguageProvider } from '../src/i18n/LanguageContext';
+import { LanguageProvider, useLanguage } from '../src/i18n/LanguageContext';
 import { AuthProvider } from '../src/contexts/AuthContext';
+import { ToastProvider } from '../src/contexts/ToastContext';
 import { Colors } from '../src/constants/theme';
 
 export default function RootLayout() {
@@ -30,29 +31,39 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <LanguageProvider>
-        <StatusBar style="dark" />
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: Colors.background },
-          }}
-          initialRouteName="auth/login"
-        >
-          <Stack.Screen name="auth/login" />
-          <Stack.Screen name="auth/register" options={{ presentation: 'fullScreenModal' }} />
-          <Stack.Screen name="onboarding/index" />
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="bill/scan" options={{ presentation: 'modal', headerShown: true, title: 'Scan Bill' }} />
-          <Stack.Screen name="bill/manual" options={{ presentation: 'modal', headerShown: true, title: 'Enter Bill' }} />
-          <Stack.Screen name="bill/[id]" options={{ headerShown: true, title: 'Bill Details' }} />
-          <Stack.Screen name="bill/index" options={{ headerShown: false }} />
-          <Stack.Screen name="chat/index" options={{ headerShown: false }} />
-          <Stack.Screen name="outage/index" options={{ headerShown: false }} />
-          <Stack.Screen name="complaints/index" options={{ headerShown: false }} />
-          <Stack.Screen name="energy-friend/index" options={{ headerShown: false }} />
-          <Stack.Screen name="notifications/index" options={{ headerShown: false }} />
-        </Stack>
+        <InnerLayout />
       </LanguageProvider>
     </AuthProvider>
+  );
+}
+
+function InnerLayout() {
+  const { fonts } = useLanguage();
+
+  return (
+    <ToastProvider fonts={{ medium: fonts.medium, semibold: fonts.semibold }}>
+      <StatusBar style="dark" />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: Colors.background },
+        }}
+        initialRouteName="auth/login"
+      >
+        <Stack.Screen name="auth/login" />
+        <Stack.Screen name="auth/register" options={{ presentation: 'fullScreenModal' }} />
+        <Stack.Screen name="onboarding/index" />
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="bill/scan" options={{ presentation: 'modal', headerShown: true, title: 'Scan Bill' }} />
+        <Stack.Screen name="bill/manual" options={{ presentation: 'modal', headerShown: true, title: 'Enter Bill' }} />
+        <Stack.Screen name="bill/[id]" options={{ headerShown: true, title: 'Bill Details' }} />
+        <Stack.Screen name="bill/index" options={{ headerShown: false }} />
+        <Stack.Screen name="chat/index" options={{ headerShown: false }} />
+        <Stack.Screen name="outage/index" options={{ headerShown: false }} />
+        <Stack.Screen name="complaints/index" options={{ headerShown: false }} />
+        <Stack.Screen name="energy-friend/index" options={{ headerShown: false }} />
+        <Stack.Screen name="notifications/index" options={{ headerShown: false }} />
+      </Stack>
+    </ToastProvider>
   );
 }

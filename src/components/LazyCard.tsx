@@ -7,7 +7,7 @@ interface Props {
   style?: ViewStyle;
 }
 
-export function LazyCard({ children, delay = 0, style }: Props) {
+export const LazyCard = React.memo(function LazyCard({ children, delay = 0, style }: Props) {
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(20)).current;
 
@@ -26,4 +26,4 @@ export function LazyCard({ children, delay = 0, style }: Props) {
       {children}
     </Animated.View>
   );
-}
+});

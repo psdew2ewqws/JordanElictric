@@ -4,8 +4,10 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   TextInput,
   ScrollView,
+  Keyboard,
   ActivityIndicator,
   Alert,
 } from 'react-native';
@@ -233,6 +235,7 @@ export default function OutageScreen() {
         <View style={styles.headerSpacer} />
       </View>
 
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
@@ -399,17 +402,33 @@ export default function OutageScreen() {
         >
           {t('whenDidStart')}
         </Text>
-        <TextInput
-          style={[
-            styles.input,
-            { fontFamily: fonts.regular, fontSize: sz(14) },
-          ]}
-          placeholder={isAr ? 'مثال: منذ ساعة' : 'e.g. 1 hour ago'}
-          placeholderTextColor={Colors.textMuted}
-          value={startTime}
-          onChangeText={setStartTime}
-          textAlign={isAr ? 'right' : 'left'}
-        />
+        <View style={styles.chipsRow}>
+          {[
+            { key: '< 1 hour', labelAr: 'أقل من ساعة' },
+            { key: '1-3 hours', labelAr: '١-٣ ساعات' },
+            { key: '3+ hours', labelAr: 'أكثر من ٣ ساعات' },
+            { key: "Don't know", labelAr: 'لا أعلم' },
+          ].map((option) => {
+            const selected = startTime === option.key;
+            return (
+              <TouchableOpacity
+                key={option.key}
+                style={[styles.chip, selected && styles.chipSelected]}
+                onPress={() => setStartTime(selected ? '' : option.key)}
+              >
+                <Text
+                  style={[
+                    styles.chipText,
+                    selected && styles.chipTextSelected,
+                    { fontFamily: fonts.medium, fontSize: sz(13) },
+                  ]}
+                >
+                  {isAr ? option.labelAr : option.key}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
 
         {/* Affected Area */}
         <Text
@@ -499,6 +518,7 @@ export default function OutageScreen() {
           )}
         </TouchableOpacity>
       </ScrollView>
+      </TouchableWithoutFeedback>
     </SafeAreaView>
   );
 }

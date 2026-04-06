@@ -26,7 +26,7 @@ export function AnimatedCounter({ value, duration = 1200, decimals = 0, suffix =
       setDisplay(prefix + (decimals > 0 ? v.toFixed(decimals) : Math.round(v).toString()) + suffix);
     });
 
-    return () => animVal.removeListener(listener);
+    return () => animVal.removeAllListeners();
   }, [value]);
 
   return <Text style={style}>{display}</Text>;

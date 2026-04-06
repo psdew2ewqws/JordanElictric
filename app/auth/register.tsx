@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TextInput,
+  Keyboard,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -26,9 +28,14 @@ export default function RegisterScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
+  const emailRef = useRef<TextInput>(null);
+  const passwordRef = useRef<TextInput>(null);
+  const subscriberRef = useRef<TextInput>(null);
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const [subscriberNumber, setSubscriberNumber] = useState('');
   const [company, setCompany] = useState<string | null>(null);
@@ -74,6 +81,7 @@ export default function RegisterScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -110,11 +118,17 @@ export default function RegisterScreen() {
                     placeholderTextColor={Colors.textMuted}
                     value={name}
                     onChangeText={setName}
+                    autoFocus={true}
+                    returnKeyType="next"
+                    textContentType="name"
+                    autoComplete="name"
+                    onSubmitEditing={() => emailRef.current?.focus()}
                   />
                 </View>
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>{t('email')}</Text>
                   <TextInput
+                    ref={emailRef}
                     style={styles.input}
                     placeholder="your@email.com"
                     placeholderTextColor={Colors.textMuted}
@@ -122,18 +136,39 @@ export default function RegisterScreen() {
                     autoCapitalize="none"
                     value={email}
                     onChangeText={setEmail}
+                    returnKeyType="next"
+                    textContentType="emailAddress"
+                    autoComplete="email"
+                    onSubmitEditing={() => passwordRef.current?.focus()}
                   />
                 </View>
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>{t('password')}</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder={t('minChars')}
-                    placeholderTextColor={Colors.textMuted}
-                    secureTextEntry
-                    value={password}
-                    onChangeText={setPassword}
-                  />
+                  <View style={styles.passwordWrapper}>
+                    <TextInput
+                      ref={passwordRef}
+                      style={styles.passwordInput}
+                      placeholder={t('minChars')}
+                      placeholderTextColor={Colors.textMuted}
+                      secureTextEntry={!showPassword}
+                      value={password}
+                      onChangeText={setPassword}
+                      returnKeyType="go"
+                      textContentType="newPassword"
+                      autoComplete="password-new"
+                      onSubmitEditing={() => handleAccountStep()}
+                    />
+                    <TouchableOpacity
+                      onPress={() => setShowPassword(!showPassword)}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                      <Ionicons
+                        name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                        size={20}
+                        color={Colors.textMuted}
+                      />
+                    </TouchableOpacity>
+                  </View>
                 </View>
 
                 {errorMsg && step === 'account' ? (
@@ -163,9 +198,11 @@ export default function RegisterScreen() {
                     style={styles.input}
                     placeholder={t('foundOnBill')}
                     placeholderTextColor={Colors.textMuted}
-                    keyboardType="numeric"
+                    keyboardType="number-pad"
                     value={subscriberNumber}
                     onChangeText={setSubscriberNumber}
+                    autoFocus={true}
+                    returnKeyType="next"
                   />
                   <Text style={styles.hint}>{t('subscriberHintAr')}</Text>
                 </View>
@@ -199,9 +236,10 @@ export default function RegisterScreen() {
                     style={styles.input}
                     placeholder={t('numberOfPeople')}
                     placeholderTextColor={Colors.textMuted}
-                    keyboardType="numeric"
+                    keyboardType="number-pad"
                     value={householdSize}
                     onChangeText={setHouseholdSize}
+                    returnKeyType="go"
                   />
                 </View>
 
@@ -229,6 +267,7 @@ export default function RegisterScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      </TouchableWithoutFeedback>
     </SafeAreaView>
   );
 }
@@ -301,6 +340,21 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     borderRadius: Radius.md,
     paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    fontSize: FontSize.md,
+    color: Colors.text,
+  },
+  passwordWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Radius.md,
+    paddingHorizontal: Spacing.lg,
+  },
+  passwordInput: {
+    flex: 1,
     paddingVertical: Spacing.md,
     fontSize: FontSize.md,
     color: Colors.text,
