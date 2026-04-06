@@ -174,13 +174,21 @@ export default function ComplaintsScreen() {
     setShowForm(true);
   }, []);
 
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
   const renderComplaintCard = useCallback(
     (complaint: Complaint) => {
       const statusColor = STATUS_COLORS[complaint.status] || Colors.textMuted;
       const typeColor = TYPE_COLORS[complaint.complaintType] || Colors.textMuted;
+      const isExpanded = expandedId === complaint.id;
 
       return (
-        <View key={complaint.id} style={styles.card}>
+        <TouchableOpacity
+          key={complaint.id}
+          style={styles.card}
+          activeOpacity={0.7}
+          onPress={() => setExpandedId(isExpanded ? null : complaint.id)}
+        >
           {/* Top row: ref + status */}
           <View style={styles.cardTopRow}>
             <Text
@@ -232,20 +240,63 @@ export default function ComplaintsScreen() {
             </Text>
           </View>
 
-          {/* Description preview */}
+          {/* Description — collapsed: 2 lines, expanded: full */}
           <Text
             style={[
               styles.cardDesc,
               { fontFamily: fonts.regular, fontSize: sz(13) },
             ]}
-            numberOfLines={2}
+            numberOfLines={isExpanded ? undefined : 2}
           >
             {complaint.description}
           </Text>
-        </View>
+
+          {/* Expanded details */}
+          {isExpanded && (
+            <View style={styles.expandedSection}>
+              <View style={styles.expandedRow}>
+                <Text style={[styles.expandedLabel, { fontFamily: fonts.medium, fontSize: sz(11) }]}>
+                  {isAr ? 'النوع' : 'Type'}
+                </Text>
+                <Text style={[styles.expandedValue, { fontFamily: fonts.regular, fontSize: sz(11) }]}>
+                  {getTypeLabel(complaint.complaintType, t as (key: string) => string, isAr)}
+                </Text>
+              </View>
+              <View style={styles.expandedRow}>
+                <Text style={[styles.expandedLabel, { fontFamily: fonts.medium, fontSize: sz(11) }]}>
+                  {isAr ? 'الحالة' : 'Status'}
+                </Text>
+                <Text style={[styles.expandedValue, { fontFamily: fonts.regular, fontSize: sz(11), color: statusColor }]}>
+                  {getStatusLabel(complaint.status, t as (key: string) => string)}
+                </Text>
+              </View>
+              <View style={styles.expandedRow}>
+                <Text style={[styles.expandedLabel, { fontFamily: fonts.medium, fontSize: sz(11) }]}>
+                  {isAr ? 'التاريخ' : 'Date'}
+                </Text>
+                <Text style={[styles.expandedValue, { fontFamily: fonts.regular, fontSize: sz(11) }]}>
+                  {formatDate(complaint.createdAt, isAr)}
+                </Text>
+              </View>
+              <View style={styles.expandedRow}>
+                <Text style={[styles.expandedLabel, { fontFamily: fonts.medium, fontSize: sz(11) }]}>
+                  {isAr ? 'المرجع' : 'Reference'}
+                </Text>
+                <Text style={[styles.expandedValue, { fontFamily: fonts.regular, fontSize: sz(11) }]}>
+                  {complaint.referenceNumber || '—'}
+                </Text>
+              </View>
+            </View>
+          )}
+
+          {/* Expand hint */}
+          <View style={{ alignItems: 'center', marginTop: 6 }}>
+            <Ionicons name={isExpanded ? 'chevron-up' : 'chevron-down'} size={14} color={Colors.textMuted} />
+          </View>
+        </TouchableOpacity>
       );
     },
-    [fonts, sz, t, isAr],
+    [fonts, sz, t, isAr, expandedId],
   );
 
   return (
@@ -624,6 +675,23 @@ const styles = StyleSheet.create({
   cardDesc: {
     color: Colors.textSecondary,
     lineHeight: 20,
+  },
+  expandedSection: {
+    marginTop: Spacing.md,
+    paddingTop: Spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: Colors.borderLight,
+  },
+  expandedRow: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    paddingVertical: 4,
+  },
+  expandedLabel: {
+    color: Colors.textMuted,
+  },
+  expandedValue: {
+    color: Colors.text,
   },
 
   // FAB

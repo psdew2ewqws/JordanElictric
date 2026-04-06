@@ -76,7 +76,12 @@ export default function LoginScreen() {
       }
     } catch {}
     try {
-      await login(email, password);
+      // Add 15s timeout to prevent infinite hang
+      const loginPromise = login(email, password);
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Connection timed out. Please try again.')), 15000)
+      );
+      await Promise.race([loginPromise, timeoutPromise]);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       Keyboard.dismiss();
       router.replace('/(tabs)');
