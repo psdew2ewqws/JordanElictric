@@ -106,6 +106,92 @@ Golden target: Stay under 300 kWh/month to remain in Tier 1 (cheapest rate).` },
 شجرة واحدة تمتص حوالي 21 كغم CO2 سنوياً.
 استهلاك 300 كيلوواط شهرياً = 180 كغم CO2 = تحتاج 9 أشجار سنوياً.
 تقليل الاستهلاك 15% يوفر 27 كغم CO2 شهرياً.` },
+
+  // ── Solar & Renewables (from Nawwar) ──
+  { source: "solar.md", section: "Solar Net Billing", content: `Solar net billing in Jordan (Bylaw 58/2024):
+Residential systems: max 5.4 kWp (single-phase), 15 kWp (three-phase).
+Export compensation: 50 fils/kWh for residential, 40 fils/kWh for commercial.
+Mechanisms: Net Billing (most common), Zero Export, Buy-All/Sell-All, Wheeling.
+Typical ROI: 4-6 year payback. System life: 25+ years.
+Monthly savings: 60-90% of electricity bill. A 5 kW system generates ~700 kWh/month.` },
+
+  { source: "solar.md", section: "الطاقة الشمسية - صافي القياس", content: `نظام صافي القياس (صافي الفوترة) في الأردن (نظام 58/2024):
+الأنظمة السكنية: حد أقصى 5.4 كيلوواط (أحادي الطور)، 15 كيلوواط (ثلاثي الطور).
+تعويض التصدير: 50 فلس/كيلوواط للمنازل، 40 فلس/كيلوواط للتجاري.
+الآليات: صافي الفوترة (الأكثر شيوعاً)، صفر تصدير، شراء الكل/بيع الكل.
+فترة الاسترداد: 4-6 سنوات. عمر النظام: 25+ سنة.
+نظام 5 كيلوواط ينتج حوالي 700 كيلوواط/شهر.` },
+
+  // ── Other Tariff Sectors ──
+  { source: "tariffs.md", section: "التعرفة التجارية والصناعية", content: `التعرفة التجارية:
+الشريحة الأولى: 1-2000 كيلوواط بسعر 120 فلس/كيلوواط.
+الشريحة الثانية: أكثر من 2000 كيلوواط بسعر 152 فلس/كيلوواط.
+
+التعرفة الصناعية الصغيرة: 60/68 فلس للشريحتين.
+التعرفة الصناعية المتوسطة (حسب وقت الاستخدام): ذروة 79 فلس، جزئي 69 فلس، خارج الذروة 59 فلس.
+التعرفة الزراعية: 55 فلس نهاراً، 49 فلس ليلاً.
+الفنادق: 82 فلس. المستشفيات: 140 فلس. شحن سيارات كهربائية: 103-160 فلس.` },
+
+  { source: "tariffs.md", section: "Commercial and Industrial Tariffs", content: `Commercial tariff:
+Tier 1 (1-2000 kWh): 120 fils/kWh. Tier 2 (2000+ kWh): 152 fils/kWh.
+
+Industrial Small: 60/68 fils. Industrial Medium (TOU): Peak 79, Partial 69, Off-peak 59 fils.
+Agricultural: 55 fils (day), 49 fils (night).
+Hotels: 82 fils. Hospitals: 140 fils. EV charging: 103-160 fils.
+Residential Unsubsidized: Tier 1 (1-1000 kWh): 120 fils. Tier 2 (1000+ kWh): 150 fils.` },
+
+  // ── JEPCO Procedures ──
+  { source: "jepco_faq.md", section: "إجراءات جيبكو", content: `إجراءات شائعة في جيبكو:
+اشتراك جديد: هوية + ملكية/إيجار + رسم 5 دنانير. المدة: 3-7 أيام عمل.
+فحص العداد: طلب من أي مركز. المدة: 7 أيام عمل. مجاناً لو العداد خطأ، 5 دنانير لو سليم.
+نقل ملكية: هوية المالك الجديد + عقد بيع/إيجار + تسوية الرصيد السابق.
+إعادة التوصيل (بعد الفصل): تسديد المبالغ المستحقة + رسم 5 دنانير.
+الاعتراض على الفاتورة: تقديم اعتراض خطي في مركز الخدمة أو من خلال الموقع.` },
+
+  { source: "jepco_faq.md", section: "JEPCO Procedures", content: `Common JEPCO procedures:
+New connection: ID + proof of ownership/lease + 5 JD fee. Timeline: 3-7 business days.
+Meter inspection: Request at any service center. Timeline: 7 business days. Free if meter is faulty, 5 JD if accurate.
+Ownership transfer: New owner ID + sale/lease contract + settle previous balance.
+Reconnection (after disconnection): Pay outstanding amount + 5 JD fee.
+Bill dispute: Submit written objection at service center or via website.
+EMRC escalation: If unresolved by JEPCO, file with EMRC at emrc.gov.jo.` },
+
+  // ── EMRC Consumer Rights ──
+  { source: "emrc.md", section: "حقوق المستهلك", content: `حقوق مستهلك الكهرباء في الأردن (هيئة تنظيم الطاقة EMRC):
+الحق في فاتورة واضحة ومفصلة.
+الحق في فحص العداد عند الشك بدقته.
+الحق في الاعتراض على الفاتورة خلال 60 يوماً.
+الحق في إعادة التوصيل خلال 24 ساعة من تسوية المستحقات.
+الحق في التعويض عن انقطاع مطول (أكثر من 24 ساعة).
+للتصعيد: هيئة تنظيم قطاع الطاقة والمعادن — emrc.gov.jo — هاتف: +962-6-5803060.` },
+
+  // ── Sector Overview ──
+  { source: "sector_overview.md", section: "قطاع الكهرباء الأردني", content: `قطاع الكهرباء في الأردن:
+التوليد: شركة توليد الكهرباء المركزية (CEGCO)، شركات مستقلة (IPPs)، طاقة متجددة.
+النقل: شركة الكهرباء الوطنية (NEPCO).
+التوزيع: جيبكو (عمان، الزرقاء)، شركة كهرباء إربد (IDECO)، شركة توزيع الكهرباء (EDCO - الجنوب).
+مزيج الطاقة: 65% غاز طبيعي، 26% طاقة متجددة (20% شمسي، 6% رياح)، 5% وقود ثقيل، 3% ديزل.
+القدرة الإجمالية: حوالي 5,600 ميغاواط. الحمل الأقصى: حوالي 3,800 ميغاواط.` },
+
+  // ── Water Heater Tips ──
+  { source: "savings_tips.md", section: "نصائح سخان المياه", content: `سخان المياه الكهربائي يستهلك 100-150 كيلوواط شهرياً:
+تركيب سخان شمسي يوفر 60-90% من تكلفة تسخين المياه. الاسترداد خلال 2-3 سنوات.
+اضبط الحرارة على 55 درجة مئوية — أعلى من ذلك هدر للطاقة.
+استخدم مؤقت (تايمر) لتشغيله ساعة قبل الاستحمام فقط.
+اعزل أنابيب المياه الساخنة لتقليل فقدان الحرارة.` },
+
+  { source: "savings_tips.md", section: "Water Heater Tips", content: `Electric water heater uses 100-150 kWh/month:
+Solar water heater saves 60-90% on water heating. Payback: 2-3 years.
+Set temperature to 55C — higher wastes energy.
+Use a timer to run only 1 hour before bathing.
+Insulate hot water pipes to reduce heat loss.` },
+
+  // ── Subsidy Registration ──
+  { source: "jepco_faq.md", section: "تسجيل الدعم", content: `منصة تسجيل دعم الكهرباء (kahraba.gov.jo):
+التسجيل مطلوب للحصول على التعرفة المدعومة (50/100/200 فلس).
+بدون تسجيل: تطبق التعرفة غير المدعومة (120/150 فلس) وهي أعلى بكثير.
+المطلوب: الرقم الوطني أو جواز السفر.
+التسجيل مجاني ومتاح أونلاين.` },
 ];
 
 Deno.serve(async (req) => {

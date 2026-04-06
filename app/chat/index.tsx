@@ -16,7 +16,7 @@ import { useRouter } from 'expo-router';
 import { useLanguage } from '../../src/i18n/LanguageContext';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { Colors, FontSize, Radius, Spacing, Shadows } from '../../src/constants/theme';
-import { supabase } from '../../src/services/supabase';
+import { supabase, jepcoProxy } from '../../src/services/supabase';
 
 interface ChatMessage {
   id: string;
@@ -48,11 +48,17 @@ export default function ChatScreen() {
     },
   ]);
 
+  // Pre-warm jepco cache so tools have data when Claude calls them
+  useEffect(() => {
+    jepcoProxy.smartMeter().catch(() => {});
+  }, []);
+
   const quickActions = [
-    { label: isAr ? 'سؤال عن فاتورتي' : 'Billing question', key: 'billing' },
-    { label: isAr ? 'نصائح توفير' : 'Savings tips', key: 'savings' },
+    { label: isAr ? 'كم فاتورتي؟' : "What's my bill?", key: 'billing' },
+    { label: isAr ? 'احسبلي فاتورة' : 'Calculate bill', key: 'calculate' },
     { label: isAr ? 'بدي أشتكي' : 'File complaint', key: 'complaint' },
     { label: isAr ? 'شو التعرفة؟' : 'Tariff info', key: 'tariff' },
+    { label: isAr ? 'حالة شكواي' : 'Complaint status', key: 'status' },
   ];
 
   const sendMessage = useCallback(
@@ -112,7 +118,14 @@ export default function ChatScreen() {
                 if (!line.startsWith('data: ')) continue;
                 try {
                   const parsed = JSON.parse(line.slice(6));
-                  if (parsed.text) {
+                  if (parsed.thinking) {
+                    // Claude is calling a tool — show thinking state
+                    setMessages((prev) =>
+                      prev.map((m) =>
+                        m.id === botMsgId ? { ...m, text: isAr ? 'عم أتحقق من بياناتك...' : 'Checking your data...', isStreaming: true } : m
+                      )
+                    );
+                  } else if (parsed.text) {
                     fullText += parsed.text;
                     setMessages((prev) =>
                       prev.map((m) =>
@@ -120,7 +133,7 @@ export default function ChatScreen() {
                       )
                     );
                   }
-                  if (parsed.done && parsed.session_id) {
+                  if (parsed.session_id) {
                     setSessionId(parsed.session_id);
                   }
                 } catch {}
