@@ -20,7 +20,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#1B4965"
+        "backgroundColor": "#0C1F3D"
       },
       "edgeToEdgeEnabled": true,
       "package": "jo.cpa.electricity",
