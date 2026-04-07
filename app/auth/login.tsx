@@ -13,8 +13,7 @@ import {
   Dimensions,
   Animated,
 } from 'react-native';
-import ReanimatedAnimated, { useSharedValue, useAnimatedStyle, withSequence, withTiming } from 'react-native-reanimated';
-import * as Haptics from 'expo-haptics';
+// react-native-reanimated and expo-haptics removed for Expo Go compatibility
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Video, ResizeMode, AVPlaybackStatus } from 'expo-av';
@@ -56,14 +55,11 @@ export default function LoginScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  const shakeX = useSharedValue(0);
-  const shakeStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: shakeX.value }],
-  }));
+  const shakeX = useRef(new Animated.Value(0)).current;
 
   const handleLogin = async () => {
     if (!email || !password || isSubmitting) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    // Haptics removed for Expo Go compatibility
     setIsSubmitting(true);
     setErrorMsg('');
     // Clear any stale tokens before login attempt
@@ -80,7 +76,7 @@ export default function LoginScreen() {
         setTimeout(() => reject(new Error('Connection timed out. Please try again.')), 15000)
       );
       await Promise.race([loginPromise, timeoutPromise]);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      // Haptics success removed for Expo Go compatibility
       Keyboard.dismiss();
       router.replace('/(tabs)');
     } catch (err: any) {
@@ -89,14 +85,13 @@ export default function LoginScreen() {
         router.replace('/(tabs)');
         return;
       }
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      shakeX.value = withSequence(
-        withTiming(-10, { duration: 50 }),
-        withTiming(10, { duration: 50 }),
-        withTiming(-10, { duration: 50 }),
-        withTiming(10, { duration: 50 }),
-        withTiming(0, { duration: 50 }),
-      );
+      Animated.sequence([
+        Animated.timing(shakeX, { toValue: -10, duration: 50, useNativeDriver: true }),
+        Animated.timing(shakeX, { toValue: 10, duration: 50, useNativeDriver: true }),
+        Animated.timing(shakeX, { toValue: -10, duration: 50, useNativeDriver: true }),
+        Animated.timing(shakeX, { toValue: 10, duration: 50, useNativeDriver: true }),
+        Animated.timing(shakeX, { toValue: 0, duration: 50, useNativeDriver: true }),
+      ]).start();
       setErrorMsg(msg || 'Login failed. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -179,7 +174,7 @@ export default function LoginScreen() {
             contentContainerStyle={styles.formScroll}
             keyboardShouldPersistTaps="handled"
           >
-          <ReanimatedAnimated.View style={shakeStyle}>
+          <Animated.View style={{ transform: [{ translateX: shakeX }] }}>
             {/* Brand */}
             <View style={[styles.brand, isAr && { marginBottom: 16 }]}>
               <Text style={[styles.appName, { fontFamily: fonts.extrabold, fontSize: sz(26), letterSpacing: isAr ? 0 : -0.5 }]}>
@@ -302,7 +297,7 @@ export default function LoginScreen() {
             <Text style={[styles.cpaText, { fontFamily: fonts.regular, fontSize: sz(10), letterSpacing: isAr ? 0 : 0.2 }]}>
               {t('cpaInitiative')}
             </Text>
-          </ReanimatedAnimated.View>
+          </Animated.View>
           </ScrollView>
         </Animated.View>
       </KeyboardAvoidingView>

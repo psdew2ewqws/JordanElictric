@@ -10,9 +10,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Animated,
 } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, withSequence, withTiming } from 'react-native-reanimated';
-import * as Haptics from 'expo-haptics';
+// react-native-reanimated and expo-haptics removed for Expo Go compatibility
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -45,30 +45,26 @@ export default function RegisterScreen() {
   const [company, setCompany] = useState<string | null>(null);
   const [householdSize, setHouseholdSize] = useState('');
 
-  const shakeX = useSharedValue(0);
-  const shakeStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: shakeX.value }],
-  }));
+  const shakeX = useRef(new Animated.Value(0)).current;
 
   const triggerShakeAndError = () => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-    shakeX.value = withSequence(
-      withTiming(-10, { duration: 50 }),
-      withTiming(10, { duration: 50 }),
-      withTiming(-10, { duration: 50 }),
-      withTiming(10, { duration: 50 }),
-      withTiming(0, { duration: 50 }),
-    );
+    Animated.sequence([
+      Animated.timing(shakeX, { toValue: -10, duration: 50, useNativeDriver: true }),
+      Animated.timing(shakeX, { toValue: 10, duration: 50, useNativeDriver: true }),
+      Animated.timing(shakeX, { toValue: -10, duration: 50, useNativeDriver: true }),
+      Animated.timing(shakeX, { toValue: 10, duration: 50, useNativeDriver: true }),
+      Animated.timing(shakeX, { toValue: 0, duration: 50, useNativeDriver: true }),
+    ]).start();
   };
 
   const handleAccountStep = async () => {
     if (!name || !email || !password || isSubmitting) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    
     setIsSubmitting(true);
     setErrorMsg('');
     try {
       await register(name, email, password);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      
       setStep('subscriber');
     } catch (err: any) {
       triggerShakeAndError();
@@ -80,7 +76,7 @@ export default function RegisterScreen() {
 
   const handleSubscriberStep = async () => {
     if (!subscriberNumber || !company || isSubmitting) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    
     setIsSubmitting(true);
     setErrorMsg('');
     setSuccessMsg('');
@@ -90,7 +86,7 @@ export default function RegisterScreen() {
         distributionCompany: company as 'JEPCO' | 'IDECO' | 'EDCO',
         householdSize: parseInt(householdSize, 10) || 1,
       });
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      
       setSuccessMsg(isAr ? 'تم العثور على حسابك!' : 'Account found!');
       setTimeout(() => router.replace('/(tabs)'), 1200);
     } catch (err: any) {
@@ -133,7 +129,7 @@ export default function RegisterScreen() {
           </View>
 
           {step === 'account' && (
-            <Animated.View style={shakeStyle}>
+            <Animated.View style={{ transform: [{ translateX: shakeX }] }}>
               <Text style={styles.title}>{t('createAccount')}</Text>
               <Text style={styles.subtitle}>{t('joinThousands')}</Text>
 
@@ -215,7 +211,7 @@ export default function RegisterScreen() {
           )}
 
           {step === 'subscriber' && (
-            <Animated.View style={shakeStyle}>
+            <Animated.View style={{ transform: [{ translateX: shakeX }] }}>
               <Text style={styles.title}>{t('yourElecAccount')}</Text>
               <Text style={styles.subtitle}>{t('linkSubscriber')}</Text>
 
