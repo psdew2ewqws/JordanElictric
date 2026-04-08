@@ -48,7 +48,7 @@ export default function LoginScreen() {
 
   const passwordRef = useRef<TextInput>(null);
 
-  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [introEnded, setIntroEnded] = useState(false);
@@ -58,7 +58,7 @@ export default function LoginScreen() {
   const shakeX = useRef(new Animated.Value(0)).current;
 
   const handleLogin = async () => {
-    if (!email || !password || isSubmitting) return;
+    if (!phone || !password || isSubmitting) return;
     // Haptics removed for Expo Go compatibility
     setIsSubmitting(true);
     setErrorMsg('');
@@ -71,7 +71,7 @@ export default function LoginScreen() {
     } catch {}
     try {
       // Add 15s timeout to prevent infinite hang
-      const loginPromise = login(email, password);
+      const loginPromise = login(phone.replace(/[^0-9]/g, '') + '@diaa.jo', password);
       const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Connection timed out. Please try again.')), 15000)
       );
@@ -188,23 +188,23 @@ export default function LoginScreen() {
             {/* Email */}
             <View style={[styles.inputGroup, isAr && { marginBottom: 10 }]}>
               <Text style={[styles.label, { fontFamily: fonts.semibold, fontSize: sz(12) }]}>
-                {t('email')}
+                {isAr ? 'رقم الهاتف' : 'Phone Number'}
               </Text>
               <View style={styles.inputWrapper}>
-                <Ionicons name="mail-outline" size={16} color="#9CAFBE" />
+                <Ionicons name="call-outline" size={16} color="#9CAFBE" />
                 <TextInput
                   style={[styles.input, { fontFamily: fonts.regular, fontSize: sz(14.5), paddingVertical: isAr ? 11 : 14 }]}
-                  placeholder={t('emailPlaceholder')}
+                  placeholder="07X XXXX XXX"
                   placeholderTextColor="#B8C5D0"
-                  keyboardType="email-address"
+                  keyboardType="phone-pad"
                   autoCapitalize="none"
                   autoFocus={true}
                   returnKeyType="next"
-                  textContentType="emailAddress"
-                  autoComplete="email"
+                  textContentType="telephoneNumber"
+                  autoComplete="tel"
                   onSubmitEditing={() => passwordRef.current?.focus()}
-                  value={email}
-                  onChangeText={setEmail}
+                  value={phone}
+                  onChangeText={setPhone}
                 />
               </View>
             </View>
@@ -225,7 +225,7 @@ export default function LoginScreen() {
                   returnKeyType="go"
                   textContentType="password"
                   autoComplete="password"
-                  onSubmitEditing={() => { if (email && password) handleLogin(); }}
+                  onSubmitEditing={() => { if (phone && password) handleLogin(); }}
                   value={password}
                   onChangeText={setPassword}
                 />
@@ -256,7 +256,7 @@ export default function LoginScreen() {
             {/* Log In */}
             <TouchableOpacity
               style={[styles.primaryBtn, (!email || !password || isSubmitting) && styles.btnDisabled, isAr && { paddingVertical: 13 }]}
-              disabled={!email || !password || isSubmitting}
+              disabled={!phone || !password || isSubmitting}
               onPress={handleLogin}
               activeOpacity={0.85}
             >
