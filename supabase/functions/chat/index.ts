@@ -21,8 +21,11 @@ Deno.serve(async (req) => {
 
   try {
     const userId = await getUserId(req);
-    const { message, session_id } = await req.json();
+    const body = await req.json();
+    const { message, session_id } = body;
     if (!message) return jsonRes({ error: "message is required" }, 400);
+    const wantsStream = body.stream !== false &&
+      new URL(req.url).searchParams.get("stream") !== "false";
 
     const db = createServiceClient();
 
@@ -66,7 +69,30 @@ Deno.serve(async (req) => {
       { maxTokens: 1500, temperature: 0.6 },
     );
 
-    // ── 8. Wrap stream to save assistant message on completion ──
+    // ── 8. Non-streaming fallback (?stream=false) ──
+    if (!wantsStream) {
+      const reader = stream.getReader();
+      while (true) {
+        const { done } = await reader.read();
+        if (done) break;
+      }
+      const fullText = getFullText();
+      const validated = validateResponse(fullText, session.lang);
+      if (validated) {
+        await db.from("chat_messages").insert({
+          session_id: session.id,
+          role: "assistant",
+          content: validated,
+          message_type: "text",
+        });
+      }
+      return jsonRes({
+        reply: validated || (session.lang === "AR" ? "عذراً، حدث خطأ." : "Sorry, an error occurred."),
+        session_id: session.id,
+      });
+    }
+
+    // ── 9. Wrap stream to save assistant message on completion ──
     const encoder = new TextEncoder();
     const { readable, writable } = new TransformStream<Uint8Array>();
     const writer = writable.getWriter();

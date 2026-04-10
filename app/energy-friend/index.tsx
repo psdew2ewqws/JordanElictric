@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,16 +11,25 @@ import {
   Image,
   ActivityIndicator,
   Alert,
+  LayoutAnimation,
+  UIManager,
+  Platform,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
-import * as Location from 'expo-location';
 import { useLanguage } from '../../src/i18n/LanguageContext';
-import { Colors, FontSize, Radius, Spacing, Shadows } from '../../src/constants/theme';
+import { Colors, Radius, Spacing, Shadows } from '../../src/constants/theme';
 import { complaintApi } from '../../src/services/api';
 import { supabase } from '../../src/services/supabase';
+import { PressableScale } from '../../src/components/PressableScale';
+import { AutoLocationRow, LocationData } from '../../src/components/AutoLocationRow';
+
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 type ScreenState = 'form' | 'submitting' | 'success';
 
@@ -29,14 +38,17 @@ const HAZARD_TYPES: {
   labelKey: 'downedWire' | 'exposedWiring' | 'damagedPole' | 'sparking' | 'otherHazard';
   icon: keyof typeof Ionicons.glyphMap;
 }[] = [
-  { key: 'downed_wire', labelKey: 'downedWire', icon: 'git-commit-outline' },
-  { key: 'exposed_wiring', labelKey: 'exposedWiring', icon: 'warning-outline' },
-  { key: 'damaged_pole', labelKey: 'damagedPole', icon: 'construct-outline' },
-  { key: 'sparking', labelKey: 'sparking', icon: 'flash-outline' },
-  { key: 'other', labelKey: 'otherHazard', icon: 'ellipsis-horizontal' },
+  { key: 'DOWNED_WIRE', labelKey: 'downedWire', icon: 'git-commit-outline' },
+  { key: 'EXPOSED_WIRING', labelKey: 'exposedWiring', icon: 'warning-outline' },
+  { key: 'DAMAGED_POLE', labelKey: 'damagedPole', icon: 'construct-outline' },
+  { key: 'SPARKING', labelKey: 'sparking', icon: 'flash-outline' },
+  { key: 'OTHER', labelKey: 'otherHazard', icon: 'ellipsis-horizontal' },
 ];
 
-type GpsState = 'idle' | 'detecting' | 'done' | 'denied' | 'error';
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const GRID_PADDING = Spacing.xl * 2;
+const GRID_GAP = Spacing.sm;
+const TILE_WIDTH = (SCREEN_WIDTH - GRID_PADDING - GRID_GAP * 2) / 3;
 
 export default function EnergyFriendScreen() {
   const router = useRouter();
@@ -46,95 +58,27 @@ export default function EnergyFriendScreen() {
   const [screenState, setScreenState] = useState<ScreenState>('form');
   const [selectedHazard, setSelectedHazard] = useState<string | null>(null);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
-  const [locationText, setLocationText] = useState('');
   const [detailsText, setDetailsText] = useState('');
+  const [showDetails, setShowDetails] = useState(false);
 
-  // GPS location state
-  const [gpsState, setGpsState] = useState<GpsState>('idle');
-  const [locationLat, setLocationLat] = useState<number | null>(null);
-  const [locationLng, setLocationLng] = useState<number | null>(null);
-  const [gpsAddress, setGpsAddress] = useState<string | null>(null);
+  // Location from AutoLocationRow
+  const [locationData, setLocationData] = useState<LocationData>({
+    lat: null, lng: null, address: null, locationText: '',
+  });
 
   const canSubmit =
-    selectedHazard !== null && locationText.trim().length > 0;
+    selectedHazard !== null &&
+    locationData.lat !== null &&
+    locationData.lng !== null;
 
-  const detectLocation = useCallback(async () => {
-    setGpsState('detecting');
-    setGpsAddress(null);
-
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        setGpsState('denied');
-        return;
-      }
-
-      const pos = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
-      setLocationLat(lat);
-      setLocationLng(lng);
-
-      // Reverse geocode via OpenStreetMap Nominatim
-      try {
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=ar`,
-          { headers: { 'User-Agent': 'Diaa-App/1.0' } }
-        );
-        const data = await res.json();
-        if (data.display_name) {
-          setGpsAddress(data.display_name);
-          // Auto-fill the location text field if it's empty
-          if (!locationText.trim()) {
-            setLocationText(data.display_name);
-          }
-        }
-      } catch {
-        // Reverse geocode failed, but we still have coordinates
-      }
-
-      setGpsState('done');
-    } catch {
-      setGpsState('error');
-    }
-  }, [locationText]);
-
-  // Auto-detect location on mount
-  useEffect(() => {
-    detectLocation();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const pickPhoto = useCallback(async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      quality: 0.8,
-    });
-
-    if (!result.canceled && result.assets[0]) {
-      setPhotoUri(result.assets[0].uri);
-    }
+  const handleLocationChange = useCallback((data: LocationData) => {
+    setLocationData(data);
   }, []);
 
-  const takePhoto = useCallback(async () => {
-    const permission = await ImagePicker.requestCameraPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert(
-        t('cameraPermission'),
-        t('allowCameraAccess'),
-      );
-      return;
-    }
-
-    const result = await ImagePicker.launchCameraAsync({
-      quality: 0.8,
-    });
-
-    if (!result.canceled && result.assets[0]) {
-      setPhotoUri(result.assets[0].uri);
-    }
-  }, [t]);
+  const toggleDetails = useCallback(() => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setShowDetails((prev) => !prev);
+  }, []);
 
   const handlePhotoPress = useCallback(() => {
     Alert.alert(
@@ -143,46 +87,56 @@ export default function EnergyFriendScreen() {
       [
         {
           text: t('camera'),
-          onPress: takePhoto,
+          onPress: async () => {
+            const perm = await ImagePicker.requestCameraPermissionsAsync();
+            if (!perm.granted) {
+              Alert.alert(t('cameraPermission'), t('allowCameraAccess'));
+              return;
+            }
+            const result = await ImagePicker.launchCameraAsync({ quality: 0.8 });
+            if (!result.canceled && result.assets[0]) setPhotoUri(result.assets[0].uri);
+          },
         },
         {
           text: t('gallery'),
-          onPress: pickPhoto,
+          onPress: async () => {
+            const result = await ImagePicker.launchImageLibraryAsync({
+              mediaTypes: ['images'],
+              quality: 0.8,
+            });
+            if (!result.canceled && result.assets[0]) setPhotoUri(result.assets[0].uri);
+          },
         },
-        {
-          text: t('cancel'),
-          style: 'cancel',
-        },
+        { text: t('cancel'), style: 'cancel' },
       ],
     );
-  }, [t, takePhoto, pickPhoto]);
+  }, [t]);
 
   const handleSubmit = useCallback(async () => {
     if (!canSubmit) return;
 
     setScreenState('submitting');
 
-    const hazardLabel =
-      HAZARD_TYPES.find((h) => h.key === selectedHazard)?.labelKey;
+    const hazardLabel = HAZARD_TYPES.find((h) => h.key === selectedHazard)?.labelKey;
     const hazardName = hazardLabel ? t(hazardLabel) : selectedHazard;
 
     const description = [
       `HAZARD: ${hazardName}`,
-      `Location: ${locationText}`,
-      detailsText ? `Details: ${detailsText}` : 'No additional details',
-      locationLat && locationLng ? `GPS: ${locationLat.toFixed(6)}, ${locationLng.toFixed(6)}` : '',
+      `Location: ${locationData.locationText || locationData.address || ''}`,
+      detailsText ? `Details: ${detailsText}` : '',
+      locationData.lat && locationData.lng
+        ? `GPS: ${locationData.lat.toFixed(6)}, ${locationData.lng.toFixed(6)}`
+        : '',
     ]
       .filter(Boolean)
       .join(' - ');
 
     try {
-      // Create the complaint
       const complaint = await complaintApi.create({
         complaintType: 'OTHER',
         description,
       });
 
-      // Also insert into energy_reports table with location data
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
@@ -190,60 +144,38 @@ export default function EnergyFriendScreen() {
             user_id: user.id,
             complaint_id: complaint?.id || null,
             hazard_type: selectedHazard,
-            location_text: locationText,
-            location_lat: locationLat,
-            location_lng: locationLng,
-            address: gpsAddress || locationText,
+            description,
+            location_lat: locationData.lat,
+            location_lng: locationData.lng,
+            address: locationData.address || locationData.locationText,
             photo_url: photoUri || null,
-            details: detailsText || null,
           });
         }
       } catch {
-        // energy_reports insert is best-effort; don't block the submission
+        // energy_reports insert is best-effort
       }
 
       setScreenState('success');
     } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : 'Failed to submit report';
+      const message = err instanceof Error ? err.message : 'Failed to submit report';
       setScreenState('form');
       Alert.alert(t('error'), message);
     }
-  }, [canSubmit, selectedHazard, detailsText, locationText, t, isAr, locationLat, locationLng, gpsAddress, photoUri]);
+  }, [canSubmit, selectedHazard, detailsText, locationData, t, photoUri]);
 
   if (screenState === 'success') {
     return (
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <View style={styles.successContainer}>
-          <View style={styles.successIconWrap}>
-            <Ionicons name="shield-checkmark" size={72} color={Colors.success} />
-          </View>
-          <Text
-            style={[
-              styles.successTitle,
-              { fontFamily: fonts.bold, fontSize: sz(24) },
-            ]}
-          >
+          <Ionicons name="shield-checkmark" size={72} color={Colors.success} />
+          <Text style={[styles.successTitle, { fontFamily: fonts.bold, fontSize: sz(24) }]}>
             {t('thankYouSafety')}
           </Text>
-          <Text
-            style={[
-              styles.successDesc,
-              { fontFamily: fonts.regular, fontSize: sz(14) },
-            ]}
-          >
+          <Text style={[styles.successDesc, { fontFamily: fonts.regular, fontSize: sz(14) }]}>
             {t('hazardSubmitted')}
           </Text>
-          <TouchableOpacity
-            style={styles.primaryBtn}
-            onPress={() => router.back()}
-          >
-            <Text
-              style={[
-                styles.primaryBtnText,
-                { fontFamily: fonts.semibold, fontSize: sz(15) },
-              ]}
-            >
+          <TouchableOpacity style={styles.primaryBtn} onPress={() => router.back()}>
+            <Text style={[styles.primaryBtnText, { fontFamily: fonts.semibold, fontSize: sz(15) }]}>
               {t('backToHome')}
             </Text>
           </TouchableOpacity>
@@ -256,298 +188,106 @@ export default function EnergyFriendScreen() {
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backBtn}
-          onPress={() => router.back()}
-        >
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={22} color={Colors.text} />
         </TouchableOpacity>
-        <Text
-          style={[
-            styles.headerTitle,
-            { fontFamily: fonts.bold, fontSize: sz(18) },
-          ]}
-        >
-          {t('energyFriendTitle')}
+        <Text style={[styles.headerTitle, { fontFamily: fonts.bold, fontSize: sz(18) }]}>
+          {t('reportHazard')}
         </Text>
         <View style={styles.headerSpacer} />
       </View>
 
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        {/* Hero */}
-        <View style={styles.heroCard}>
-          <View style={styles.heroIconWrap}>
-            <Ionicons name="shield-half-outline" size={32} color="#E05A3A" />
-          </View>
-          <Text
-            style={[
-              styles.heroTitle,
-              { fontFamily: fonts.bold, fontSize: sz(18) },
-            ]}
-          >
-            {t('reportHazard')}
-          </Text>
-          <Text
-            style={[
-              styles.heroDesc,
-              { fontFamily: fonts.regular, fontSize: sz(14) },
-            ]}
-          >
-            {t('hazardDesc')}
-          </Text>
-        </View>
-
-        {/* Hazard Type */}
-        <Text
-          style={[
-            styles.label,
-            { fontFamily: fonts.semibold, fontSize: sz(14) },
-          ]}
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
-          {t('hazardType')}
-        </Text>
-        <View style={styles.hazardChipsRow}>
-          {HAZARD_TYPES.map((hazard) => {
-            const selected = selectedHazard === hazard.key;
-            return (
-              <TouchableOpacity
-                key={hazard.key}
-                style={[
-                  styles.hazardChip,
-                  selected && styles.hazardChipSelected,
-                ]}
-                onPress={() =>
-                  setSelectedHazard(selected ? null : hazard.key)
-                }
-              >
-                <Ionicons
-                  name={hazard.icon}
-                  size={18}
-                  color={selected ? Colors.primary : Colors.textSecondary}
-                />
-                <Text
-                  style={[
-                    styles.hazardChipText,
-                    selected && styles.hazardChipTextSelected,
-                    { fontFamily: fonts.medium, fontSize: sz(12) },
-                  ]}
+          {/* Hazard Type Grid */}
+          <Text style={[styles.label, { fontFamily: fonts.semibold, fontSize: sz(14), marginTop: 0 }]}>
+            {t('hazardType')}
+          </Text>
+          <View style={styles.grid}>
+            {HAZARD_TYPES.map((hazard) => {
+              const selected = selectedHazard === hazard.key;
+              return (
+                <PressableScale
+                  key={hazard.key}
+                  style={[styles.tile, selected && styles.tileSelected]}
+                  onPress={() => setSelectedHazard(selected ? null : hazard.key)}
                 >
-                  {t(hazard.labelKey)}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-
-        {/* Photo */}
-        <Text
-          style={[
-            styles.label,
-            { fontFamily: fonts.semibold, fontSize: sz(14) },
-          ]}
-        >
-          {t('addPhoto')}
-        </Text>
-        {photoUri ? (
-          <View style={styles.photoPreview}>
-            <Image
-              source={{ uri: photoUri }}
-              style={styles.photoImage}
-              resizeMode="cover"
-            />
-            <TouchableOpacity
-              style={styles.photoRemoveBtn}
-              onPress={() => setPhotoUri(null)}
-            >
-              <Ionicons name="close-circle" size={28} color={Colors.danger} />
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <TouchableOpacity
-            style={styles.photoBtn}
-            onPress={handlePhotoPress}
-          >
-            <Ionicons name="camera-outline" size={28} color={Colors.primary} />
-            <Text
-              style={[
-                styles.photoBtnText,
-                { fontFamily: fonts.medium, fontSize: sz(13) },
-              ]}
-            >
-              {t('addPhoto')}
-            </Text>
-          </TouchableOpacity>
-        )}
-
-        {/* GPS Location Detection */}
-        <Text
-          style={[
-            styles.label,
-            { fontFamily: fonts.semibold, fontSize: sz(14) },
-          ]}
-        >
-          {t('yourCurrentLocation')}
-        </Text>
-        <View style={styles.gpsCard}>
-          <View style={styles.gpsHeader}>
-            <View style={styles.gpsIconWrap}>
-              <Ionicons
-                name="location"
-                size={20}
-                color={
-                  gpsState === 'done'
-                    ? Colors.success
-                    : gpsState === 'denied' || gpsState === 'error'
-                    ? Colors.danger
-                    : Colors.primary
-                }
-              />
-            </View>
-            <View style={styles.gpsTextWrap}>
-              {gpsState === 'detecting' && (
-                <View style={styles.gpsDetectingRow}>
-                  <ActivityIndicator size="small" color={Colors.primary} />
+                  <Ionicons
+                    name={hazard.icon}
+                    size={26}
+                    color={selected ? Colors.primary : Colors.textSecondary}
+                  />
                   <Text
                     style={[
-                      styles.gpsDetectingText,
-                      { fontFamily: fonts.medium, fontSize: sz(13) },
+                      styles.tileLabel,
+                      selected && styles.tileLabelSelected,
+                      { fontFamily: fonts.medium, fontSize: sz(11) },
                     ]}
+                    numberOfLines={1}
                   >
-                    {isAr ? 'جاري تحديد الموقع...' : 'Detecting location...'}
+                    {t(hazard.labelKey)}
                   </Text>
-                </View>
-              )}
-              {gpsState === 'denied' && (
-                <Text
-                  style={[
-                    styles.gpsDeniedText,
-                    { fontFamily: fonts.medium, fontSize: sz(13) },
-                  ]}
-                >
-                  {isAr
-                    ? 'تم رفض إذن الموقع. يمكنك إدخال الموقع يدوياً أدناه.'
-                    : 'Location permission denied. You can enter location manually below.'}
-                </Text>
-              )}
-              {gpsState === 'error' && (
-                <Text
-                  style={[
-                    styles.gpsDeniedText,
-                    { fontFamily: fonts.medium, fontSize: sz(13) },
-                  ]}
-                >
-                  {isAr
-                    ? 'تعذر تحديد الموقع. يمكنك إدخال الموقع يدوياً أدناه.'
-                    : 'Could not detect location. You can enter location manually below.'}
-                </Text>
-              )}
-              {gpsState === 'done' && (
-                <>
-                  {gpsAddress && (
-                    <Text
-                      style={[
-                        styles.gpsAddressText,
-                        { fontFamily: fonts.medium, fontSize: sz(13) },
-                      ]}
-                      numberOfLines={2}
-                    >
-                      {gpsAddress}
-                    </Text>
-                  )}
-                  {locationLat !== null && locationLng !== null && (
-                    <Text
-                      style={[
-                        styles.gpsCoordsText,
-                        { fontFamily: fonts.regular, fontSize: sz(11) },
-                      ]}
-                    >
-                      {locationLat.toFixed(6)}, {locationLng.toFixed(6)}
-                    </Text>
-                  )}
-                </>
-              )}
-              {gpsState === 'idle' && (
-                <Text
-                  style={[
-                    styles.gpsDetectingText,
-                    { fontFamily: fonts.medium, fontSize: sz(13) },
-                  ]}
-                >
-                  {isAr ? 'اضغط لتحديد الموقع' : 'Tap to detect location'}
-                </Text>
-              )}
-            </View>
+                </PressableScale>
+              );
+            })}
           </View>
-          {gpsState !== 'detecting' && (
-            <TouchableOpacity
-              style={styles.gpsRefreshBtn}
-              onPress={detectLocation}
-            >
-              <Ionicons name="refresh" size={16} color={Colors.primary} />
-              <Text
-                style={[
-                  styles.gpsRefreshText,
-                  { fontFamily: fonts.medium, fontSize: sz(12) },
-                ]}
-              >
-                {isAr ? 'تحديث الموقع' : 'Refresh Location'}
+
+          {/* Location */}
+          <AutoLocationRow onLocationChange={handleLocationChange} />
+
+          {/* Optional: Photo + Details links */}
+          <View style={styles.optionalRow}>
+            <TouchableOpacity style={styles.optionalLink} onPress={handlePhotoPress}>
+              <Ionicons
+                name={photoUri ? 'image' : 'camera-outline'}
+                size={18}
+                color={photoUri ? Colors.success : Colors.primary}
+              />
+              <Text style={[styles.optionalText, { fontFamily: fonts.medium, fontSize: sz(13) }]}>
+                {t('addPhoto')}
               </Text>
             </TouchableOpacity>
+            <TouchableOpacity style={styles.optionalLink} onPress={toggleDetails}>
+              <Ionicons name="create-outline" size={18} color={Colors.primary} />
+              <Text style={[styles.optionalText, { fontFamily: fonts.medium, fontSize: sz(13) }]}>
+                {t('addDetails')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Photo preview (if taken) */}
+          {photoUri && (
+            <View style={styles.photoPreview}>
+              <Image source={{ uri: photoUri }} style={styles.photoImage} resizeMode="cover" />
+              <TouchableOpacity style={styles.photoRemoveBtn} onPress={() => setPhotoUri(null)}>
+                <Ionicons name="close-circle" size={28} color={Colors.danger} />
+              </TouchableOpacity>
+            </View>
           )}
-        </View>
 
-        {/* Location */}
-        <Text
-          style={[
-            styles.label,
-            { fontFamily: fonts.semibold, fontSize: sz(14) },
-          ]}
-        >
-          {t('locationDescription')}
-        </Text>
-        <TextInput
-          style={[
-            styles.input,
-            { fontFamily: fonts.regular, fontSize: sz(14) },
-          ]}
-          placeholder={t('locationPlaceholder')}
-          placeholderTextColor={Colors.textMuted}
-          value={locationText}
-          onChangeText={setLocationText}
-          textAlign={isAr ? 'right' : 'left'}
-        />
+          {/* Details textarea (collapsible) */}
+          {showDetails && (
+            <TextInput
+              style={[styles.textarea, { fontFamily: fonts.regular, fontSize: sz(14), textAlign: isAr ? 'right' : 'left' }]}
+              placeholder={t('hazardDetailsPlaceholder')}
+              placeholderTextColor={Colors.textMuted}
+              value={detailsText}
+              onChangeText={setDetailsText}
+              multiline
+              numberOfLines={3}
+              textAlignVertical="top"
+            />
+          )}
+        </ScrollView>
+      </TouchableWithoutFeedback>
 
-        {/* Details */}
-        <Text
-          style={[
-            styles.label,
-            { fontFamily: fonts.semibold, fontSize: sz(14) },
-          ]}
-        >
-          {t('hazardDetails')}
-        </Text>
-        <TextInput
-          style={[
-            styles.textarea,
-            { fontFamily: fonts.regular, fontSize: sz(14) },
-          ]}
-          placeholder={t('hazardDetailsPlaceholder')}
-          placeholderTextColor={Colors.textMuted}
-          value={detailsText}
-          onChangeText={setDetailsText}
-          multiline
-          numberOfLines={4}
-          textAlignVertical="top"
-          textAlign={isAr ? 'right' : 'left'}
-        />
-
-        {/* Submit */}
+      {/* Fixed Footer */}
+      <View style={styles.footer}>
         <TouchableOpacity
           style={[styles.primaryBtn, !canSubmit && styles.primaryBtnDisabled]}
           onPress={handleSubmit}
@@ -556,28 +296,17 @@ export default function EnergyFriendScreen() {
           {screenState === 'submitting' ? (
             <View style={styles.loadingRow}>
               <ActivityIndicator size="small" color={Colors.white} />
-              <Text
-                style={[
-                  styles.primaryBtnText,
-                  { fontFamily: fonts.semibold, fontSize: sz(15) },
-                ]}
-              >
-                {isAr ? 'جاري الإرسال...' : 'Submitting...'}
+              <Text style={[styles.primaryBtnText, { fontFamily: fonts.semibold, fontSize: sz(15) }]}>
+                {t('submitting')}
               </Text>
             </View>
           ) : (
-            <Text
-              style={[
-                styles.primaryBtnText,
-                { fontFamily: fonts.semibold, fontSize: sz(15) },
-              ]}
-            >
+            <Text style={[styles.primaryBtnText, { fontFamily: fonts.semibold, fontSize: sz(15) }]}>
               {t('submitHazard')}
             </Text>
           )}
         </TouchableOpacity>
-      </ScrollView>
-      </TouchableWithoutFeedback>
+      </View>
     </SafeAreaView>
   );
 }
@@ -602,11 +331,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  headerTitle: {
-    flex: 1,
-    textAlign: 'center',
-    color: Colors.text,
-  },
+  headerTitle: { flex: 1, textAlign: 'center', color: Colors.text },
   headerSpacer: { width: 36 },
 
   // Scroll
@@ -614,96 +339,69 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: Spacing.xl,
     paddingTop: Spacing.xl,
-    paddingBottom: Spacing.xxxl,
+    paddingBottom: Spacing.lg,
   },
 
-  // Hero
-  heroCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.lg,
-    padding: Spacing.xl,
-    alignItems: 'center',
-    marginBottom: Spacing.xxl,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    ...Shadows.sm,
-  },
-  heroIconWrap: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#E05A3A' + '12',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing.md,
-  },
-  heroTitle: {
-    color: Colors.text,
-    textAlign: 'center',
-    marginBottom: Spacing.sm,
-  },
-  heroDesc: {
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-
-  // Form
+  // Label
   label: {
     color: Colors.text,
     marginBottom: Spacing.sm,
     marginTop: Spacing.lg,
   },
 
-  // Hazard chips
-  hazardChipsRow: {
+  // Hazard Grid (3 columns)
+  grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: Spacing.sm,
+    gap: GRID_GAP,
+    marginBottom: Spacing.lg,
   },
-  hazardChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
+  tile: {
+    width: TILE_WIDTH,
+    height: 80,
+    backgroundColor: Colors.surface,
     borderRadius: Radius.md,
-    backgroundColor: Colors.surfaceAlt,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: Colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
   },
-  hazardChipSelected: {
+  tileSelected: {
     backgroundColor: Colors.primary + '12',
     borderColor: Colors.primary,
   },
-  hazardChipText: {
+  tileLabel: {
     color: Colors.textSecondary,
+    textAlign: 'center',
   },
-  hazardChipTextSelected: {
+  tileLabelSelected: {
+    color: Colors.primary,
+  },
+
+  // Optional row
+  optionalRow: {
+    flexDirection: 'row',
+    gap: Spacing.xl,
+    marginTop: Spacing.lg,
+    marginBottom: Spacing.sm,
+  },
+  optionalLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  optionalText: {
     color: Colors.primary,
   },
 
   // Photo
-  photoBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.sm,
-    backgroundColor: Colors.surfaceAlt,
-    borderRadius: Radius.md,
-    paddingVertical: Spacing.xl,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderStyle: 'dashed',
-  },
-  photoBtnText: {
-    color: Colors.primary,
-  },
   photoPreview: {
     position: 'relative',
     borderRadius: Radius.md,
     overflow: 'hidden',
-    height: 180,
+    height: 160,
+    marginTop: Spacing.sm,
   },
   photoImage: {
     width: '100%',
@@ -716,79 +414,7 @@ const styles = StyleSheet.create({
     right: Spacing.sm,
   },
 
-  // GPS Location Card
-  gpsCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.md,
-    padding: Spacing.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    ...Shadows.sm,
-  },
-  gpsHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: Spacing.md,
-  },
-  gpsIconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: Colors.primaryContainer,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  gpsTextWrap: {
-    flex: 1,
-    justifyContent: 'center',
-    minHeight: 36,
-  },
-  gpsDetectingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  gpsDetectingText: {
-    color: Colors.textSecondary,
-  },
-  gpsDeniedText: {
-    color: Colors.danger,
-    lineHeight: 20,
-  },
-  gpsAddressText: {
-    color: Colors.text,
-    lineHeight: 20,
-  },
-  gpsCoordsText: {
-    color: Colors.textMuted,
-    marginTop: Spacing.xs,
-  },
-  gpsRefreshBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    gap: Spacing.xs,
-    marginTop: Spacing.md,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: Radius.full,
-    backgroundColor: Colors.primary + '10',
-  },
-  gpsRefreshText: {
-    color: Colors.primary,
-  },
-
-  // Input
-  input: {
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.md,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    color: Colors.text,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    minHeight: 46,
-  },
+  // Details textarea
   textarea: {
     backgroundColor: Colors.surface,
     borderRadius: Radius.md,
@@ -797,17 +423,24 @@ const styles = StyleSheet.create({
     color: Colors.text,
     borderWidth: 1,
     borderColor: Colors.border,
-    minHeight: 100,
+    minHeight: 80,
+    marginTop: Spacing.sm,
   },
 
-  // Submit
+  // Fixed Footer
+  footer: {
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.md,
+    backgroundColor: Colors.background,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+  },
   primaryBtn: {
     backgroundColor: Colors.primary,
     borderRadius: Radius.md,
     paddingVertical: Spacing.lg,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: Spacing.xxl,
     ...Shadows.md,
   },
   primaryBtnDisabled: {
@@ -828,19 +461,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: Spacing.xxl,
-  },
-  successIconWrap: {
-    marginBottom: Spacing.xl,
+    gap: Spacing.md,
   },
   successTitle: {
     color: Colors.text,
     textAlign: 'center',
-    marginBottom: Spacing.md,
   },
   successDesc: {
     color: Colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
-    marginBottom: Spacing.xxxl,
+    marginBottom: Spacing.xxl,
   },
 });

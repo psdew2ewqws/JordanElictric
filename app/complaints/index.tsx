@@ -75,7 +75,7 @@ function getTypeLabel(
   isAr: boolean,
 ): string {
   const map: Record<ComplaintType, string> = {
-    OUTAGE: isAr ? 'انقطاع' : 'Outage',
+    OUTAGE: t('outageLabel'),
     BILLING: t('typeBilling'),
     METER: t('typeMeter'),
     VOLTAGE: t('typeVoltage'),
@@ -156,13 +156,13 @@ export default function ComplaintsScreen() {
       setFormDescription('');
       const ref = result?.reference_number || result?.id?.slice(0, 8) || '';
       showToast(
-        isAr ? `تم تقديم الشكوى: ${ref}` : `Complaint filed: ${ref}`,
+        `${t('complaintFiled')}: ${ref}`,
         'success',
       );
       fetchComplaints();
     } catch (err: unknown) {
       const message =
-        err instanceof Error ? err.message : isAr ? 'فشل تقديم الشكوى' : 'Failed to submit complaint';
+        err instanceof Error ? err.message : t('failedSubmit');
       showToast(message, 'error');
     } finally {
       setSubmitting(false);
@@ -255,7 +255,7 @@ export default function ComplaintsScreen() {
             <View style={styles.expandedSection}>
               <View style={styles.expandedRow}>
                 <Text style={[styles.expandedLabel, { fontFamily: fonts.medium, fontSize: sz(11) }]}>
-                  {isAr ? 'النوع' : 'Type'}
+                  {t('complaintType')}
                 </Text>
                 <Text style={[styles.expandedValue, { fontFamily: fonts.regular, fontSize: sz(11) }]}>
                   {getTypeLabel(complaint.complaintType, t as (key: string) => string, isAr)}
@@ -263,7 +263,7 @@ export default function ComplaintsScreen() {
               </View>
               <View style={styles.expandedRow}>
                 <Text style={[styles.expandedLabel, { fontFamily: fonts.medium, fontSize: sz(11) }]}>
-                  {isAr ? 'الحالة' : 'Status'}
+                  {t('statusLabel')}
                 </Text>
                 <Text style={[styles.expandedValue, { fontFamily: fonts.regular, fontSize: sz(11), color: statusColor }]}>
                   {getStatusLabel(complaint.status, t as (key: string) => string)}
@@ -271,7 +271,7 @@ export default function ComplaintsScreen() {
               </View>
               <View style={styles.expandedRow}>
                 <Text style={[styles.expandedLabel, { fontFamily: fonts.medium, fontSize: sz(11) }]}>
-                  {isAr ? 'التاريخ' : 'Date'}
+                  {t('dateLabel')}
                 </Text>
                 <Text style={[styles.expandedValue, { fontFamily: fonts.regular, fontSize: sz(11) }]}>
                   {formatDate(complaint.createdAt, isAr)}
@@ -279,7 +279,7 @@ export default function ComplaintsScreen() {
               </View>
               <View style={styles.expandedRow}>
                 <Text style={[styles.expandedLabel, { fontFamily: fonts.medium, fontSize: sz(11) }]}>
-                  {isAr ? 'المرجع' : 'Reference'}
+                  {t('referenceLabel')}
                 </Text>
                 <Text style={[styles.expandedValue, { fontFamily: fonts.regular, fontSize: sz(11) }]}>
                   {complaint.referenceNumber || '—'}
@@ -342,7 +342,7 @@ export default function ComplaintsScreen() {
                 { fontFamily: fonts.semibold, fontSize: sz(14) },
               ]}
             >
-              {isAr ? 'إعادة المحاولة' : 'Retry'}
+              {t('retry')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -458,7 +458,7 @@ export default function ComplaintsScreen() {
                     { color: '#E8930C', fontFamily: fonts.medium, fontSize: sz(13) },
                   ]}
                 >
-                  {isAr ? 'انقطاع' : 'Outage'}
+                  {t('outageLabel')}
                 </Text>
                 <Ionicons name="open-outline" size={12} color="#E8930C" />
               </TouchableOpacity>

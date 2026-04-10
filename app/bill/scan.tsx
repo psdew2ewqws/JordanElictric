@@ -222,7 +222,7 @@ export default function ScanBillScreen() {
                 <View style={styles.resultRow}>
                   <Ionicons name="document-text-outline" size={20} color={Colors.primary} />
                   <Text style={styles.resultLabel}>
-                    {isAr ? 'رقم الملف' : 'File Number'}
+                    {t('fileNumber')}
                   </Text>
                 </View>
                 <Text style={styles.fileNumberText}>
@@ -247,7 +247,7 @@ export default function ScanBillScreen() {
                 {ocrResult.extracted_data.customer_name && (
                   <View style={styles.fieldRow}>
                     <Text style={styles.fieldLabel}>
-                      {isAr ? 'اسم المشترك' : 'Customer'}
+                      {t('customerLabel')}
                     </Text>
                     <Text style={styles.fieldValue}>
                       {ocrResult.extracted_data.customer_name}
@@ -257,7 +257,7 @@ export default function ScanBillScreen() {
                 {ocrResult.extracted_data.consumption_kwh !== null && (
                   <View style={styles.fieldRow}>
                     <Text style={styles.fieldLabel}>
-                      {isAr ? 'الاستهلاك' : 'Consumption'}
+                      {t('consumption')}
                     </Text>
                     <Text style={styles.fieldValue}>
                       {ocrResult.extracted_data.consumption_kwh} kWh
@@ -267,7 +267,7 @@ export default function ScanBillScreen() {
                 {ocrResult.extracted_data.total_amount !== null && (
                   <View style={styles.fieldRow}>
                     <Text style={styles.fieldLabel}>
-                      {isAr ? 'المبلغ الإجمالي' : 'Total Amount'}
+                      {t('totalAmountLabel')}
                     </Text>
                     <Text style={styles.fieldValue}>
                       {ocrResult.extracted_data.total_amount} JOD
@@ -277,7 +277,7 @@ export default function ScanBillScreen() {
                 {ocrResult.extracted_data.billing_period && (
                   <View style={styles.fieldRow}>
                     <Text style={styles.fieldLabel}>
-                      {isAr ? 'فترة الفوترة' : 'Billing Period'}
+                      {t('billingPeriodLabel')}
                     </Text>
                     <Text style={styles.fieldValue}>
                       {ocrResult.extracted_data.billing_period}
@@ -292,7 +292,7 @@ export default function ScanBillScreen() {
               <TouchableOpacity style={styles.primaryBtn} onPress={handleLinkFileNumber}>
                 <Ionicons name="link-outline" size={20} color={Colors.white} />
                 <Text style={styles.primaryBtnText}>
-                  {isAr ? 'ربط رقم الملف' : 'Link File Number'}
+                  {t('linkFileNumber')}
                 </Text>
               </TouchableOpacity>
             )}
@@ -307,7 +307,7 @@ export default function ScanBillScreen() {
             >
               <Ionicons name="camera-outline" size={20} color={Colors.primary} />
               <Text style={styles.secondaryBtnText}>
-                {isAr ? 'مسح فاتورة أخرى' : 'Scan Another Bill'}
+                {t('scanAnotherBill')}
               </Text>
             </TouchableOpacity>
 

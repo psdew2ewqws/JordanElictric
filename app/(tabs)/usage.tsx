@@ -182,7 +182,7 @@ export default function UsageScreen() {
       <View style={styles.screen}>
         <View style={{ paddingHorizontal: 16, paddingTop: 100 }}>
           <Text style={{ color: '#3D5468', fontSize: 12, fontFamily: fonts.regular, textAlign: 'center', marginBottom: 16 }}>
-            {isAr ? 'جاري جلب بياناتك من جيبكو...' : 'Fetching your data from JEPCO...'}
+            {t('fetchingFromJepco')}
           </Text>
           <Shimmer radius={14} height={140} />
           <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
@@ -216,21 +216,21 @@ export default function UsageScreen() {
             {/* Summary cards — animated counters */}
             <View style={styles.sumRow}>
               <View style={styles.sumCard}>
-                <Text style={[styles.sumLabel, { fontFamily: fonts.medium, letterSpacing: isAr ? 0 : 0.3 }]}>{isAr ? 'المتوقع' : 'Projected'}</Text>
+                <Text style={[styles.sumLabel, { fontFamily: fonts.medium, letterSpacing: isAr ? 0 : 0.3 }]}>{t('projectedLabel')}</Text>
                 <AnimatedCounter value={currentKwh} style={[styles.sumVal, { fontFamily: fonts.bold }]} duration={1000} />
                 <Text style={[styles.sumUnit, { fontFamily: fonts.medium }]}>kWh</Text>
                 {daysInCycle > 0 && (
                   <Text style={[styles.sumChange, { fontFamily: fonts.semibold, color: '#6EE7B7' }]}>
-                    {isAr ? `${daysInCycle} يوم` : `${daysInCycle} day${daysInCycle > 1 ? 's' : ''}`}
+                    {`${daysInCycle} ${t('daysUnit')}`}
                   </Text>
                 )}
               </View>
               <View style={styles.sumCard}>
-                <Text style={[styles.sumLabel, { fontFamily: fonts.medium, letterSpacing: isAr ? 0 : 0.3 }]}>{isAr ? 'التكلفة المتوقعة' : 'Projected Cost'}</Text>
+                <Text style={[styles.sumLabel, { fontFamily: fonts.medium, letterSpacing: isAr ? 0 : 0.3 }]}>{t('projectedCost')}</Text>
                 <AnimatedCounter value={expectedBillJd > 0 ? expectedBillJd : actualCostJd} decimals={2} style={[styles.sumVal, { fontFamily: fonts.bold }]} duration={1200} />
                 <Text style={[styles.sumUnit, { fontFamily: fonts.medium }]}>JD</Text>
                 <Text style={[styles.sumChange, { fontFamily: fonts.semibold, color: '#6EE7B7' }]}>
-                  {isAr ? `الشريحة ${currentTier}` : `Tier ${currentTier}`}
+                  {`${t('tier')} ${currentTier}`}
                 </Text>
               </View>
               <View style={styles.sumCard}>
@@ -401,25 +401,6 @@ export default function UsageScreen() {
                   <Ionicons name={lastYearDiff > 0 ? 'trending-up' : 'trending-down'} size={10} color={lastYearDiff > 0 ? '#DC2626' : '#059669'} />
                   <Text style={[styles.cmpPct, { fontFamily: fonts.semibold, color: lastYearDiff > 0 ? '#DC2626' : '#059669' }]}>{Math.abs(lastYearPct)}%</Text>
                 </View>
-              </View>
-            </View>
-          </View>
-
-          {/* === METER READINGS === */}
-          <View style={styles.card}>
-            <Text style={[styles.cardTitle, { fontFamily: fonts.bold, fontSize: sz(13) }]}>
-              Meter Readings
-            </Text>
-            <View style={styles.meterRow}>
-              <View style={styles.meterCard}>
-                <Text style={[styles.meterLabel, { fontFamily: fonts.medium }]}>Previous</Text>
-                <Text style={[styles.meterVal, { fontFamily: fonts.bold }]}>{lastReading.toLocaleString()}</Text>
-                <Text style={[styles.meterDate, { fontFamily: fonts.regular }]}>{lastReadingDate}</Text>
-              </View>
-              <View style={styles.meterCard}>
-                <Text style={[styles.meterLabel, { fontFamily: fonts.medium }]}>Current</Text>
-                <Text style={[styles.meterVal, { fontFamily: fonts.bold }]}>{currentReading.toLocaleString()}</Text>
-                <Text style={[styles.meterDate, { fontFamily: fonts.regular }]}>Today</Text>
               </View>
             </View>
           </View>

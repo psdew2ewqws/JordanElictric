@@ -12,8 +12,8 @@ export const MUNICIPALITY_TAX_PCT = 0.10;
 export const NATIONAL_AVG_KWH = 297;
 
 // CO2 per kWh in Jordan (grid emission factor)
-export const CO2_PER_KWH = 0.6; // kg
-export const WATER_PER_KWH = 2.0; // liters
+export const CO2_PER_KWH = 0.71;    // kg — verified from FusionSolar Jordan data
+export const COAL_PER_KWH = 0.116;  // kg standard coal equivalent — from FusionSolar
 export const CO2_PER_TREE_YEAR = 21; // kg absorbed per tree per year
 
 export interface TierBreakdown {
@@ -84,7 +84,7 @@ export function calcBillBreakdown(kwh: number): BillBreakdown {
 
 export interface FootprintData {
   co2Kg: number;
-  waterLiters: number;
+  coalSavedKg: number;
   treesNeeded: number;
   drivingKm: number;
 }
@@ -93,7 +93,7 @@ export function calcFootprint(kwh: number): FootprintData {
   const co2Kg = kwh * CO2_PER_KWH;
   return {
     co2Kg,
-    waterLiters: kwh * WATER_PER_KWH,
+    coalSavedKg: +(kwh * COAL_PER_KWH).toFixed(1),
     treesNeeded: Math.ceil(co2Kg / CO2_PER_TREE_YEAR),
     drivingKm: Math.round(co2Kg / 0.21),
   };

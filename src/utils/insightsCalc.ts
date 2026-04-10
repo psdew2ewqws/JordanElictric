@@ -23,11 +23,10 @@ const NATIONAL_AVG_KWH = 297;
 
 // ─── Environmental Constants ───────────────────────────────
 
-const CO2_PER_KWH = 0.6;       // kg
-const WATER_PER_KWH = 2.0;     // liters
+const CO2_PER_KWH = 0.71;      // kg — verified from FusionSolar Jordan (236.30/332.82)
+const COAL_PER_KWH = 0.116;    // kg standard coal equivalent — from FusionSolar (38.6/332.82)
 const TREE_CO2_OFFSET = 21;    // kg CO2/year per tree
 const CAR_CO2_PER_KM = 0.21;   // kg CO2/km average car
-const SHOWER_LITERS = 65;      // average shower
 
 // ─── Tier Breakdown ────────────────────────────────────────
 
@@ -125,24 +124,22 @@ export function calcSavingsOpportunity(projectedKwh: number): SavingsOpportunity
 
 export interface EnvironmentalImpact {
   co2Kg: number;
-  waterLiters: number;
+  coalSavedKg: number;
   treesNeeded: number;
   drivingKm: number;
-  showers: number;
   co2VsLastMonth: number;    // positive = more, negative = less
 }
 
 export function calcEnvironmentalImpact(kwh: number, lastMonthKwh?: number): EnvironmentalImpact {
   const co2Kg = +(kwh * CO2_PER_KWH).toFixed(1);
-  const waterLiters = Math.round(kwh * WATER_PER_KWH);
+  const coalSavedKg = +(kwh * COAL_PER_KWH).toFixed(1);
   const treesNeeded = Math.ceil(co2Kg / TREE_CO2_OFFSET);
   const drivingKm = Math.round(co2Kg / CAR_CO2_PER_KM);
-  const showers = Math.floor(waterLiters / SHOWER_LITERS);
 
   const lastCo2 = lastMonthKwh ? +(lastMonthKwh * CO2_PER_KWH).toFixed(1) : 0;
   const co2VsLastMonth = lastMonthKwh ? +(co2Kg - lastCo2).toFixed(1) : 0;
 
-  return { co2Kg, waterLiters, treesNeeded, drivingKm, showers, co2VsLastMonth };
+  return { co2Kg, coalSavedKg, treesNeeded, drivingKm, co2VsLastMonth };
 }
 
 // ─── Daily Pace ────────────────────────────────────────────

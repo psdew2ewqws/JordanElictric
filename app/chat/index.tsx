@@ -19,6 +19,7 @@ import { useLanguage } from '../../src/i18n/LanguageContext';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { Colors, FontSize, Radius, Spacing, Shadows } from '../../src/constants/theme';
 import { supabase, jepcoProxy } from '../../src/services/supabase';
+import { fetch as expoFetch } from 'expo/fetch';
 
 interface ChatMessage {
   id: string;
@@ -55,11 +56,11 @@ export default function ChatScreen() {
   }, []);
 
   const quickActions = [
-    { label: isAr ? 'كم فاتورتي؟' : "What's my bill?", key: 'billing' },
-    { label: isAr ? 'احسبلي فاتورة' : 'Calculate bill', key: 'calculate' },
-    { label: isAr ? 'بدي أشتكي' : 'File complaint', key: 'complaint' },
-    { label: isAr ? 'شو التعرفة؟' : 'Tariff info', key: 'tariff' },
-    { label: isAr ? 'حالة شكواي' : 'Complaint status', key: 'status' },
+    { label: t('chatBilling'), key: 'billing' },
+    { label: t('chatCalculate'), key: 'calculate' },
+    { label: t('chatComplaint'), key: 'complaint' },
+    { label: t('chatTariff'), key: 'tariff' },
+    { label: t('chatStatus'), key: 'status' },
   ];
 
   const sendMessage = useCallback(
@@ -87,12 +88,15 @@ export default function ChatScreen() {
       ]);
 
       try {
-        // Use direct fetch instead of supabase.functions.invoke to handle SSE streaming
+        // Use expoFetch (not global fetch) for ReadableStream support on native
         const { data: { session: authSession } } = await supabase.auth.getSession();
         const token = authSession?.access_token;
         const fnUrl = `${(supabase as any).supabaseUrl}/functions/v1/chat`;
 
-        const response = await fetch(fnUrl, {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 60_000);
+
+        const response = await expoFetch(fnUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -100,7 +104,16 @@ export default function ChatScreen() {
             'apikey': (supabase as any).supabaseKey,
           },
           body: JSON.stringify({ message: trimmed, session_id: sessionId }),
+          signal: controller.signal,
         });
+        clearTimeout(timeout);
+
+        if (!response.ok) {
+          const errBody = await response.text().catch(() => '');
+          let msg = t('sorryError');
+          try { const p = JSON.parse(errBody); msg = p.error || msg; } catch {}
+          throw new Error(msg);
+        }
 
         const contentType = response.headers.get('content-type') || '';
 
@@ -138,8 +151,21 @@ export default function ChatScreen() {
                   if (parsed.session_id) {
                     setSessionId(parsed.session_id);
                   }
-                } catch {}
+                } catch (e) {
+                  if (__DEV__) console.warn('[Chat] SSE parse error:', line, e);
+                }
               }
+            }
+          } else {
+            // Fallback: ReadableStream not available, parse full SSE response text
+            const raw = await response.text();
+            for (const line of raw.split('\n')) {
+              if (!line.startsWith('data: ')) continue;
+              try {
+                const parsed = JSON.parse(line.slice(6));
+                if (parsed.text) fullText += parsed.text;
+                if (parsed.session_id) setSessionId(parsed.session_id);
+              } catch {}
             }
           }
 
@@ -163,12 +189,13 @@ export default function ChatScreen() {
           );
         }
       } catch (err: any) {
+        const isTimeout = err?.name === 'AbortError';
         setMessages((prev) =>
           prev.map((m) =>
             m.id === botMsgId
               ? {
                   ...m,
-                  text: t('sorryErrorRetry'),
+                  text: err?.message && !isTimeout ? err.message : t('sorryErrorRetry'),
                   isStreaming: false,
                 }
               : m
@@ -236,7 +263,7 @@ export default function ChatScreen() {
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior="padding"
       >
         {/* Header */}
         <View style={styles.header}>
@@ -246,7 +273,7 @@ export default function ChatScreen() {
           <View style={styles.headerCenter}>
             <View style={styles.onlineDot} />
             <Text style={[styles.headerTitle, { fontFamily: fonts.bold, fontSize: sz(18) }]}>
-              {isAr ? 'ضياء' : 'Diaa'}
+              {t('appName')}
             </Text>
           </View>
           <View style={styles.headerSpacer} />

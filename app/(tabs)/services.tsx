@@ -33,11 +33,11 @@ export default function ServicesScreen() {
   const isAr = language === 'ar';
 
   const labels: Record<string, { title: string; desc: string }> = {
-    chat: { title: t('inquiriesComplaints'), desc: isAr ? 'محادثة مباشرة على مدار الساعة' : '24/7 live support' },
-    outage: { title: t('reportOutage'), desc: isAr ? 'الإبلاغ عن انقطاع الكهرباء' : 'Report power interruptions' },
-    report: { title: t('reportTrack'), desc: isAr ? 'متابعة الشكاوى والبلاغات' : 'Track complaints & reports' },
-    safety: { title: t('energyFriend'), desc: isAr ? 'الإبلاغ عن مخاطر كهربائية' : 'Report electrical hazards' },
-    billing: { title: t('viewPayBills'), desc: isAr ? 'عرض الفواتير وتفاصيلها' : 'View bills & payment details' },
+    chat: { title: t('inquiriesComplaints'), desc: t('chatServiceDesc') },
+    outage: { title: t('reportOutage'), desc: t('outageServiceDesc') },
+    report: { title: t('reportTrack'), desc: t('reportTrackDesc') },
+    safety: { title: t('energyFriend'), desc: t('safetyServiceDesc') },
+    billing: { title: t('viewPayBills'), desc: t('billingServiceDesc') },
   };
 
   return (

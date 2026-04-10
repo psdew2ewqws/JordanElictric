@@ -10,6 +10,7 @@ import { LanguageToggle } from '../../src/components/LanguageToggle';
 import { DataSourceBadge } from '../../src/components/DataSourceBadge';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { jepcoApi, notificationApi, billApi, complaintApi } from '../../src/services/api';
+import { getFallbackSmartMeter } from '../../src/utils/mockData';
 
 const C = {
   navy: '#0C1F2E', navyMid: '#14354D', navyLight: '#1B4965',
@@ -44,6 +45,10 @@ export default function HomeScreen() {
       ]);
       const allFailed = results.every((r) => r.status === 'rejected');
       if (allFailed) setError(true);
+      // Fall back to demo data if smart meter call failed
+      if (results[0].status === 'rejected' && !smartMeter) {
+        setSmartMeter(getFallbackSmartMeter(subscription?.householdSize));
+      }
     } catch {
       setError(true);
     } finally {
@@ -166,7 +171,7 @@ export default function HomeScreen() {
                   {t('tariffTier')}
                 </Text>
                 <Text style={{ fontSize: 13, fontFamily: f.bold, color: tier === 1 ? C.green : tier === 2 ? C.amber : C.red }}>
-                  {isAr ? `الشريحة ${tier}` : `Tier ${tier}`}
+                  {`${t('tier')} ${tier}`}
                 </Text>
               </View>
               <View style={s.billTableRow}>
@@ -207,7 +212,7 @@ export default function HomeScreen() {
           <View style={s.summaryDiv} />
           <TouchableOpacity style={s.summaryItem} onPress={() => router.push('/(tabs)/usage')}>
             <Text style={{ fontSize: 18, fontFamily: f.bold, color: tier === 1 ? C.green : tier === 2 ? C.amber : C.red }}>{tier}/3</Text>
-            <Text style={{ fontSize: 11, color: C.gray400, fontFamily: f.regular }}>{isAr ? 'الشريحة' : 'Tier'}</Text>
+            <Text style={{ fontSize: 11, color: C.gray400, fontFamily: f.regular }}>{t('tier')}</Text>
           </TouchableOpacity>
         </View>
 

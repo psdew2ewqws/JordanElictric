@@ -210,7 +210,7 @@ async function footprint(db: DB, sub: Sub) {
   if (fp) {
     return {
       co2Kg: Number(fp.co2_kg),
-      waterLiters: Number(fp.water_liters),
+      coalSavedKg: Number(fp.coal_saved_kg ?? fp.water_liters ?? 0),
       treesNeeded: fp.trees_needed,
       drivingKm: Number(fp.driving_km),
       co2ChangePct: fp.co2_change_pct ? Number(fp.co2_change_pct) : null,
@@ -303,7 +303,8 @@ async function refresh(db: DB, sub: Sub) {
       month: monthStart,
       total_kwh: expectedKwh,
       co2_kg: fp.co2Kg,
-      water_liters: fp.waterLiters,
+      water_liters: fp.coalSavedKg,
+      coal_saved_kg: fp.coalSavedKg,
       trees_needed: fp.treesNeeded,
       driving_km: fp.drivingKm,
       co2_change_pct: co2ChangePct,

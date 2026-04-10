@@ -86,7 +86,7 @@ export default function NotificationsScreen() {
         setNotifications([]);
       } else {
         setError(
-          err instanceof Error ? err.message : isAr ? 'فشل تحميل الإشعارات' : 'Failed to load notifications',
+          err instanceof Error ? err.message : t('failedLoadNotifications'),
         );
       }
     } finally {
@@ -187,7 +187,7 @@ export default function NotificationsScreen() {
                 ]}
                 numberOfLines={1}
               >
-                {title || (isAr ? 'إشعار' : 'Notification')}
+                {title || t('notificationLabel')}
               </Text>
               <Text style={[styles.cardTime, { fontFamily: f.regular }]}>
                 {timeAgo(item.created_at, isAr)}
@@ -246,7 +246,7 @@ export default function NotificationsScreen() {
           <Text style={[styles.errorText, { fontFamily: f.medium }]}>{error}</Text>
           <TouchableOpacity style={styles.retryBtn} onPress={loadNotifications}>
             <Text style={[styles.retryText, { fontFamily: f.semibold }]}>
-              {isAr ? 'إعادة المحاولة' : 'Retry'}
+              {t('retry')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -256,7 +256,7 @@ export default function NotificationsScreen() {
             <Ionicons name="notifications-off-outline" size={56} color={Colors.textMuted} />
           </View>
           <Text style={[styles.emptyTitle, { fontFamily: f.bold }]}>
-            {isAr ? 'لا توجد إشعارات بعد' : 'No notifications yet'}
+            {t('noNotificationsYet')}
           </Text>
           <Text style={[styles.emptyDesc, { fontFamily: f.regular }]}>
             {isAr
@@ -287,7 +287,7 @@ export default function NotificationsScreen() {
               </Text>
               <TouchableOpacity onPress={handleMarkAllRead}>
                 <Text style={[styles.markAllText, { fontFamily: f.semibold }]}>
-                  {isAr ? 'قراءة الكل' : 'Mark all read'}
+                  {t('markAllRead')}
                 </Text>
               </TouchableOpacity>
             </View>

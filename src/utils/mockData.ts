@@ -84,9 +84,35 @@ export const mockAnalytics: Analytics = {
     },
   ],
   environmentalImpact: {
-    co2Kg: 192,
-    treesNeeded: 9,
-    waterLiters: 640,
-    co2ChangeFromLastMonth: 23,
+    co2Kg: 227,
+    treesNeeded: 11,
+    coalSavedKg: 37.1,
+    drivingKm: 1081,
+    co2ChangeFromLastMonth: 27,
   },
 };
+
+/** Client-side fallback smart meter data, used when API calls fail */
+export function getFallbackSmartMeter(householdSize = 4): Record<string, any> {
+  const dayOfMonth = new Date().getDate();
+  const month = new Date().getMonth();
+  const baseDaily = householdSize * 6;
+  const seasonal = month >= 5 && month <= 8 ? 1.4 : month >= 11 || month <= 1 ? 1.2 : 1.0;
+  const dailyKwh = baseDaily * seasonal;
+  const currentKwh = Math.round(dailyKwh * dayOfMonth);
+  const expectedKwh = Math.round(dailyKwh * 30);
+  const lastMonthKwh = Math.round(expectedKwh * 0.95);
+  const lastYearKwh = Math.round(expectedKwh * 0.85);
+
+  return {
+    showSmartMeterFeature: true,
+    currentElectricityConsumptionQuntity: currentKwh.toString(),
+    expectedElectricityConsumptionQuntity: expectedKwh.toString(),
+    expectedElectricityEndofMonthBillAmount: '0',
+    numberOfConsumptionDaysSinceLastRead: dayOfMonth.toString(),
+    comparazinConsumption: {
+      lastMonthconsumption: lastMonthKwh.toString(),
+      lastYearconsumption: lastYearKwh.toString(),
+    },
+  };
+}

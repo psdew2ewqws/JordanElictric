@@ -366,7 +366,7 @@ async function execGetFootprint(ctx: ToolContext): Promise<string> {
     return JSON.stringify({
       month: fp.month,
       co2_kg: fp.co2_kg,
-      water_liters: fp.water_liters,
+      coal_saved_kg: fp.coal_saved_kg ?? fp.water_liters,
       trees_needed: fp.trees_needed,
       driving_km: fp.driving_km_equivalent,
       yoy_change_pct: fp.yoy_change_pct,
@@ -387,7 +387,7 @@ async function execGetFootprint(ctx: ToolContext): Promise<string> {
     return JSON.stringify({
       month: new Date().toISOString().slice(0, 7),
       co2_kg: +f.co2Kg.toFixed(1),
-      water_liters: f.waterLiters,
+      coal_saved_kg: f.coalSavedKg,
       trees_needed: f.treesNeeded,
       driving_km: f.drivingKm,
     });

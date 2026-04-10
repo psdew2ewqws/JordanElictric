@@ -288,7 +288,7 @@ export default function BillHistoryScreen() {
                 { fontFamily: fonts.semibold, fontSize: sz(14) },
               ]}
             >
-              {isAr ? 'إعادة المحاولة' : 'Retry'}
+              {t('retry')}
             </Text>
           </TouchableOpacity>
         </View>

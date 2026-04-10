@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Alert,
-  ActivityIndicator, TextInput, RefreshControl,
+  ActivityIndicator, TextInput, RefreshControl, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -42,13 +42,15 @@ function Row({ icon, label, value, onPress }: { icon: string; label: string; val
 function Sheet({ visible, onClose, title, children }: { visible: boolean; onClose: () => void; title: string; children: React.ReactNode }) {
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <TouchableOpacity style={s.overlay} activeOpacity={1} onPress={onClose}>
-        <TouchableOpacity style={s.sheet} activeOpacity={1}>
-          <View style={s.handle} />
-          <Text style={s.sheetTitle}>{title}</Text>
-          {children}
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <TouchableOpacity style={s.overlay} activeOpacity={1} onPress={onClose}>
+          <TouchableOpacity style={s.sheet} activeOpacity={1}>
+            <View style={s.handle} />
+            <Text style={s.sheetTitle}>{title}</Text>
+            {children}
+          </TouchableOpacity>
         </TouchableOpacity>
-      </TouchableOpacity>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -100,7 +102,7 @@ export default function ProfileScreen() {
   const co = sub?.distributionCompany || 'JEPCO';
   const hh = sub?.householdSize || 1;
 
-  const saveSub = async () => { if (!editNum.trim()) return; setSaving(true); try { await updateSubscription({ subscriberNumber: editNum.trim() }); setSubModal(false); showToast(isAr ? 'تم الحفظ!' : 'Saved!', 'success'); } catch { showToast(isAr ? 'فشل الحفظ' : 'Save failed', 'error'); } finally { setSaving(false); } };
+  const saveSub = async () => { if (!editNum.trim()) return; setSaving(true); try { await updateSubscription({ subscriberNumber: editNum.trim() }); setSubModal(false); showToast(t('saved'), 'success'); } catch { showToast(t('saveFailed'), 'error'); } finally { setSaving(false); } };
   const pickCo = async (v: string) => { setSaving(true); try { await updateSubscription({ distributionCompany: v }); setCoModal(false); } catch {} finally { setSaving(false); } };
   const pickHh = async (n: number) => { setSaving(true); try { await updateSubscription({ householdSize: n }); setHhModal(false); } catch {} finally { setSaving(false); } };
   const pickLang = async (l: 'en' | 'ar') => { setLanguage(l); try { await updateUser({ language: l === 'ar' ? 'AR' : 'EN' }); } catch {} setLangModal(false); };

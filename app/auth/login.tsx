@@ -13,7 +13,7 @@ import {
   Dimensions,
   Animated,
 } from 'react-native';
-// react-native-reanimated and expo-haptics removed for Expo Go compatibility
+import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Video, ResizeMode, AVPlaybackStatus } from 'expo-av';
@@ -85,6 +85,7 @@ export default function LoginScreen() {
         router.replace('/(tabs)');
         return;
       }
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Animated.sequence([
         Animated.timing(shakeX, { toValue: -10, duration: 50, useNativeDriver: true }),
         Animated.timing(shakeX, { toValue: 10, duration: 50, useNativeDriver: true }),
@@ -166,7 +167,8 @@ export default function LoginScreen() {
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <KeyboardAvoidingView
         style={styles.formArea}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : -VIDEO_HEIGHT}
       >
         <Animated.View style={[styles.formInner, { opacity: formOpacity }]}>
           <ScrollView

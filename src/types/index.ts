@@ -91,6 +91,7 @@ export interface SavingsTip {
 export interface EnvironmentalImpact {
   co2Kg: number;
   treesNeeded: number;
-  waterLiters: number;
+  coalSavedKg: number;
+  drivingKm: number;
   co2ChangeFromLastMonth: number;
 }

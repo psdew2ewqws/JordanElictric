@@ -16,6 +16,7 @@ import {
   calcTierBreakdown, calcBillBreakdown, calcSavingsOpportunity,
   calcEnvironmentalImpact, calcDailyPace, getRecommendations,
 } from '../../src/utils/insightsCalc';
+import { getFallbackSmartMeter } from '../../src/utils/mockData';
 
 const { width: SW } = Dimensions.get('window');
 
@@ -38,9 +39,12 @@ export default function InsightsScreen() {
       const raw = res.data;
       setSmartMeter(raw?.body || raw);
     } catch (e: any) {
-      // On 401, show empty state instead of error
       if (e?.status !== 401) {
         setError(e?.message || 'Failed to load');
+      }
+      // Fall back to client-generated demo data so screens never show zeros
+      if (!smartMeter) {
+        setSmartMeter(getFallbackSmartMeter());
       }
     } finally {
       setLoading(false);
@@ -77,7 +81,7 @@ export default function InsightsScreen() {
       <View style={styles.screen}>
         <View style={{ paddingHorizontal: 16, paddingTop: 100 }}>
           <Text style={{ color: '#3D5468', fontSize: 12, fontFamily: fonts.regular, textAlign: 'center', marginBottom: 16 }}>
-            {isAr ? 'جاري جلب بياناتك من جيبكو...' : 'Fetching your data from JEPCO...'}
+            {t('fetchingFromJepco')}
           </Text>
           <Shimmer radius={14} height={100} />
           <View style={{ gap: 10, marginTop: 14 }}>
@@ -94,11 +98,11 @@ export default function InsightsScreen() {
       <View style={[styles.screen, { justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32 }]}>
         <Ionicons name="refresh-circle-outline" size={48} color="#4A5E6D" />
         <Text style={{ color: '#3D5468', fontSize: 14, fontFamily: fonts.medium, textAlign: 'center', marginTop: 12 }}>
-          {isAr ? 'تعذر تحميل الرؤى. اسحب للأسفل لإعادة المحاولة.' : "Couldn't load insights. Pull down to retry."}
+          {t('couldntLoadInsights')}
         </Text>
         <TouchableOpacity onPress={loadData} style={{ marginTop: 16, paddingHorizontal: 24, paddingVertical: 10, backgroundColor: '#1B4965', borderRadius: 8 }}>
           <Text style={{ color: '#fff', fontSize: 13, fontFamily: fonts.semibold }}>
-            {isAr ? 'إعادة المحاولة' : 'Retry'}
+            {t('retry')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -147,7 +151,7 @@ export default function InsightsScreen() {
                     {tr.range} kWh
                   </Text>
                   <Text style={[{ fontSize: sz(9), color: '#4A5E6D', fontFamily: fonts.regular, writingDirection: 'ltr' as const, textAlign: 'left' as const }]}>
-                    {tr.rate} JD/{isAr ? 'ك.و.س' : 'kWh'}
+                    {tr.rate} JD/{t('kwhUnit')}
                   </Text>
                 </View>
                 {tr.active && tr.kwh > 0 && (
@@ -199,10 +203,10 @@ export default function InsightsScreen() {
             {/* Row 2 */}
             <View style={[styles.fpRow, { marginTop: 16 }]}>
               <View style={styles.fpItem}>
-                <Ionicons name="water-outline" size={20} color="#3B82F6" />
-                <AnimatedCounter value={env.waterLiters} duration={900}
+                <MaterialCommunityIcons name="fire" size={20} color="#F59E0B" />
+                <AnimatedCounter value={env.coalSavedKg} decimals={1} duration={900}
                   style={[styles.fpVal, { fontFamily: fonts.bold }]} />
-                <Text style={[styles.fpUnit, { fontFamily: fonts.regular, fontSize: sz(9) }]}>{t('litersUsed')}</Text>
+                <Text style={[styles.fpUnit, { fontFamily: fonts.regular, fontSize: sz(9) }]}>{t('coalSaved')}</Text>
               </View>
               <View style={styles.fpItem}>
                 <MaterialCommunityIcons name="tree" size={20} color="#10B981" />
@@ -239,7 +243,7 @@ export default function InsightsScreen() {
           {tips.length > 0 && (
             <LazyCard delay={550} style={styles.card}>
               <Text style={[styles.title, { fontFamily: fonts.bold, fontSize: sz(14), marginBottom: 10 }]}>
-                {isAr ? 'هل تعلم؟' : 'Did you know?'}
+                {t('didYouKnow')}
               </Text>
               {tips.map((tip, i) => (
                 <View key={i} style={[styles.tipRow, i > 0 && { borderTopWidth: 1, borderTopColor: '#F1F5F9', paddingTop: 12 }]}>

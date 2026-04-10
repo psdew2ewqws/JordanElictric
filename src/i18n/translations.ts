@@ -145,14 +145,12 @@ export const translations = {
     environmentalFootprint: 'Your Environmental Footprint',
     co2Label: 'CO₂',
     kgEmitted: 'kg emitted',
-    waterLabel: 'Water',
-    litersUsed: 'liters used',
+    coalLabel: 'Coal',
+    coalSaved: 'kg coal saved',
     treesNeeded: 'Trees needed',
     toOffsetCarbon: 'to offset',
     likeDriving: 'Like driving',
     km: 'km',
-    enoughWaterFor: 'Water for',
-    showers: 'showers',
     savedCo2: 'kg CO₂ less than last month',
     moreCo2: 'kg CO₂ more than last month',
     vsLastMonth: 'vs Last Month',
@@ -377,6 +375,70 @@ export const translations = {
     hazardType: 'Hazard Type',
     yourCurrentLocation: 'Your Current Location',
 
+    // Auto Location
+    detectingLocation: 'Detecting location...',
+    enterLocationManually: 'Enter location manually...',
+    addDetails: 'Add details',
+
+    // Chat quick actions
+    chatBilling: "What's my bill?",
+    chatCalculate: 'Calculate bill',
+    chatComplaint: 'File complaint',
+    chatTariff: 'Tariff info',
+    chatStatus: 'Complaint status',
+
+    // Complaints (additional)
+    outageLabel: 'Outage',
+    complaintFiled: 'Complaint filed',
+    failedSubmit: 'Failed to submit complaint',
+    statusLabel: 'Status',
+    dateLabel: 'Date',
+    referenceLabel: 'Reference',
+    retry: 'Retry',
+
+    // Bill scan (additional)
+    fileNumber: 'File Number',
+    customerLabel: 'Customer',
+    totalAmountLabel: 'Total Amount',
+    billingPeriodLabel: 'Billing Period',
+    linkFileNumber: 'Link File Number',
+    scanAnotherBill: 'Scan Another Bill',
+
+    // Notifications
+    justNow: 'Just now',
+    failedLoadNotifications: 'Failed to load notifications',
+    notificationLabel: 'Notification',
+    noNotificationsYet: 'No notifications yet',
+    markAllRead: 'Mark all read',
+
+    // Insights (additional)
+    couldntLoadInsights: "Couldn't load insights. Pull down to retry.",
+    didYouKnow: 'Did you know?',
+
+    // Services descriptions
+    chatServiceDesc: '24/7 live support',
+    outageServiceDesc: 'Report power interruptions',
+    reportTrackDesc: 'Track complaints & reports',
+    safetyServiceDesc: 'Report electrical hazards',
+    billingServiceDesc: 'View bills & payment details',
+
+    // Register (additional)
+    accountFound: 'Account found!',
+
+    // Usage (additional)
+    projectedLabel: 'Projected',
+    projectedCost: 'Projected Cost',
+    daysUnit: 'days',
+
+    // Profile (additional)
+    saveFailed: 'Save failed',
+
+    // Outage time options
+    lessThan1Hour: '< 1 hour',
+    oneToThreeHours: '1-3 hours',
+    moreThanThreeHours: '3+ hours',
+    dontKnow: "Don't know",
+
     // General
     error: 'Error',
   },
@@ -526,14 +588,12 @@ export const translations = {
     environmentalFootprint: 'بصمتك البيئية',
     co2Label: 'CO₂',
     kgEmitted: 'كغ انبعاثات',
-    waterLabel: 'مياه',
-    litersUsed: 'لتر مستهلك',
+    coalLabel: 'فحم',
+    coalSaved: 'كغ فحم موفّر',
     treesNeeded: 'أشجار مطلوبة',
     toOffsetCarbon: 'للتعويض',
     likeDriving: 'كقيادة',
     km: 'كم',
-    enoughWaterFor: 'مياه تكفي',
-    showers: 'دشّات',
     savedCo2: 'كغ CO₂ أقل من الشهر الماضي',
     moreCo2: 'كغ CO₂ أكثر من الشهر الماضي',
     vsLastMonth: 'مقارنة بالشهر الماضي',
@@ -757,6 +817,70 @@ export const translations = {
     backToHome: 'العودة للرئيسية',
     hazardType: 'نوع الخطر',
     yourCurrentLocation: 'موقعك الحالي',
+
+    // Auto Location
+    detectingLocation: 'جاري تحديد الموقع...',
+    enterLocationManually: 'أدخل الموقع يدوياً...',
+    addDetails: 'إضافة تفاصيل',
+
+    // Chat quick actions
+    chatBilling: 'كم فاتورتي؟',
+    chatCalculate: 'احسبلي فاتورة',
+    chatComplaint: 'بدي أشتكي',
+    chatTariff: 'شو التعرفة؟',
+    chatStatus: 'حالة شكواي',
+
+    // Complaints (additional)
+    outageLabel: 'انقطاع',
+    complaintFiled: 'تم تقديم الشكوى',
+    failedSubmit: 'فشل تقديم الشكوى',
+    statusLabel: 'الحالة',
+    dateLabel: 'التاريخ',
+    referenceLabel: 'المرجع',
+    retry: 'إعادة المحاولة',
+
+    // Bill scan (additional)
+    fileNumber: 'رقم الملف',
+    customerLabel: 'اسم المشترك',
+    totalAmountLabel: 'المبلغ الإجمالي',
+    billingPeriodLabel: 'فترة الفوترة',
+    linkFileNumber: 'ربط رقم الملف',
+    scanAnotherBill: 'مسح فاتورة أخرى',
+
+    // Notifications
+    justNow: 'الآن',
+    failedLoadNotifications: 'فشل تحميل الإشعارات',
+    notificationLabel: 'إشعار',
+    noNotificationsYet: 'لا توجد إشعارات بعد',
+    markAllRead: 'قراءة الكل',
+
+    // Insights (additional)
+    couldntLoadInsights: 'تعذر تحميل الرؤى. اسحب للأسفل لإعادة المحاولة.',
+    didYouKnow: 'هل تعلم؟',
+
+    // Services descriptions
+    chatServiceDesc: 'محادثة مباشرة على مدار الساعة',
+    outageServiceDesc: 'الإبلاغ عن انقطاع الكهرباء',
+    reportTrackDesc: 'متابعة الشكاوى والبلاغات',
+    safetyServiceDesc: 'الإبلاغ عن مخاطر كهربائية',
+    billingServiceDesc: 'عرض الفواتير وتفاصيلها',
+
+    // Register (additional)
+    accountFound: 'تم العثور على حسابك!',
+
+    // Usage (additional)
+    projectedLabel: 'المتوقع',
+    projectedCost: 'التكلفة المتوقعة',
+    daysUnit: 'يوم',
+
+    // Profile (additional)
+    saveFailed: 'فشل الحفظ',
+
+    // Outage time options
+    lessThan1Hour: 'أقل من ساعة',
+    oneToThreeHours: '١-٣ ساعات',
+    moreThanThreeHours: 'أكثر من ٣ ساعات',
+    dontKnow: 'لا أعلم',
 
     // General
     error: 'خطأ',

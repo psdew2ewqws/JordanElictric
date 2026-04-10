@@ -12,7 +12,7 @@ import {
   ScrollView,
   Animated,
 } from 'react-native';
-// react-native-reanimated and expo-haptics removed for Expo Go compatibility
+import * as Haptics from 'expo-haptics';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -46,8 +46,10 @@ export default function RegisterScreen() {
   const [householdSize, setHouseholdSize] = useState('');
 
   const shakeX = useRef(new Animated.Value(0)).current;
+  const shakeStyle = { transform: [{ translateX: shakeX }] };
 
   const triggerShakeAndError = () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     Animated.sequence([
       Animated.timing(shakeX, { toValue: -10, duration: 50, useNativeDriver: true }),
       Animated.timing(shakeX, { toValue: 10, duration: 50, useNativeDriver: true }),
@@ -86,8 +88,8 @@ export default function RegisterScreen() {
         distributionCompany: company as 'JEPCO' | 'IDECO' | 'EDCO',
         householdSize: parseInt(householdSize, 10) || 1,
       });
-      
-      setSuccessMsg(isAr ? 'تم العثور على حسابك!' : 'Account found!');
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setSuccessMsg(t('accountFound'));
       setTimeout(() => router.replace('/(tabs)'), 1200);
     } catch (err: any) {
       triggerShakeAndError();
@@ -108,7 +110,7 @@ export default function RegisterScreen() {
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior="padding"
       >
         <ScrollView
           style={styles.container}
