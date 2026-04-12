@@ -107,7 +107,15 @@ export default function ProfileScreen() {
   const pickHh = async (n: number) => { setSaving(true); try { await updateSubscription({ householdSize: n }); setHhModal(false); } catch {} finally { setSaving(false); } };
   const pickLang = async (l: 'en' | 'ar') => { setLanguage(l); try { await updateUser({ language: l === 'ar' ? 'AR' : 'EN' }); } catch {} setLangModal(false); };
   const toggleNotif = async () => { const v = !notifOn; setNotifOn(v); await AsyncStorage.setItem('diaa_notifications', v ? 'on' : 'off'); };
-  const doLogout = () => Alert.alert(t('logoutTitle'), t('logoutConfirm'), [{ text: t('cancel'), style: 'cancel' }, { text: t('logOut'), style: 'destructive', onPress: async () => { await logout(); router.replace('/auth/login'); } }]);
+  const doLogout = () => {
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined' && window.confirm(t('logoutConfirm'))) {
+        (async () => { await logout(); router.replace('/auth/login'); })();
+      }
+    } else {
+      Alert.alert(t('logoutTitle'), t('logoutConfirm'), [{ text: t('cancel'), style: 'cancel' }, { text: t('logOut'), style: 'destructive', onPress: async () => { await logout(); router.replace('/auth/login'); } }]);
+    }
+  };
 
   return (
     <SafeAreaView style={s.safe} edges={['top']}>
