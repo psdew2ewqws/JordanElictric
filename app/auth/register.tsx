@@ -32,12 +32,13 @@ export default function RegisterScreen() {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  const emailRef = useRef<TextInput>(null);
+  const phoneRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
   const subscriberRef = useRef<TextInput>(null);
 
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState(''); // optional
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
@@ -60,12 +61,12 @@ export default function RegisterScreen() {
   };
 
   const handleAccountStep = async () => {
-    if (!name || !email || !password || isSubmitting) return;
+    if (!name || !phone || !password || isSubmitting) return;
     
     setIsSubmitting(true);
     setErrorMsg('');
     try {
-      await register(name, email, password);
+      await register(name, phone.replace(/[^0-9]/g, '') + '@diaa.jo', password);
       
       setStep('subscriber');
     } catch (err: any) {
@@ -148,13 +149,28 @@ export default function RegisterScreen() {
                     returnKeyType="next"
                     textContentType="name"
                     autoComplete="name"
-                    onSubmitEditing={() => emailRef.current?.focus()}
+                    onSubmitEditing={() => phoneRef.current?.focus()}
                   />
                 </View>
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>{t('email')}</Text>
+                  <Text style={styles.label}>{isAr ? 'رقم الهاتف' : 'Phone Number'}</Text>
                   <TextInput
-                    ref={emailRef}
+                    ref={phoneRef}
+                    style={styles.input}
+                    placeholder="07X XXXX XXX"
+                    placeholderTextColor={Colors.textMuted}
+                    keyboardType="phone-pad"
+                    value={phone}
+                    onChangeText={setPhone}
+                    returnKeyType="next"
+                    textContentType="telephoneNumber"
+                    autoComplete="tel"
+                    onSubmitEditing={() => passwordRef.current?.focus()}
+                  />
+                </View>
+                <View style={styles.inputGroup}>
+                  <Text style={[styles.label, { color: Colors.textMuted }]}>{isAr ? 'البريد الإلكتروني (اختياري)' : 'Email (optional)'}</Text>
+                  <TextInput
                     style={styles.input}
                     placeholder="your@email.com"
                     placeholderTextColor={Colors.textMuted}
@@ -165,7 +181,6 @@ export default function RegisterScreen() {
                     returnKeyType="next"
                     textContentType="emailAddress"
                     autoComplete="email"
-                    onSubmitEditing={() => passwordRef.current?.focus()}
                   />
                 </View>
                 <View style={styles.inputGroup}>
@@ -201,8 +216,8 @@ export default function RegisterScreen() {
                   <Text style={{ color: '#DC2626', fontSize: 13, textAlign: 'center' }}>{errorMsg}</Text>
                 ) : null}
                 <TouchableOpacity
-                  style={[styles.primaryBtn, (!name || !email || !password || isSubmitting) && styles.btnDisabled]}
-                  disabled={!name || !email || !password || isSubmitting}
+                  style={[styles.primaryBtn, (!name || !phone || !password || isSubmitting) && styles.btnDisabled]}
+                  disabled={!name || !phone || !password || isSubmitting}
                   onPress={handleAccountStep}
                 >
                   <Text style={styles.primaryBtnText}>{isSubmitting ? '...' : t('continueBtn')}</Text>
