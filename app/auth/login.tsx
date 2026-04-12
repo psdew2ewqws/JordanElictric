@@ -257,7 +257,7 @@ export default function LoginScreen() {
 
             {/* Log In */}
             <TouchableOpacity
-              style={[styles.primaryBtn, (!email || !password || isSubmitting) && styles.btnDisabled, isAr && { paddingVertical: 13 }]}
+              style={[styles.primaryBtn, (!phone || !password || isSubmitting) && styles.btnDisabled, isAr && { paddingVertical: 13 }]}
               disabled={!phone || !password || isSubmitting}
               onPress={handleLogin}
               activeOpacity={0.85}
