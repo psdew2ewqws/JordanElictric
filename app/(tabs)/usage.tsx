@@ -219,12 +219,12 @@ export default function UsageScreen() {
         <LinearGradient colors={['#0F2440', '#1B4965']} style={styles.header}>
           <SafeAreaView edges={['top']} style={styles.headerPad}>
             <View style={styles.topRow}>
-              <View>
-                <Text style={[styles.hdrTitle, { fontFamily: fonts.bold, fontSize: sz(20), letterSpacing: isAr ? 0 : -0.3 }]}>
+              <View style={{ flex: 1, alignItems: isAr ? 'flex-end' : 'flex-start' }}>
+                <Text style={[styles.hdrTitle, { fontFamily: fonts.bold, fontSize: sz(20), letterSpacing: isAr ? 0 : -0.3, textAlign: isAr ? 'right' : 'left', writingDirection: isAr ? 'rtl' : 'ltr' }]}>
                   {t('usageTitle')}
                 </Text>
-                <Text style={[styles.hdrSub, { fontFamily: fonts.regular, fontSize: sz(11) }]}>
-                  {isSmartMeter ? 'Live smart meter data' : t('usageSubtitle')}
+                <Text style={[styles.hdrSub, { fontFamily: fonts.regular, fontSize: sz(11), textAlign: isAr ? 'right' : 'left', writingDirection: isAr ? 'rtl' : 'ltr' }]}>
+                  {isSmartMeter ? (isAr ? 'بيانات عداد ذكي مباشرة' : 'Live smart meter data') : t('usageSubtitle')}
                 </Text>
               </View>
               <LanguageToggle variant="dark" />
@@ -233,7 +233,7 @@ export default function UsageScreen() {
             {/* Summary cards — animated counters */}
             <View style={styles.sumRow}>
               <View style={styles.sumCard}>
-                <Text style={[styles.sumLabel, { fontFamily: fonts.medium, letterSpacing: isAr ? 0 : 0.3 }]}>{t('projectedLabel')}</Text>
+                <Text style={[styles.sumLabel, { fontFamily: fonts.medium, letterSpacing: isAr ? 0 : 0.3, textTransform: isAr ? 'none' : 'uppercase' }]}>{t('projectedLabel')}</Text>
                 <AnimatedCounter value={currentKwh} style={[styles.sumVal, { fontFamily: fonts.bold }]} duration={1000} />
                 <Text style={[styles.sumUnit, { fontFamily: fonts.medium }]}>kWh</Text>
                 {daysInCycle > 0 && (
@@ -243,7 +243,7 @@ export default function UsageScreen() {
                 )}
               </View>
               <View style={styles.sumCard}>
-                <Text style={[styles.sumLabel, { fontFamily: fonts.medium, letterSpacing: isAr ? 0 : 0.3 }]}>{t('projectedCost')}</Text>
+                <Text style={[styles.sumLabel, { fontFamily: fonts.medium, letterSpacing: isAr ? 0 : 0.3, textTransform: isAr ? 'none' : 'uppercase' }]}>{t('projectedCost')}</Text>
                 <AnimatedCounter value={actualCostJd} decimals={2} style={[styles.sumVal, { fontFamily: fonts.bold }]} duration={1200} />
                 <Text style={[styles.sumUnit, { fontFamily: fonts.medium }]}>JD</Text>
                 <Text style={[styles.sumChange, { fontFamily: fonts.semibold, color: '#6EE7B7' }]}>
@@ -251,7 +251,7 @@ export default function UsageScreen() {
                 </Text>
               </View>
               <View style={styles.sumCard}>
-                <Text style={[styles.sumLabel, { fontFamily: fonts.medium, letterSpacing: 0.3 }]}>Daily Avg</Text>
+                <Text style={[styles.sumLabel, { fontFamily: fonts.medium, letterSpacing: isAr ? 0 : 0.3, textTransform: isAr ? 'none' : 'uppercase' }]}>{t('dailyAvgLabel')}</Text>
                 <AnimatedCounter value={dailyAvg} style={[styles.sumVal, { fontFamily: fonts.bold }]} duration={1000} />
                 <Text style={[styles.sumUnit, { fontFamily: fonts.medium }]}>kWh/day</Text>
               </View>
@@ -537,21 +537,21 @@ const styles = StyleSheet.create({
   header: { borderBottomLeftRadius: 24, borderBottomRightRadius: 24 },
   headerPad: { paddingHorizontal: 20, paddingBottom: 22 },
   topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingTop: 8 },
-  hdrTitle: { color: '#fff', textAlign: 'left', writingDirection: 'ltr' },
-  hdrSub: { color: 'rgba(255,255,255,0.6)', marginTop: 2, textAlign: 'left', writingDirection: 'ltr' },
+  hdrTitle: { color: '#fff' },
+  hdrSub: { color: 'rgba(255,255,255,0.6)', marginTop: 2 },
 
   sumRow: { flexDirection: 'row', gap: 6, marginTop: 18 },
   sumCard: { flex: 1, backgroundColor: 'rgba(255,255,255,0.06)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: 10, alignItems: 'center' },
-  sumLabel: { fontSize: 8, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase' },
+  sumLabel: { fontSize: 9, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', textAlign: 'center' },
   sumVal: { fontSize: 20, color: '#fff', marginTop: 2, letterSpacing: -0.5 },
-  sumUnit: { fontSize: 8, color: 'rgba(255,255,255,0.55)', marginTop: 1 },
-  sumChange: { fontSize: 8, marginTop: 3 },
+  sumUnit: { fontSize: 9, color: 'rgba(255,255,255,0.55)', marginTop: 1 },
+  sumChange: { fontSize: 9, marginTop: 3 },
 
   body: { paddingHorizontal: 16, paddingTop: 16 },
 
   card: { backgroundColor: '#fff', borderRadius: 14, padding: 16, marginBottom: 10, borderWidth: 1, borderColor: '#E8ECF0' },
-  cardTitle: { color: '#0C1E2D', marginBottom: 2, textAlign: 'left', writingDirection: 'ltr' },
-  cardSub: { color: '#4A5E6D', marginBottom: 10, textAlign: 'left', writingDirection: 'ltr' },
+  cardTitle: { color: '#0C1E2D', marginBottom: 2 },
+  cardSub: { color: '#4A5E6D', marginBottom: 10 },
 
   chartWrap: { flexDirection: 'row', marginTop: 8 },
   yAxis: { width: 28, justifyContent: 'space-between', paddingRight: 4 },

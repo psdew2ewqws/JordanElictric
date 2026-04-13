@@ -429,6 +429,7 @@ export const translations = {
     projectedLabel: 'Current',
     projectedCost: 'Current Cost',
     daysUnit: 'days',
+    dailyAvgLabel: 'Daily Avg',
 
     // Profile (additional)
     saveFailed: 'Save failed',
@@ -872,6 +873,7 @@ export const translations = {
     projectedLabel: 'الحالي',
     projectedCost: 'التكلفة الحالية',
     daysUnit: 'يوم',
+    dailyAvgLabel: 'المعدل اليومي',
 
     // Profile (additional)
     saveFailed: 'فشل الحفظ',
