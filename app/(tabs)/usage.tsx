@@ -221,10 +221,10 @@ export default function UsageScreen() {
           <SafeAreaView edges={['top']} style={styles.headerPad}>
             <View style={styles.topRow}>
               <View style={{ flex: 1, alignItems: isAr ? 'flex-end' : 'flex-start' }}>
-                <Text style={[styles.hdrTitle, { fontFamily: fonts.bold, fontSize: sz(20), letterSpacing: isAr ? 0 : -0.3, textAlign: isAr ? 'right' : 'left', writingDirection: isAr ? 'rtl' : 'ltr' }]}>
+                <Text style={[styles.hdrTitle, { fontFamily: fonts.bold, fontSize: sz(20), lineHeight: isAr ? 24 : undefined, letterSpacing: isAr ? 0 : -0.3, textAlign: isAr ? 'right' : 'left', writingDirection: isAr ? 'rtl' : 'ltr' }]}>
                   {t('usageTitle')}
                 </Text>
-                <Text style={[styles.hdrSub, { fontFamily: fonts.regular, fontSize: sz(11), textAlign: isAr ? 'right' : 'left', writingDirection: isAr ? 'rtl' : 'ltr' }]}>
+                <Text style={[styles.hdrSub, { fontFamily: fonts.regular, fontSize: sz(11), lineHeight: isAr ? 14 : undefined, marginTop: isAr ? 0 : 2, textAlign: isAr ? 'right' : 'left', writingDirection: isAr ? 'rtl' : 'ltr' }]}>
                   {isSmartMeter ? (isAr ? 'بيانات عداد ذكي مباشرة' : 'Live smart meter data') : t('usageSubtitle')}
                 </Text>
               </View>
