@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Animated, RefreshControl,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Animated, RefreshControl, Modal, Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -50,6 +50,7 @@ export default function UsageScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [smartMeter, setSmartMeter] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [tiersModalOpen, setTiersModalOpen] = useState(false);
 
   // Animation values
   const chartAnim = useRef(new Animated.Value(0)).current; // 0 to 1 for line chart draw
@@ -360,11 +361,26 @@ export default function UsageScreen() {
 
           {/* === TIER POSITION === */}
           <LazyCard delay={300} style={styles.card}>
-            <Text style={[styles.cardTitle, { fontFamily: fonts.bold, fontSize: sz(13) }]}>
-              {t('tierBreakdown')}
-            </Text>
+            <View style={{ flexDirection: isAr ? 'row-reverse' : 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Text style={[styles.cardTitle, { fontFamily: fonts.bold, fontSize: sz(13), flex: 1 }]}>
+                {t('tierBreakdown')}
+              </Text>
+              <TouchableOpacity
+                onPress={() => setTiersModalOpen(true)}
+                hitSlop={10}
+                style={styles.tierInfoBtn}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="help-circle-outline" size={14} color="#1B4965" />
+                <Text style={[styles.tierInfoBtnText, { fontFamily: fonts.medium }]}>
+                  {t('whatAreTiers')}
+                </Text>
+              </TouchableOpacity>
+            </View>
             <Text style={[styles.cardSub, { fontFamily: fonts.regular, fontSize: sz(10) }]}>
-              Used {currentKwh} kWh so far — Tier {currentTier}
+              {isAr
+                ? `استهلكت ${currentKwh} ك.و.س حتى الآن — الشريحة ${currentTier}`
+                : `Used ${currentKwh} kWh so far — Tier ${currentTier}`}
             </Text>
 
             <View style={styles.tierTrack}>
@@ -528,6 +544,94 @@ export default function UsageScreen() {
           <View style={{ height: 30 }} />
         </View>
       </ScrollView>
+
+      {/* ═══ TIER EXPLAINER MODAL ═══ */}
+      <Modal
+        visible={tiersModalOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setTiersModalOpen(false)}
+      >
+        <Pressable style={styles.modalBackdrop} onPress={() => setTiersModalOpen(false)}>
+          <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
+            <View style={{ flexDirection: isAr ? 'row-reverse' : 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <Text style={[styles.modalTitle, { fontFamily: fonts.bold, textAlign: isAr ? 'right' : 'left', flex: 1 }]}>
+                {t('tiersExplainTitle')}
+              </Text>
+              <TouchableOpacity onPress={() => setTiersModalOpen(false)} hitSlop={10}>
+                <Ionicons name="close" size={22} color="#4A5E6D" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 460 }}>
+              <Text style={[styles.modalIntro, { fontFamily: fonts.regular, textAlign: isAr ? 'right' : 'left', writingDirection: isAr ? 'rtl' : 'ltr' }]}>
+                {t('tiersExplainIntro')}
+              </Text>
+
+              {/* Tier 1 */}
+              <View style={[styles.modalTierRow, { backgroundColor: 'rgba(5,150,105,0.08)', borderLeftColor: '#059669', flexDirection: isAr ? 'row-reverse' : 'row' }]}>
+                <View style={[styles.modalTierDot, { backgroundColor: '#059669' }]} />
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.modalTierTitle, { fontFamily: fonts.bold, color: '#059669', textAlign: isAr ? 'right' : 'left' }]}>
+                    {t('tiersExplainT1Title')}
+                  </Text>
+                  <Text style={[styles.modalTierDesc, { fontFamily: fonts.regular, textAlign: isAr ? 'right' : 'left', writingDirection: isAr ? 'rtl' : 'ltr' }]}>
+                    {t('tiersExplainT1Desc')}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Tier 2 */}
+              <View style={[styles.modalTierRow, { backgroundColor: 'rgba(217,119,6,0.08)', borderLeftColor: '#D97706', flexDirection: isAr ? 'row-reverse' : 'row' }]}>
+                <View style={[styles.modalTierDot, { backgroundColor: '#D97706' }]} />
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.modalTierTitle, { fontFamily: fonts.bold, color: '#D97706', textAlign: isAr ? 'right' : 'left' }]}>
+                    {t('tiersExplainT2Title')}
+                  </Text>
+                  <Text style={[styles.modalTierDesc, { fontFamily: fonts.regular, textAlign: isAr ? 'right' : 'left', writingDirection: isAr ? 'rtl' : 'ltr' }]}>
+                    {t('tiersExplainT2Desc')}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Tier 3 */}
+              <View style={[styles.modalTierRow, { backgroundColor: 'rgba(220,38,38,0.08)', borderLeftColor: '#DC2626', flexDirection: isAr ? 'row-reverse' : 'row' }]}>
+                <View style={[styles.modalTierDot, { backgroundColor: '#DC2626' }]} />
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.modalTierTitle, { fontFamily: fonts.bold, color: '#DC2626', textAlign: isAr ? 'right' : 'left' }]}>
+                    {t('tiersExplainT3Title')}
+                  </Text>
+                  <Text style={[styles.modalTierDesc, { fontFamily: fonts.regular, textAlign: isAr ? 'right' : 'left', writingDirection: isAr ? 'rtl' : 'ltr' }]}>
+                    {t('tiersExplainT3Desc')}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Example */}
+              <View style={styles.modalExample}>
+                <Text style={[styles.modalExampleTitle, { fontFamily: fonts.bold, textAlign: isAr ? 'right' : 'left' }]}>
+                  {t('tiersExplainExampleTitle')}
+                </Text>
+                <Text style={[styles.modalExampleBody, { fontFamily: fonts.regular, textAlign: isAr ? 'right' : 'left', writingDirection: isAr ? 'rtl' : 'ltr' }]}>
+                  {t('tiersExplainExampleBody')}
+                </Text>
+              </View>
+
+              {/* Tip */}
+              <View style={[styles.modalTip, { flexDirection: isAr ? 'row-reverse' : 'row' }]}>
+                <Ionicons name="bulb-outline" size={16} color="#1B4965" />
+                <Text style={[styles.modalTipText, { fontFamily: fonts.medium, textAlign: isAr ? 'right' : 'left', writingDirection: isAr ? 'rtl' : 'ltr' }]}>
+                  {t('tiersExplainTip')}
+                </Text>
+              </View>
+            </ScrollView>
+
+            <TouchableOpacity style={styles.modalBtn} onPress={() => setTiersModalOpen(false)} activeOpacity={0.85}>
+              <Text style={[styles.modalBtnText, { fontFamily: fonts.bold }]}>{t('gotIt')}</Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -566,6 +670,24 @@ const styles = StyleSheet.create({
   tierLabel: { fontSize: 7, color: '#4A5E6D' },
   tierInfo: { flexDirection: 'row', gap: 6, marginTop: 10 },
   tierInfoCard: { flex: 1, borderRadius: 8, padding: 8, alignItems: 'center' },
+  tierInfoBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(27,73,101,0.08)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12 },
+  tierInfoBtnText: { fontSize: 10, color: '#1B4965' },
+
+  modalBackdrop: { flex: 1, backgroundColor: 'rgba(12,30,45,0.55)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+  modalCard: { width: '100%', maxWidth: 420, backgroundColor: '#fff', borderRadius: 16, padding: 18 },
+  modalTitle: { fontSize: 17, color: '#0C1E2D' },
+  modalIntro: { fontSize: 12, color: '#4A5E6D', lineHeight: 18, marginBottom: 14 },
+  modalTierRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, padding: 12, borderRadius: 10, marginBottom: 8, borderLeftWidth: 3 },
+  modalTierDot: { width: 10, height: 10, borderRadius: 5, marginTop: 5 },
+  modalTierTitle: { fontSize: 13, marginBottom: 2 },
+  modalTierDesc: { fontSize: 11, color: '#3D5468', lineHeight: 16 },
+  modalExample: { backgroundColor: '#F2F5F7', borderRadius: 10, padding: 12, marginTop: 8 },
+  modalExampleTitle: { fontSize: 12, color: '#0C1E2D', marginBottom: 4 },
+  modalExampleBody: { fontSize: 11, color: '#3D5468', lineHeight: 16 },
+  modalTip: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: 'rgba(27,73,101,0.08)', borderRadius: 10, padding: 12, marginTop: 10 },
+  modalTipText: { flex: 1, fontSize: 11, color: '#1B4965', lineHeight: 16 },
+  modalBtn: { backgroundColor: '#1B4965', borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginTop: 14 },
+  modalBtnText: { color: '#fff', fontSize: 14 },
   ticLabel: { fontSize: 7, color: '#3D5468', textTransform: 'uppercase' },
   ticVal: { fontSize: 14, marginTop: 2 },
   ticSub: { fontSize: 7, color: '#4A5E6D', marginTop: 1 },
