@@ -11,7 +11,7 @@ const C = {
   offWhite: '#F4F6F8',
   gray100: '#EAEDF0',
   gray200: '#D1D5DB',
-  gray400: '#4A5E6D',
+  gray400: '#111827',
   gray600: '#4B5563',
   gray800: '#1F2937',
   navy: '#1B4965',

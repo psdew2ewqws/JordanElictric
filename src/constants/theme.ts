@@ -28,11 +28,11 @@ export const Colors = {
   dangerLight: '#F9DEDC',
 
   // Text
-  text: '#1A1C1E',
-  onSurface: '#1A1C1E',
-  textSecondary: '#44474E',
-  onSurfaceVariant: '#44474E',
-  textMuted: '#4A5E6D',
+  text: '#000000',
+  onSurface: '#000000',
+  textSecondary: '#111827',
+  onSurfaceVariant: '#111827',
+  textMuted: '#111827',
   outline: '#74777F',
   outlineVariant: '#C4C6CF',
   textOnPrimary: '#FFFFFF',

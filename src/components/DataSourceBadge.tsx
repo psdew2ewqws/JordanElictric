@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 10,
-    color: '#4A5E6D',
+    color: '#111827',
     writingDirection: 'ltr',
     textAlign: 'left',
   },

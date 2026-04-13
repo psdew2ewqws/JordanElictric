@@ -129,7 +129,7 @@ export default function OnboardingScreen() {
 
           {/* CPA Badge */}
           <View style={styles.cpaBadge}>
-            <Ionicons name="shield-checkmark" size={14} color="#4A5E6D" />
+            <Ionicons name="shield-checkmark" size={14} color="#111827" />
             <Text style={[styles.cpaText, { fontFamily: fonts.regular, fontSize: sz(10) }]}>
               {t('cpaInitiative')}
             </Text>
@@ -206,10 +206,10 @@ const styles = StyleSheet.create({
   formWrap: { flex: 1 },
   formContent: { paddingHorizontal: 24, paddingTop: 28, paddingBottom: 40 },
   welcomeText: { color: '#0C1E2D' },
-  setupText: { color: '#3D5468', marginTop: 4, marginBottom: 28 },
+  setupText: { color: '#111827', marginTop: 4, marginBottom: 28 },
 
   fieldLabel: { color: '#1B4965', marginBottom: 6 },
-  fieldHint: { color: '#3D5468', marginBottom: 12, lineHeight: 18 },
+  fieldHint: { color: '#111827', marginBottom: 12, lineHeight: 18 },
 
   inputRow: { flexDirection: 'row', gap: 10, alignItems: 'center' },
   inputFlex: { flex: 1 },
@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25, shadowRadius: 8, elevation: 4,
   },
   helpBtnText: { fontSize: 20, fontWeight: '800', color: '#fff' },
-  arabicHint: { fontSize: 10, color: '#4A5E6D', marginTop: 6, writingDirection: 'ltr' },
+  arabicHint: { fontSize: 10, color: '#111827', marginTop: 6, writingDirection: 'ltr' },
 
   // Submit
   submitBtn: {
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
 
   // CPA
   cpaBadge: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, marginTop: 32 },
-  cpaText: { color: '#4A5E6D' },
+  cpaText: { color: '#111827' },
 
   // Modal
   modalOverlay: {
@@ -259,9 +259,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff', borderRadius: 10, padding: 14, width: '100%',
     borderWidth: 1, borderColor: '#E4EBF0',
   },
-  fakeBillHeader: { fontSize: 9, color: '#3D5468', textAlign: 'center', marginBottom: 10 },
+  fakeBillHeader: { fontSize: 9, color: '#111827', textAlign: 'center', marginBottom: 10 },
   fakeBillRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  fakeBillLabel: { fontSize: 10, color: '#3D5468' },
+  fakeBillLabel: { fontSize: 10, color: '#111827' },
   fakeBillHighlight: {
     backgroundColor: '#DBEAFE', borderWidth: 1.5, borderColor: '#3B82F6',
     borderRadius: 6, paddingHorizontal: 10, paddingVertical: 4,
@@ -272,14 +272,14 @@ const styles = StyleSheet.create({
 
   modalBody: { padding: 20 },
   modalTitle: { fontSize: 17, color: '#0C1E2D', marginBottom: 8 },
-  modalDesc: { fontSize: 13, color: '#3D5468', lineHeight: 19, marginBottom: 12 },
+  modalDesc: { fontSize: 13, color: '#111827', lineHeight: 19, marginBottom: 12 },
   modalTip: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     backgroundColor: 'rgba(27,73,101,0.06)', borderRadius: 8,
     padding: 10, marginBottom: 10,
   },
   modalTipText: { fontSize: 12, color: '#1B4965', flex: 1 },
-  modalContact: { fontSize: 11, color: '#4A5E6D', marginBottom: 14 },
+  modalContact: { fontSize: 11, color: '#111827', marginBottom: 14 },
   modalClose: {
     backgroundColor: '#1B4965', borderRadius: 10,
     paddingVertical: 13, alignItems: 'center',

@@ -71,6 +71,6 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.6)',
   },
   inactiveTextLight: {
-    color: '#4A5E6D',
+    color: '#111827',
   },
 });

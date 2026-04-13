@@ -15,7 +15,7 @@ import { getFallbackSmartMeter } from '../../src/utils/mockData';
 const C = {
   navy: '#0C1F2E', navyMid: '#14354D', navyLight: '#1B4965',
   white: '#FFFFFF', offWhite: '#F4F6F8',
-  gray100: '#EAEDF0', gray200: '#D1D5DB', gray400: '#4A5E6D', gray600: '#4B5563', gray800: '#1F2937',
+  gray100: '#EAEDF0', gray200: '#D1D5DB', gray400: '#111827', gray600: '#4B5563', gray800: '#1F2937',
   green: '#157A3B', amber: '#92680A', red: '#A82020',
 };
 
@@ -148,7 +148,7 @@ export default function HomeScreen() {
         {/* ═══ BILL CARD ═══ */}
         <View style={s.billWrap}>
           <View style={s.billCard}>
-            <Text style={{ fontSize: 13, color: C.gray400, fontFamily: f.medium }}>
+            <Text style={{ fontSize: 13, lineHeight: 16, color: C.gray400, fontFamily: f.medium }}>
               {t('yourBillThisMonth')}
             </Text>
             <View style={s.billAmountRow}>
@@ -160,26 +160,26 @@ export default function HomeScreen() {
 
             <View style={s.billTable}>
               <View style={s.billTableRow}>
-                <Text style={{ fontSize: 13, color: C.gray400, fontFamily: f.regular }}>
+                <Text style={{ fontSize: 13, lineHeight: 16, color: C.gray400, fontFamily: f.regular }}>
                   {t('consumption')}
                 </Text>
-                <Text style={{ fontSize: 13, color: C.gray800, fontFamily: f.bold }}>
+                <Text style={{ fontSize: 13, lineHeight: 16, color: C.gray800, fontFamily: f.bold }}>
                   {kwh} kWh
                 </Text>
               </View>
               <View style={s.billTableRow}>
-                <Text style={{ fontSize: 13, color: C.gray400, fontFamily: f.regular }}>
+                <Text style={{ fontSize: 13, lineHeight: 16, color: C.gray400, fontFamily: f.regular }}>
                   {t('tariffTier')}
                 </Text>
-                <Text style={{ fontSize: 13, fontFamily: f.bold, color: tier === 1 ? C.green : tier === 2 ? C.amber : C.red }}>
+                <Text style={{ fontSize: 13, lineHeight: 16, fontFamily: f.bold, color: tier === 1 ? C.green : tier === 2 ? C.amber : C.red }}>
                   {`${t('tier')} ${tier}`}
                 </Text>
               </View>
               <View style={s.billTableRow}>
-                <Text style={{ fontSize: 13, color: C.gray400, fontFamily: f.regular }}>
+                <Text style={{ fontSize: 13, lineHeight: 16, color: C.gray400, fontFamily: f.regular }}>
                   {t('billingCycle')}
                 </Text>
-                <Text style={{ fontSize: 13, color: C.gray800, fontFamily: f.regular }}>
+                <Text style={{ fontSize: 13, lineHeight: 16, color: C.gray800, fontFamily: f.regular }}>
                   {sm.lastElectricityReadDate
                     ? `${new Date(sm.lastElectricityReadDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} — ${new Date(sm.nextElectricityReadDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}`
                     : '—'}
@@ -202,18 +202,18 @@ export default function HomeScreen() {
         {/* ═══ SUMMARY ═══ */}
         <View style={s.summaryRow}>
           <TouchableOpacity style={s.summaryItem} onPress={() => router.push('/bill/')}>
-            <Text style={{ fontSize: 18, color: C.gray800, fontFamily: f.bold }}>{bills}</Text>
-            <Text style={{ fontSize: 11, color: C.gray400, fontFamily: f.regular }}>{t('bills')}</Text>
+            <Text style={{ fontSize: 18, lineHeight: 22, color: C.gray800, fontFamily: f.bold }}>{bills}</Text>
+            <Text style={{ fontSize: 11, lineHeight: 14, color: C.gray400, fontFamily: f.regular }}>{t('bills')}</Text>
           </TouchableOpacity>
           <View style={s.summaryDiv} />
           <TouchableOpacity style={s.summaryItem} onPress={() => router.push('/complaints/')}>
-            <Text style={{ fontSize: 18, color: C.gray800, fontFamily: f.bold }}>{tickets}</Text>
-            <Text style={{ fontSize: 11, color: C.gray400, fontFamily: f.regular }}>{t('tickets')}</Text>
+            <Text style={{ fontSize: 18, lineHeight: 22, color: C.gray800, fontFamily: f.bold }}>{tickets}</Text>
+            <Text style={{ fontSize: 11, lineHeight: 14, color: C.gray400, fontFamily: f.regular }}>{t('tickets')}</Text>
           </TouchableOpacity>
           <View style={s.summaryDiv} />
           <TouchableOpacity style={s.summaryItem} onPress={() => router.push('/(tabs)/usage')}>
-            <Text style={{ fontSize: 18, fontFamily: f.bold, color: tier === 1 ? C.green : tier === 2 ? C.amber : C.red }}>{tier}/3</Text>
-            <Text style={{ fontSize: 11, color: C.gray400, fontFamily: f.regular }}>{t('tier')}</Text>
+            <Text style={{ fontSize: 18, lineHeight: 22, fontFamily: f.bold, color: tier === 1 ? C.green : tier === 2 ? C.amber : C.red }}>{tier}/3</Text>
+            <Text style={{ fontSize: 11, lineHeight: 14, color: C.gray400, fontFamily: f.regular }}>{t('tier')}</Text>
           </TouchableOpacity>
         </View>
 

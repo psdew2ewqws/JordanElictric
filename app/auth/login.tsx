@@ -369,7 +369,7 @@ const styles = StyleSheet.create({
   },
   tagline: {
     fontSize: 12,
-    color: '#5A6F82',
+    color: '#111827',
     marginTop: 3,
   },
 
@@ -454,7 +454,7 @@ const styles = StyleSheet.create({
   },
   dividerText: {
     fontSize: 12,
-    color: '#4A5E6D',
+    color: '#111827',
   },
 
   // Google
@@ -488,7 +488,7 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 13.5,
-    color: '#7B8EA0',
+    color: '#111827',
     writingDirection: 'ltr',
   },
   footerLink: {

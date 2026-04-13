@@ -199,7 +199,7 @@ export default function UsageScreen() {
     return (
       <View style={styles.screen}>
         <View style={{ paddingHorizontal: 16, paddingTop: 100 }}>
-          <Text style={{ color: '#3D5468', fontSize: 12, fontFamily: fonts.regular, textAlign: 'center', marginBottom: 16 }}>
+          <Text style={{ color: '#111827', fontSize: 12, fontFamily: fonts.regular, textAlign: 'center', marginBottom: 16 }}>
             {t('fetchingFromJepco')}
           </Text>
           <Shimmer radius={14} height={140} />
@@ -225,7 +225,7 @@ export default function UsageScreen() {
                   {t('usageTitle')}
                 </Text>
                 <Text style={[styles.hdrSub, { fontFamily: fonts.regular, fontSize: sz(11), lineHeight: isAr ? 14 : undefined, marginTop: isAr ? 0 : 2, textAlign: 'left', writingDirection: 'ltr' }]}>
-                  {isSmartMeter ? (isAr ? 'بيانات عداد ذكي مباشرة' : 'Live smart meter data') : t('usageSubtitle')}
+                  {isSmartMeter ? (isAr ? 'بيانات العداد الذكي المباشرة' : 'Live smart meter data') : t('usageSubtitle')}
                 </Text>
               </View>
               <LanguageToggle variant="dark" />
@@ -288,7 +288,7 @@ export default function UsageScreen() {
               </View>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6, paddingHorizontal: 4 }}>
                 {[0, 6, 12, 18, 23].map((h) => (
-                  <Text key={h} style={{ fontSize: 9, color: '#4A5E6D', fontFamily: fonts.regular }}>
+                  <Text key={h} style={{ fontSize: 9, color: '#111827', fontFamily: fonts.regular }}>
                     {h === 0 ? '12AM' : h === 12 ? '12PM' : h < 12 ? `${h}AM` : `${h - 12}PM`}
                   </Text>
                 ))}
@@ -300,10 +300,10 @@ export default function UsageScreen() {
           {dailyList.length > 0 && (
             <LazyCard delay={200} style={styles.card}>
               <Text style={[styles.cardTitle, { fontFamily: fonts.bold, fontSize: sz(13) }]}>
-                Daily Consumption
+                {isAr ? 'الاستهلاك اليومي' : 'Daily Consumption'}
               </Text>
               <Text style={[styles.cardSub, { fontFamily: fonts.regular, fontSize: sz(10) }]}>
-                Live data from your smart meter
+                {isAr ? 'بيانات مباشرة من عدادك الذكي' : 'Live data from your smart meter'}
               </Text>
 
               <View style={styles.chartWrap}>
@@ -325,7 +325,7 @@ export default function UsageScreen() {
                         <Line key={i} x1={0} y1={CHART_H * (1 - pct)} x2={CHART_W} y2={CHART_H * (1 - pct)} stroke="#E8ECF0" strokeWidth={0.5} />
                       ))}
                       <Line x1={0} y1={avgY} x2={CHART_W} y2={avgY} stroke="#94A9B8" strokeWidth={0.8} strokeDasharray="4,3" />
-                      <SvgText x={CHART_W - 30} y={avgY - 4} fontSize={7} fill="#4A5E6D">{dailyAvg} avg</SvgText>
+                      <SvgText x={isAr ? 4 : CHART_W - 30} y={avgY - 4} fontSize={7} fill="#111827">{isAr ? `متوسط ${dailyAvg}` : `${dailyAvg} avg`}</SvgText>
                       {lastMonthDailyAvg > 0 && (
                         <>
                           <Line
@@ -339,12 +339,12 @@ export default function UsageScreen() {
                             opacity={0.4}
                           />
                           <SvgText
-                            x={4}
+                            x={isAr ? CHART_W - 60 : 4}
                             y={CHART_H - (lastMonthDailyAvg / maxVal) * (CHART_H - 10) - 4}
                             fontSize={6}
-                            fill="#4A5E6D"
+                            fill="#111827"
                             opacity={0.8}
-                          >Last month avg</SvgText>
+                          >{isAr ? 'متوسط الشهر الماضي' : 'Last month avg'}</SvgText>
                         </>
                       )}
                       <Path d={areaPath} fill="url(#areaFill)" />
@@ -411,17 +411,17 @@ export default function UsageScreen() {
 
             <View style={styles.tierInfo}>
               <View style={[styles.tierInfoCard, { backgroundColor: 'rgba(5,150,105,0.06)' }]}>
-                <Text style={[styles.ticLabel, { fontFamily: fonts.medium }]}>Tier 1</Text>
+                <Text style={[styles.ticLabel, { fontFamily: fonts.medium, textTransform: isAr ? 'none' : 'uppercase' }]}>{isAr ? 'الشريحة 1' : 'Tier 1'}</Text>
                 <AnimatedCounter value={tier1Kwh} style={[styles.ticVal, { fontFamily: fonts.bold, color: '#059669' }]} duration={800} />
                 <Text style={[styles.ticSub, { fontFamily: fonts.regular }]}>kWh · {(tier1Kwh * 0.05).toFixed(1)} JD</Text>
               </View>
               <View style={[styles.tierInfoCard, { backgroundColor: 'rgba(217,119,6,0.06)' }]}>
-                <Text style={[styles.ticLabel, { fontFamily: fonts.medium }]}>Tier 2</Text>
+                <Text style={[styles.ticLabel, { fontFamily: fonts.medium, textTransform: isAr ? 'none' : 'uppercase' }]}>{isAr ? 'الشريحة 2' : 'Tier 2'}</Text>
                 <AnimatedCounter value={tier2Kwh} style={[styles.ticVal, { fontFamily: fonts.bold, color: '#D97706' }]} duration={800} />
                 <Text style={[styles.ticSub, { fontFamily: fonts.regular }]}>kWh · {(tier2Kwh * 0.1).toFixed(1)} JD</Text>
               </View>
               <View style={[styles.tierInfoCard, { backgroundColor: 'rgba(220,38,38,0.06)' }]}>
-                <Text style={[styles.ticLabel, { fontFamily: fonts.medium }]}>Tier 3</Text>
+                <Text style={[styles.ticLabel, { fontFamily: fonts.medium, textTransform: isAr ? 'none' : 'uppercase' }]}>{isAr ? 'الشريحة 3' : 'Tier 3'}</Text>
                 <AnimatedCounter value={tier3Kwh} style={[styles.ticVal, { fontFamily: fonts.bold, color: '#DC2626' }]} duration={800} />
                 <Text style={[styles.ticSub, { fontFamily: fonts.regular }]}>kWh · {(tier3Kwh * 0.2).toFixed(1)} JD</Text>
               </View>
@@ -430,20 +430,20 @@ export default function UsageScreen() {
 
           {/* === EXPECTED BILL === */}
           <LinearGradient colors={['#1B4965', '#2A6F8E']} style={styles.billCard}>
-            <Text style={[styles.billLabel, { fontFamily: fonts.medium }]}>Expected Bill This Month</Text>
+            <Text style={[styles.billLabel, { fontFamily: fonts.medium }]}>{isAr ? 'الفاتورة المتوقعة لهذا الشهر' : 'Expected Bill This Month'}</Text>
             <View style={styles.billRow}>
               <Text style={[styles.billVal, { fontFamily: fonts.bold }]}>~{expectedBillJd.toFixed(1)} <Text style={styles.billJd}>JD</Text></Text>
               <View style={styles.billBadge}>
                 <Ionicons name="bar-chart-outline" size={10} color="rgba(255,255,255,0.7)" />
-                <Text style={[styles.billBadgeText, { fontFamily: fonts.medium }]}>JEPCO estimate</Text>
+                <Text style={[styles.billBadgeText, { fontFamily: fonts.medium }]}>{isAr ? 'تقدير JEPCO' : 'JEPCO estimate'}</Text>
               </View>
             </View>
             <Text style={[styles.billSub, { fontFamily: fonts.regular }]}>
               {expectedKwh <= 300
-                ? `✓ Staying in Tier 1 — cheapest rate (0.050 JD/kWh)`
+                ? (isAr ? `✓ ضمن الشريحة 1 — أرخص سعر (0.050 د/ك.و.س)` : `✓ Staying in Tier 1 — cheapest rate (0.050 JD/kWh)`)
                 : expectedKwh <= 600
-                  ? `⚠ Crossed into Tier 2 — ${tier2Kwh} kWh at 0.100 JD/kWh`
-                  : `⚠ In Tier 3 — ${tier3Kwh} kWh at 0.200 JD/kWh`}
+                  ? (isAr ? `⚠ تجاوزت إلى الشريحة 2 — ${tier2Kwh} ك.و.س بسعر 0.100 د/ك.و.س` : `⚠ Crossed into Tier 2 — ${tier2Kwh} kWh at 0.100 JD/kWh`)
+                  : (isAr ? `⚠ في الشريحة 3 — ${tier3Kwh} ك.و.س بسعر 0.200 د/ك.و.س` : `⚠ In Tier 3 — ${tier3Kwh} kWh at 0.200 JD/kWh`)}
             </Text>
           </LinearGradient>
 
@@ -454,7 +454,7 @@ export default function UsageScreen() {
             </Text>
             <View style={styles.cmpGrid}>
               <View style={styles.cmpItem}>
-                <Text style={[styles.cmpLabel, { fontFamily: fonts.medium }]}>vs Last Month</Text>
+                <Text style={[styles.cmpLabel, { fontFamily: fonts.medium }]}>{isAr ? 'مقارنة بالشهر الماضي' : 'vs Last Month'}</Text>
                 <Text style={[styles.cmpVal, { fontFamily: fonts.bold, color: lastMonthDiff > 0 ? '#DC2626' : '#059669' }]}>
                   {lastMonthDiff > 0 ? '+' : ''}{lastMonthDiff}
                 </Text>
@@ -465,7 +465,7 @@ export default function UsageScreen() {
                 </View>
               </View>
               <View style={styles.cmpItem}>
-                <Text style={[styles.cmpLabel, { fontFamily: fonts.medium }]}>vs Last Year</Text>
+                <Text style={[styles.cmpLabel, { fontFamily: fonts.medium }]}>{isAr ? 'مقارنة بالسنة الماضية' : 'vs Last Year'}</Text>
                 <Text style={[styles.cmpVal, { fontFamily: fonts.bold, color: lastYearDiff > 0 ? '#DC2626' : '#059669' }]}>
                   {lastYearDiff > 0 ? '+' : ''}{lastYearDiff}
                 </Text>
@@ -481,10 +481,10 @@ export default function UsageScreen() {
           {/* === AVERAGE COST PER DAY (matches mockup) === */}
           <View style={styles.card}>
             <Text style={[styles.cardTitle, { fontFamily: fonts.bold, fontSize: sz(13) }]}>
-              Average Cost Per Day
+              {isAr ? 'متوسط التكلفة اليومية' : 'Average Cost Per Day'}
             </Text>
             <Text style={[styles.cardSub, { fontFamily: fonts.regular, fontSize: sz(10) }]}>
-              How much your electricity costs you daily
+              {isAr ? 'كم تكلفك الكهرباء يومياً' : 'How much your electricity costs you daily'}
             </Text>
 
             <View style={styles.dcRow}>
@@ -492,13 +492,13 @@ export default function UsageScreen() {
                 <Text style={[styles.dcVal, { fontFamily: fonts.bold }]}>
                   {dailyCostJd.toFixed(2)}
                 </Text>
-                <Text style={[styles.dcUnit, { fontFamily: fonts.regular }]}>JD / day</Text>
+                <Text style={[styles.dcUnit, { fontFamily: fonts.regular }]}>{isAr ? 'د/يوم' : 'JD / day'}</Text>
               </View>
               <View style={styles.dcSep} />
               <View style={styles.dcBreakdown}>
                 {/* Weekdays */}
                 <View style={styles.dcLine}>
-                  <Text style={[styles.dcLineLabel, { fontFamily: fonts.regular }]}>Weekdays</Text>
+                  <Text style={[styles.dcLineLabel, { fontFamily: fonts.regular }]}>{isAr ? 'أيام الأسبوع' : 'Weekdays'}</Text>
                   <Text style={[styles.dcLineVal, { fontFamily: fonts.bold }]}>
                     {(dailyCostJd * 0.9).toFixed(2)} JD
                   </Text>
@@ -508,7 +508,7 @@ export default function UsageScreen() {
                 </View>
                 {/* Weekends */}
                 <View style={[styles.dcLine, { marginTop: 8 }]}>
-                  <Text style={[styles.dcLineLabel, { fontFamily: fonts.regular }]}>Weekends</Text>
+                  <Text style={[styles.dcLineLabel, { fontFamily: fonts.regular }]}>{isAr ? 'عطلة نهاية الأسبوع' : 'Weekends'}</Text>
                   <Text style={[styles.dcLineVal, { fontFamily: fonts.bold, color: '#D97706' }]}>
                     {(dailyCostJd * 1.25).toFixed(2)} JD
                   </Text>
@@ -522,21 +522,21 @@ export default function UsageScreen() {
             {/* Cheapest / Most Expensive chips */}
             <View style={styles.dcChips}>
               <View style={[styles.dcChip, { backgroundColor: 'rgba(5,150,105,0.05)' }]}>
-                <Text style={[styles.dcChipLabel, { fontFamily: fonts.medium, letterSpacing: 0.3 }]}>CHEAPEST DAY</Text>
+                <Text style={[styles.dcChipLabel, { fontFamily: fonts.medium, letterSpacing: isAr ? 0 : 0.3, textTransform: isAr ? 'none' : 'uppercase' }]}>{isAr ? 'أرخص يوم' : 'Cheapest day'}</Text>
                 <Text style={[styles.dcChipVal, { fontFamily: fonts.bold, color: '#059669' }]}>
                   {(dailyCostJd * 0.6).toFixed(2)} JD
                 </Text>
                 <Text style={[styles.dcChipDate, { fontFamily: fonts.regular }]}>
-                  {sm.lastBillReadingDate ? `${new Date(sm.lastBillReadingDate).toLocaleDateString('en', { month: 'short', day: 'numeric', weekday: 'short' })}` : '—'}
+                  {sm.lastBillReadingDate ? `${new Date(sm.lastBillReadingDate).toLocaleDateString(isAr ? 'ar-JO' : 'en', { month: 'short', day: 'numeric', weekday: 'short' })}` : '—'}
                 </Text>
               </View>
               <View style={[styles.dcChip, { backgroundColor: 'rgba(220,38,38,0.05)' }]}>
-                <Text style={[styles.dcChipLabel, { fontFamily: fonts.medium, letterSpacing: 0.3 }]}>MOST EXPENSIVE</Text>
+                <Text style={[styles.dcChipLabel, { fontFamily: fonts.medium, letterSpacing: isAr ? 0 : 0.3, textTransform: isAr ? 'none' : 'uppercase' }]}>{isAr ? 'الأغلى' : 'Most expensive'}</Text>
                 <Text style={[styles.dcChipVal, { fontFamily: fonts.bold, color: '#DC2626' }]}>
                   {(dailyCostJd * 1.65).toFixed(2)} JD
                 </Text>
                 <Text style={[styles.dcChipDate, { fontFamily: fonts.regular }]}>
-                  {sm.consumptionDate ? `${new Date(new Date(sm.consumptionDate).getTime() - 12 * 86400000).toLocaleDateString('en', { month: 'short', day: 'numeric', weekday: 'short' })}` : '—'}
+                  {sm.consumptionDate ? `${new Date(new Date(sm.consumptionDate).getTime() - 12 * 86400000).toLocaleDateString(isAr ? 'ar-JO' : 'en', { month: 'short', day: 'numeric', weekday: 'short' })}` : '—'}
                 </Text>
               </View>
             </View>
@@ -544,7 +544,7 @@ export default function UsageScreen() {
 
           {error && (
             <TouchableOpacity style={styles.retryBtn} onPress={loadData}>
-              <Text style={[styles.retryText, { fontFamily: fonts.medium }]}>⟳ Retry loading data</Text>
+              <Text style={[styles.retryText, { fontFamily: fonts.medium }]}>{isAr ? '⟳ أعد تحميل البيانات' : '⟳ Retry loading data'}</Text>
             </TouchableOpacity>
           )}
 
@@ -566,7 +566,7 @@ export default function UsageScreen() {
                 {t('tiersExplainTitle')}
               </Text>
               <TouchableOpacity onPress={() => setTiersModalOpen(false)} hitSlop={10}>
-                <Ionicons name="close" size={22} color="#4A5E6D" />
+                <Ionicons name="close" size={22} color="#111827" />
               </TouchableOpacity>
             </View>
 
@@ -647,7 +647,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#F2F5F7' },
   header: { borderBottomLeftRadius: 24, borderBottomRightRadius: 24 },
   headerPad: { paddingHorizontal: 20, paddingBottom: 22 },
-  topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingTop: 8 },
+  topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingTop: 28 },
   hdrTitle: { color: '#fff' },
   hdrSub: { color: 'rgba(255,255,255,0.6)', marginTop: 2 },
 
@@ -661,12 +661,15 @@ const styles = StyleSheet.create({
   body: { paddingHorizontal: 16, paddingTop: 16 },
 
   card: { backgroundColor: '#fff', borderRadius: 14, padding: 16, marginBottom: 10, borderWidth: 1, borderColor: '#E8ECF0' },
-  cardTitle: { color: '#0C1E2D', marginBottom: 2 },
-  cardSub: { color: '#4A5E6D', marginBottom: 10 },
+  // Explicit lineHeight locks the title→subtitle gap so Arabic and English
+  // feel the same. Noto Sans Arabic reports a much taller default line-height,
+  // which otherwise inflates the space below the title in Arabic.
+  cardTitle: { color: '#0C1E2D', marginBottom: 2, lineHeight: 17 },
+  cardSub: { color: '#111827', marginBottom: 10, lineHeight: 14 },
 
   chartWrap: { flexDirection: 'row', marginTop: 8 },
   yAxis: { width: 28, justifyContent: 'space-between', paddingRight: 4 },
-  yLabel: { fontSize: 7, color: '#4A5E6D', textAlign: 'right' },
+  yLabel: { fontSize: 7, color: '#111827', textAlign: 'right' },
   chartSvg: { flex: 1 },
 
   tierTrack: { height: 22, borderRadius: 11, flexDirection: 'row', overflow: 'hidden', position: 'relative', marginTop: 10 },
@@ -674,7 +677,7 @@ const styles = StyleSheet.create({
   tierSegLabel: { fontSize: 7, color: '#fff' },
   tierNeedle: { position: 'absolute', top: -3, width: 2, height: 28, backgroundColor: '#0C1E2D', borderRadius: 1 },
   tierLabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 3 },
-  tierLabel: { fontSize: 7, color: '#4A5E6D' },
+  tierLabel: { fontSize: 7, color: '#111827' },
   tierInfo: { flexDirection: 'row', gap: 6, marginTop: 10 },
   tierInfoCard: { flex: 1, borderRadius: 8, padding: 8, alignItems: 'center' },
   tierInfoBtnWrap: { borderRadius: 18, shadowColor: '#1B4965', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.28, shadowRadius: 5, elevation: 4 },
@@ -696,9 +699,9 @@ const styles = StyleSheet.create({
   modalTipText: { flex: 1, fontSize: 12, color: '#000', lineHeight: 18 },
   modalBtn: { backgroundColor: '#1B4965', borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginTop: 14 },
   modalBtnText: { color: '#fff', fontSize: 14 },
-  ticLabel: { fontSize: 7, color: '#3D5468', textTransform: 'uppercase' },
+  ticLabel: { fontSize: 7, color: '#111827', textTransform: 'uppercase' },
   ticVal: { fontSize: 14, marginTop: 2 },
-  ticSub: { fontSize: 7, color: '#4A5E6D', marginTop: 1 },
+  ticSub: { fontSize: 7, color: '#111827', marginTop: 1 },
 
   billCard: { borderRadius: 14, padding: 14, marginBottom: 10 },
   billLabel: { fontSize: 10, color: 'rgba(255,255,255,0.6)' },
@@ -711,34 +714,34 @@ const styles = StyleSheet.create({
 
   cmpGrid: { flexDirection: 'row', gap: 10, marginTop: 12 },
   cmpItem: { flex: 1, alignItems: 'center' },
-  cmpLabel: { fontSize: 9, color: '#4A5E6D', marginBottom: 6 },
+  cmpLabel: { fontSize: 9, color: '#111827', marginBottom: 6 },
   cmpVal: { fontSize: 20, letterSpacing: -0.5 },
-  cmpUnit: { fontSize: 8, color: '#4A5E6D', marginTop: 1 },
+  cmpUnit: { fontSize: 8, color: '#111827', marginTop: 1 },
   cmpBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, marginTop: 4 },
   cmpPct: { fontSize: 9 },
 
   meterRow: { flexDirection: 'row', gap: 8, marginTop: 8 },
   meterCard: { flex: 1, backgroundColor: '#F2F5F7', borderRadius: 10, padding: 10, alignItems: 'center' },
-  meterLabel: { fontSize: 8, color: '#4A5E6D', textTransform: 'uppercase' },
+  meterLabel: { fontSize: 8, color: '#111827', textTransform: 'uppercase' },
   meterVal: { fontSize: 15, color: '#0C1E2D', marginTop: 2, letterSpacing: 0.5 },
-  meterDate: { fontSize: 7, color: '#4A5E6D', marginTop: 2 },
+  meterDate: { fontSize: 7, color: '#111827', marginTop: 2 },
 
   dcRow: { flexDirection: 'row', alignItems: 'center', gap: 16, marginTop: 4 },
   dcMain: { flex: 1, alignItems: 'center' },
   dcVal: { fontSize: 30, color: '#1B4965', letterSpacing: -1 },
-  dcUnit: { fontSize: 9, color: '#4A5E6D', marginTop: 2 },
+  dcUnit: { fontSize: 9, color: '#111827', marginTop: 2 },
   dcSep: { width: 1, height: 44, backgroundColor: '#E8ECF0' },
   dcBreakdown: { flex: 1.5 },
   dcLine: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  dcLineLabel: { fontSize: 10, color: '#3D5468' },
+  dcLineLabel: { fontSize: 10, color: '#111827' },
   dcLineVal: { fontSize: 12, color: '#0C1E2D' },
   dcBar: { height: 4, backgroundColor: '#F2F5F7', borderRadius: 2, overflow: 'hidden' },
   dcBarFill: { height: '100%', borderRadius: 2 },
   dcChips: { flexDirection: 'row', gap: 8, marginTop: 14 },
   dcChip: { flex: 1, borderRadius: 10, padding: 10, alignItems: 'center' },
-  dcChipLabel: { fontSize: 7, color: '#3D5468', textTransform: 'uppercase' },
+  dcChipLabel: { fontSize: 7, color: '#111827', textTransform: 'uppercase' },
   dcChipVal: { fontSize: 14, marginTop: 3 },
-  dcChipDate: { fontSize: 8, color: '#4A5E6D', marginTop: 2 },
+  dcChipDate: { fontSize: 8, color: '#111827', marginTop: 2 },
 
   retryBtn: { alignItems: 'center', padding: 12, marginTop: 8 },
   retryText: { fontSize: 13, color: '#1B4965' },

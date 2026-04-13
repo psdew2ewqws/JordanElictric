@@ -80,7 +80,7 @@ export default function InsightsScreen() {
     return (
       <View style={styles.screen}>
         <View style={{ paddingHorizontal: 16, paddingTop: 100 }}>
-          <Text style={{ color: '#3D5468', fontSize: 12, fontFamily: fonts.regular, textAlign: 'center', marginBottom: 16 }}>
+          <Text style={{ color: '#111827', fontSize: 12, fontFamily: fonts.regular, textAlign: 'center', marginBottom: 16 }}>
             {t('fetchingFromJepco')}
           </Text>
           <Shimmer radius={14} height={100} />
@@ -96,8 +96,8 @@ export default function InsightsScreen() {
   if (error && !smartMeter) {
     return (
       <View style={[styles.screen, { justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32 }]}>
-        <Ionicons name="refresh-circle-outline" size={48} color="#4A5E6D" />
-        <Text style={{ color: '#3D5468', fontSize: 14, fontFamily: fonts.medium, textAlign: 'center', marginTop: 12 }}>
+        <Ionicons name="refresh-circle-outline" size={48} color="#111827" />
+        <Text style={{ color: '#111827', fontSize: 14, fontFamily: fonts.medium, textAlign: 'center', marginTop: 12 }}>
           {t('couldntLoadInsights')}
         </Text>
         <TouchableOpacity onPress={loadData} style={{ marginTop: 16, paddingHorizontal: 24, paddingVertical: 10, backgroundColor: '#1B4965', borderRadius: 8 }}>
@@ -150,7 +150,7 @@ export default function InsightsScreen() {
                   <Text style={[{ fontSize: sz(12), color: '#0C1E2D', fontFamily: fonts.semibold, writingDirection: 'ltr' as const, textAlign: 'left' as const }]}>
                     {tr.range} kWh
                   </Text>
-                  <Text style={[{ fontSize: sz(9), color: '#4A5E6D', fontFamily: fonts.regular, writingDirection: 'ltr' as const, textAlign: 'left' as const }]}>
+                  <Text style={[{ fontSize: sz(9), color: '#111827', fontFamily: fonts.regular, writingDirection: 'ltr' as const, textAlign: 'left' as const }]}>
                     {tr.rate} JD/{t('kwhUnit')}
                   </Text>
                 </View>
@@ -159,7 +159,7 @@ export default function InsightsScreen() {
                     <Text style={[{ fontSize: sz(13), color: '#0C1E2D', fontFamily: fonts.bold }]}>
                       {tr.kwh} kWh
                     </Text>
-                    <Text style={[{ fontSize: sz(9), color: '#4A5E6D', fontFamily: fonts.regular }]}>
+                    <Text style={[{ fontSize: sz(9), color: '#111827', fontFamily: fonts.regular }]}>
                       {tr.cost.toFixed(2)} JD
                     </Text>
                   </View>
@@ -252,7 +252,7 @@ export default function InsightsScreen() {
                     <Text style={[{ fontSize: sz(12), color: '#0C1E2D', fontFamily: fonts.semibold, writingDirection: 'ltr' as const, textAlign: 'left' as const }]}>
                       {isAr ? tip.titleAr : tip.titleEn}
                     </Text>
-                    <Text style={[{ fontSize: sz(10), color: '#4A5E6D', fontFamily: fonts.regular, marginTop: 2, writingDirection: 'ltr' as const, textAlign: 'left' as const }]}>
+                    <Text style={[{ fontSize: sz(10), color: '#111827', fontFamily: fonts.regular, marginTop: 2, writingDirection: 'ltr' as const, textAlign: 'left' as const }]}>
                       {isAr ? tip.descAr : tip.descEn}
                     </Text>
                   </View>
@@ -276,7 +276,7 @@ function BillLine({ label, val, color, fonts, sz }: any) {
     <View style={blStyles.row}>
       <View style={[blStyles.dot, { backgroundColor: color }]} />
       <Text style={[blStyles.label, { fontFamily: fonts.regular, fontSize: sz(11) }]}>{label}</Text>
-      <Text style={[blStyles.val, { fontFamily: fonts.medium, fontSize: sz(11), color: isNeg ? '#10B981' : '#3D5468' }]}>
+      <Text style={[blStyles.val, { fontFamily: fonts.medium, fontSize: sz(11), color: isNeg ? '#10B981' : '#111827' }]}>
         {isNeg ? '-' : ''}{Math.abs(val).toFixed(3)} JD
       </Text>
     </View>
@@ -286,7 +286,7 @@ function BillLine({ label, val, color, fonts, sz }: any) {
 const blStyles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 7, gap: 8 },
   dot: { width: 9, height: 9, borderRadius: 5 },
-  label: { flex: 1, color: '#3D5468', writingDirection: 'ltr', textAlign: 'left' },
+  label: { flex: 1, color: '#111827', writingDirection: 'ltr', textAlign: 'left' },
   val: { writingDirection: 'ltr', textAlign: 'right' },
 });
 
@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#0F2440', borderRadius: 16, padding: 18, marginBottom: 10,
   },
   title: { color: '#0C1E2D', writingDirection: 'ltr', textAlign: 'left' },
-  sub: { color: '#4A5E6D', marginTop: 2, writingDirection: 'ltr', textAlign: 'left' },
+  sub: { color: '#111827', marginTop: 2, writingDirection: 'ltr', textAlign: 'left' },
   darkTitle: { color: '#fff', marginBottom: 14, writingDirection: 'ltr', textAlign: 'left' },
 
   // Tier card
