@@ -232,29 +232,29 @@ export default function UsageScreen() {
             </View>
 
             {/* Summary cards — animated counters */}
-            <View style={styles.sumRow}>
-              <View style={styles.sumCard}>
-                <Text style={[styles.sumLabel, { fontFamily: fonts.medium, letterSpacing: isAr ? 0 : 0.3, textTransform: isAr ? 'none' : 'uppercase' }]}>{t('projectedLabel')}</Text>
-                <AnimatedCounter value={currentKwh} style={[styles.sumVal, { fontFamily: fonts.bold }]} duration={1000} />
-                <Text style={[styles.sumUnit, { fontFamily: fonts.medium }]}>kWh</Text>
+            <View style={[styles.sumRow, { marginTop: isAr ? 10 : 18 }]}>
+              <View style={[styles.sumCard, { padding: isAr ? 8 : 10 }]}>
+                <Text style={[styles.sumLabel, { fontFamily: fonts.medium, letterSpacing: isAr ? 0 : 0.3, textTransform: isAr ? 'none' : 'uppercase', lineHeight: isAr ? 12 : undefined }]}>{t('projectedLabel')}</Text>
+                <AnimatedCounter value={currentKwh} style={[styles.sumVal, { fontFamily: fonts.bold, marginTop: isAr ? 0 : 2, lineHeight: isAr ? 24 : undefined }]} duration={1000} />
+                <Text style={[styles.sumUnit, { fontFamily: fonts.medium, lineHeight: isAr ? 12 : undefined }]}>kWh</Text>
                 {daysInCycle > 0 && (
-                  <Text style={[styles.sumChange, { fontFamily: fonts.semibold, color: '#6EE7B7' }]}>
+                  <Text style={[styles.sumChange, { fontFamily: fonts.semibold, color: '#6EE7B7', marginTop: isAr ? 2 : 3, lineHeight: isAr ? 12 : undefined }]}>
                     {`${daysInCycle} ${t('daysUnit')}`}
                   </Text>
                 )}
               </View>
-              <View style={styles.sumCard}>
-                <Text style={[styles.sumLabel, { fontFamily: fonts.medium, letterSpacing: isAr ? 0 : 0.3, textTransform: isAr ? 'none' : 'uppercase' }]}>{t('projectedCost')}</Text>
-                <AnimatedCounter value={actualCostJd} decimals={2} style={[styles.sumVal, { fontFamily: fonts.bold }]} duration={1200} />
-                <Text style={[styles.sumUnit, { fontFamily: fonts.medium }]}>JD</Text>
-                <Text style={[styles.sumChange, { fontFamily: fonts.semibold, color: '#6EE7B7' }]}>
+              <View style={[styles.sumCard, { padding: isAr ? 8 : 10 }]}>
+                <Text style={[styles.sumLabel, { fontFamily: fonts.medium, letterSpacing: isAr ? 0 : 0.3, textTransform: isAr ? 'none' : 'uppercase', lineHeight: isAr ? 12 : undefined }]}>{t('projectedCost')}</Text>
+                <AnimatedCounter value={actualCostJd} decimals={2} style={[styles.sumVal, { fontFamily: fonts.bold, marginTop: isAr ? 0 : 2, lineHeight: isAr ? 24 : undefined }]} duration={1200} />
+                <Text style={[styles.sumUnit, { fontFamily: fonts.medium, lineHeight: isAr ? 12 : undefined }]}>JD</Text>
+                <Text style={[styles.sumChange, { fontFamily: fonts.semibold, color: '#6EE7B7', marginTop: isAr ? 2 : 3, lineHeight: isAr ? 12 : undefined }]}>
                   {`${t('tier')} ${currentTier}`}
                 </Text>
               </View>
-              <View style={styles.sumCard}>
-                <Text style={[styles.sumLabel, { fontFamily: fonts.medium, letterSpacing: isAr ? 0 : 0.3, textTransform: isAr ? 'none' : 'uppercase' }]}>{t('dailyAvgLabel')}</Text>
-                <AnimatedCounter value={dailyAvg} style={[styles.sumVal, { fontFamily: fonts.bold }]} duration={1000} />
-                <Text style={[styles.sumUnit, { fontFamily: fonts.medium }]}>kWh/day</Text>
+              <View style={[styles.sumCard, { padding: isAr ? 8 : 10 }]}>
+                <Text style={[styles.sumLabel, { fontFamily: fonts.medium, letterSpacing: isAr ? 0 : 0.3, textTransform: isAr ? 'none' : 'uppercase', lineHeight: isAr ? 12 : undefined }]}>{t('dailyAvgLabel')}</Text>
+                <AnimatedCounter value={dailyAvg} style={[styles.sumVal, { fontFamily: fonts.bold, marginTop: isAr ? 0 : 2, lineHeight: isAr ? 24 : undefined }]} duration={1000} />
+                <Text style={[styles.sumUnit, { fontFamily: fonts.medium, lineHeight: isAr ? 12 : undefined }]}>kWh/day</Text>
               </View>
             </View>
           </SafeAreaView>
