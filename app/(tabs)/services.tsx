@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useLanguage } from '../../src/i18n/LanguageContext';
 import { useAuth } from '../../src/contexts/AuthContext';
+import { useFabScroll } from '../../src/components/DiaaFab';
 
 const C = {
   white: '#FFFFFF',
@@ -30,6 +31,7 @@ export default function ServicesScreen() {
   const router = useRouter();
   const { t, fonts, language } = useLanguage();
   const { subscription } = useAuth();
+  const { onScroll: onFabScroll } = useFabScroll();
   const isAr = language === 'ar';
 
   const labels: Record<string, { title: string; desc: string }> = {
@@ -42,7 +44,7 @@ export default function ServicesScreen() {
 
   return (
     <SafeAreaView style={s.safe} edges={['top']}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} onScroll={onFabScroll} scrollEventThrottle={32}>
         <View style={s.header}>
           <Text style={[s.title, { fontFamily: fonts.bold, letterSpacing: isAr ? 0 : -0.3 }]}>{t('services')}</Text>
         </View>

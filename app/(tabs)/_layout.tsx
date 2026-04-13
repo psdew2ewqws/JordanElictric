@@ -1,10 +1,11 @@
 import { Tabs } from 'expo-router';
-import { Platform } from 'react-native';
+import { Platform, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 // expo-haptics removed for Expo Go compatibility
 import { Colors } from '../../src/constants/theme';
 import { useLanguage } from '../../src/i18n/LanguageContext';
+import { DiaaFab, FabScrollProvider } from '../../src/components/DiaaFab';
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
@@ -13,6 +14,8 @@ export default function TabLayout() {
   const bottomPadding = Platform.OS === 'ios' ? insets.bottom : 8;
 
   return (
+    <FabScrollProvider>
+    <View style={{ flex: 1 }}>
     <Tabs
       screenOptions={{
         headerShown: false,
@@ -86,5 +89,8 @@ export default function TabLayout() {
         
       />
     </Tabs>
+    <DiaaFab />
+    </View>
+    </FabScrollProvider>
   );
 }

@@ -87,7 +87,7 @@ function getTypeLabel(
 function formatDate(dateStr: string, isAr: boolean): string {
   try {
     const d = new Date(dateStr);
-    return d.toLocaleDateString(isAr ? 'ar-JO' : 'en-US', {
+    return d.toLocaleDateString(isAr ? 'ar-EG' : 'en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',

@@ -17,11 +17,13 @@ import {
   calcEnvironmentalImpact, calcDailyPace, getRecommendations,
 } from '../../src/utils/insightsCalc';
 import { getFallbackSmartMeter } from '../../src/utils/mockData';
+import { useFabScroll } from '../../src/components/DiaaFab';
 
 const { width: SW } = Dimensions.get('window');
 
 export default function InsightsScreen() {
   const { t, fonts, language, sz } = useLanguage();
+  const { onScroll: onFabScroll } = useFabScroll();
   const isAr = language === 'ar';
 
   const [loading, setLoading] = useState(true);
@@ -111,7 +113,7 @@ export default function InsightsScreen() {
 
   return (
     <View style={styles.screen}>
-      <ScrollView showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
+      <ScrollView showsVerticalScrollIndicator={false} onScroll={onFabScroll} scrollEventThrottle={32} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
         {/* ═══ HEADER — just title, no duplicate stats ═══ */}
         <LinearGradient colors={['#0F2440', '#1B4965']} style={styles.header}>
           <SafeAreaView edges={['top']} style={styles.headerPad}>

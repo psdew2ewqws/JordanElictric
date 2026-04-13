@@ -13,6 +13,7 @@ import { LanguageToggle } from '../../src/components/LanguageToggle';
 import { DataSourceBadge } from '../../src/components/DataSourceBadge';
 import { AnimatedCounter } from '../../src/components/AnimatedCounter';
 import { LazyCard } from '../../src/components/LazyCard';
+import { useFabScroll } from '../../src/components/DiaaFab';
 
 const { width: SW } = Dimensions.get('window');
 const CHART_W = SW - 72;
@@ -44,6 +45,7 @@ function buildSmoothPath(points: {x: number, y: number}[]): string {
 
 export default function UsageScreen() {
   const { t, fonts, language, sz } = useLanguage();
+  const { onScroll: onFabScroll } = useFabScroll();
   const isAr = language === 'ar';
 
   const [loading, setLoading] = useState(true);
@@ -121,10 +123,13 @@ export default function UsageScreen() {
     const lastYearDiff = currentKwh - lastYear;
     const lastYearPct = lastYear > 0 ? +((lastYearDiff / lastYear) * 100).toFixed(1) : 0;
 
-    const dailyList: { date: string; kwh: number }[] = (_sm.consumptionMonthlyList || []).map((d: any) => ({
-      date: d.date,
-      kwh: parseFloat(d.consumptionAtDate || '0'),
-    }));
+    const dailyList: { date: string; kwh: number }[] = (_sm.consumptionMonthlyList || [])
+      .map((d: any) => ({
+        date: d.date,
+        kwh: parseFloat(d.consumptionAtDate || '0'),
+      }))
+      // Oldest on the left, newest on the right
+      .sort((a: { date: string }, b: { date: string }) => a.date.localeCompare(b.date));
 
     // Hourly data — today's hours only
     const todayStr = new Date().toISOString().slice(0, 10);
@@ -163,6 +168,7 @@ export default function UsageScreen() {
       x: chartData.length > 1 ? (i / (chartData.length - 1)) * CHART_W : CHART_W / 2,
       y: CHART_H - (d.kwh / maxVal) * (CHART_H - 10),
       val: d.kwh,
+      date: d.date,
     }));
     const linePath = buildSmoothPath(points);
     const areaPath = linePath + ` L${points[points.length - 1].x},${CHART_H} L${points[0].x},${CHART_H} Z`;
@@ -215,7 +221,7 @@ export default function UsageScreen() {
 
   return (
     <View style={styles.screen}>
-      <ScrollView showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
+      <ScrollView showsVerticalScrollIndicator={false} onScroll={onFabScroll} scrollEventThrottle={32} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
         {/* === HEADER === */}
         <LinearGradient colors={['#0F2440', '#1B4965']} style={styles.header}>
           <SafeAreaView edges={['top']} style={styles.headerPad}>
@@ -297,13 +303,25 @@ export default function UsageScreen() {
           )}
 
           {/* === DAILY CONSUMPTION TIMELINE === */}
-          {dailyList.length > 0 && (
+          {dailyList.length > 0 && (() => {
+            // Pick the month shown on the chart from the first valid data point
+            const firstDate = dailyList.find(d => d.date)?.date;
+            const lastDate = [...dailyList].reverse().find(d => d.date)?.date;
+            const monthName = firstDate
+              ? new Date(firstDate).toLocaleDateString(isAr ? 'ar-EG' : 'en', { month: 'long', year: 'numeric' })
+              : '';
+            // Pick ~5 evenly-spaced ticks across the series
+            const tickCount = Math.min(5, points.length);
+            const tickIndices = Array.from({ length: tickCount }, (_, i) =>
+              Math.round((i / Math.max(tickCount - 1, 1)) * (points.length - 1))
+            );
+            return (
             <LazyCard delay={200} style={styles.card}>
               <Text style={[styles.cardTitle, { fontFamily: fonts.bold, fontSize: sz(13) }]}>
                 {isAr ? 'الاستهلاك اليومي' : 'Daily Consumption'}
               </Text>
               <Text style={[styles.cardSub, { fontFamily: fonts.regular, fontSize: sz(10) }]}>
-                {isAr ? 'بيانات مباشرة من عدادك الذكي' : 'Live data from your smart meter'}
+                {monthName || (isAr ? 'بيانات مباشرة من عدادك الذكي' : 'Live data from your smart meter')}
               </Text>
 
               <View style={styles.chartWrap}>
@@ -356,8 +374,26 @@ export default function UsageScreen() {
                   </Animated.View>
                 </Animated.View>
               </View>
+              {/* X-axis: day ticks — force LTR flow so ticks align with the SVG chart, which is always LTR. */}
+              <View style={{ flexDirection: 'row', marginLeft: 28, marginTop: 4, paddingRight: 4, direction: 'ltr' as any }}>
+                {tickIndices.map((idx, i) => {
+                  const p = points[idx];
+                  if (!p?.date) return <View key={i} style={{ flex: 1 }} />;
+                  const d = new Date(p.date);
+                  const align: 'flex-start' | 'center' | 'flex-end' =
+                    i === 0 ? 'flex-start' : i === tickIndices.length - 1 ? 'flex-end' : 'center';
+                  return (
+                    <View key={i} style={{ flex: 1, alignItems: align }}>
+                      <Text style={{ fontSize: 9, lineHeight: 11, color: '#111827', fontFamily: fonts.regular }}>
+                        {d.toLocaleDateString(isAr ? 'ar-EG' : 'en', { day: 'numeric', month: 'short' })}
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
             </LazyCard>
-          )}
+            );
+          })()}
 
           {/* === TIER POSITION === */}
           <LazyCard delay={300} style={styles.card}>
@@ -527,7 +563,7 @@ export default function UsageScreen() {
                   {(dailyCostJd * 0.6).toFixed(2)} JD
                 </Text>
                 <Text style={[styles.dcChipDate, { fontFamily: fonts.regular }]}>
-                  {sm.lastBillReadingDate ? `${new Date(sm.lastBillReadingDate).toLocaleDateString(isAr ? 'ar-JO' : 'en', { month: 'short', day: 'numeric', weekday: 'short' })}` : '—'}
+                  {sm.lastBillReadingDate ? `${new Date(sm.lastBillReadingDate).toLocaleDateString(isAr ? 'ar-EG' : 'en', { month: 'short', day: 'numeric', weekday: 'short' })}` : '—'}
                 </Text>
               </View>
               <View style={[styles.dcChip, { backgroundColor: 'rgba(220,38,38,0.05)' }]}>
@@ -536,7 +572,7 @@ export default function UsageScreen() {
                   {(dailyCostJd * 1.65).toFixed(2)} JD
                 </Text>
                 <Text style={[styles.dcChipDate, { fontFamily: fonts.regular }]}>
-                  {sm.consumptionDate ? `${new Date(new Date(sm.consumptionDate).getTime() - 12 * 86400000).toLocaleDateString(isAr ? 'ar-JO' : 'en', { month: 'short', day: 'numeric', weekday: 'short' })}` : '—'}
+                  {sm.consumptionDate ? `${new Date(new Date(sm.consumptionDate).getTime() - 12 * 86400000).toLocaleDateString(isAr ? 'ar-EG' : 'en', { month: 'short', day: 'numeric', weekday: 'short' })}` : '—'}
                 </Text>
               </View>
             </View>

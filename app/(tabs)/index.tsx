@@ -11,6 +11,7 @@ import { DataSourceBadge } from '../../src/components/DataSourceBadge';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { jepcoApi, notificationApi, billApi, complaintApi } from '../../src/services/api';
 import { getFallbackSmartMeter } from '../../src/utils/mockData';
+import { useFabScroll } from '../../src/components/DiaaFab';
 
 const C = {
   navy: '#0C1F2E', navyMid: '#14354D', navyLight: '#1B4965',
@@ -23,6 +24,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const { t, fonts, language } = useLanguage();
   const { user, subscription } = useAuth();
+  const { onScroll: onFabScroll } = useFabScroll();
   const isAr = language === 'ar';
   const f = fonts; // shorthand
 
@@ -94,14 +96,12 @@ export default function HomeScreen() {
 
   return (
     <View style={s.screen}>
-      <ScrollView showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
+      <ScrollView showsVerticalScrollIndicator={false} onScroll={onFabScroll} scrollEventThrottle={32} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
         {/* ═══ HEADER ═══ */}
         <LinearGradient colors={[C.navy, C.navyMid, C.navyLight]} style={s.header}>
           <SafeAreaView edges={['top']} style={s.headerInner}>
             <View style={s.navRow}>
-              <TouchableOpacity onPress={() => router.push('/chat/')} hitSlop={12}>
-                <Ionicons name="chatbubble-ellipses-outline" size={21} color="rgba(255,255,255,0.6)" />
-              </TouchableOpacity>
+              <View />
               <View style={s.navRight}>
                 <TouchableOpacity hitSlop={12} onPress={() => router.push('/notifications/')}>
                   <Ionicons name="notifications-outline" size={21} color="rgba(255,255,255,0.6)" />
@@ -148,10 +148,10 @@ export default function HomeScreen() {
         {/* ═══ BILL CARD ═══ */}
         <View style={s.billWrap}>
           <View style={s.billCard}>
-            <Text style={{ fontSize: 13, lineHeight: 16, color: C.gray400, fontFamily: f.medium }}>
+            <Text style={{ fontSize: 13, lineHeight: 16, color: C.gray400, fontFamily: f.medium, textAlign: isAr ? 'right' : 'left' }}>
               {t('yourBillThisMonth')}
             </Text>
-            <View style={s.billAmountRow}>
+            <View style={[s.billAmountRow, { flexDirection: isAr ? 'row-reverse' : 'row', justifyContent: isAr ? 'flex-end' : 'flex-start' }]}>
               <Text style={{ fontSize: 38, color: C.gray800, letterSpacing: -1.5, fontFamily: f.bold }}>
                 {costJd.toFixed(2)}
               </Text>
@@ -159,15 +159,15 @@ export default function HomeScreen() {
             </View>
 
             <View style={s.billTable}>
-              <View style={s.billTableRow}>
+              <View style={[s.billTableRow, { flexDirection: isAr ? 'row-reverse' : 'row' }]}>
                 <Text style={{ fontSize: 13, lineHeight: 16, color: C.gray400, fontFamily: f.regular }}>
                   {t('consumption')}
                 </Text>
                 <Text style={{ fontSize: 13, lineHeight: 16, color: C.gray800, fontFamily: f.bold }}>
-                  {kwh} kWh
+                  {kwh} {isAr ? 'كيلوواط بالساعة' : 'kWh'}
                 </Text>
               </View>
-              <View style={s.billTableRow}>
+              <View style={[s.billTableRow, { flexDirection: isAr ? 'row-reverse' : 'row' }]}>
                 <Text style={{ fontSize: 13, lineHeight: 16, color: C.gray400, fontFamily: f.regular }}>
                   {t('tariffTier')}
                 </Text>
@@ -175,7 +175,7 @@ export default function HomeScreen() {
                   {`${t('tier')} ${tier}`}
                 </Text>
               </View>
-              <View style={s.billTableRow}>
+              <View style={[s.billTableRow, { flexDirection: isAr ? 'row-reverse' : 'row' }]}>
                 <Text style={{ fontSize: 13, lineHeight: 16, color: C.gray400, fontFamily: f.regular }}>
                   {t('billingCycle')}
                 </Text>
@@ -187,11 +187,11 @@ export default function HomeScreen() {
               </View>
             </View>
 
-            <TouchableOpacity style={s.viewBillsBtn} onPress={() => router.push('/bill/')} activeOpacity={0.8}>
+            <TouchableOpacity style={[s.viewBillsBtn, { flexDirection: isAr ? 'row-reverse' : 'row' }]} onPress={() => router.push('/bill/')} activeOpacity={0.8}>
               <Text style={{ color: C.white, fontSize: 14, fontFamily: f.bold }}>
                 {t('viewBills')}
               </Text>
-              <Ionicons name="arrow-forward" size={16} color={C.white} />
+              <Ionicons name={isAr ? 'arrow-back' : 'arrow-forward'} size={16} color={C.white} />
             </TouchableOpacity>
           </View>
           <View style={{ paddingHorizontal: 4, marginTop: 6 }}>
@@ -217,7 +217,7 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
 
-        <View style={{ height: 20 }} />
+        <View style={{ height: 90 }} />
       </ScrollView>
     </View>
   );

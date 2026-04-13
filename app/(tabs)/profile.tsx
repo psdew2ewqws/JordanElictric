@@ -11,6 +11,7 @@ import { useAuth } from '../../src/contexts/AuthContext';
 import { useToast } from '../../src/contexts/ToastContext';
 import { billApi } from '../../src/services/api';
 import { useLanguage } from '../../src/i18n/LanguageContext';
+import { useFabScroll } from '../../src/components/DiaaFab';
 
 const C = {
   white: '#FFFFFF',
@@ -71,6 +72,7 @@ export default function ProfileScreen() {
   const { user: au, subscription: sub, logout, updateSubscription, updateUser } = useAuth();
   const { t, language, setLanguage, fonts } = useLanguage();
   const { showToast } = useToast();
+  const { onScroll: onFabScroll } = useFabScroll();
   const isAr = language === 'ar';
 
   const [billCount, setBillCount] = useState(0);
@@ -119,7 +121,7 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={s.safe} edges={['top']}>
-      <ScrollView showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
+      <ScrollView showsVerticalScrollIndicator={false} onScroll={onFabScroll} scrollEventThrottle={32} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
         {/* Identity — no avatar circle, just clean text */}
         <View style={s.identity}>
           <Text style={[s.name, { fontFamily: fonts.bold, letterSpacing: isAr ? 0 : -0.3 }]}>{name}</Text>
