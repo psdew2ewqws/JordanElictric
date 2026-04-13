@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -7,11 +7,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Shimmer } from '../../src/components/Shimmer';
 import { useLanguage } from '../../src/i18n/LanguageContext';
 import { LanguageToggle } from '../../src/components/LanguageToggle';
-import { DataSourceBadge } from '../../src/components/DataSourceBadge';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { jepcoApi, notificationApi, billApi, complaintApi } from '../../src/services/api';
 import { getFallbackSmartMeter } from '../../src/utils/mockData';
-import { useFabScroll } from '../../src/components/DiaaFab';
 
 const C = {
   navy: '#0C1F2E', navyMid: '#14354D', navyLight: '#1B4965',
@@ -24,7 +22,6 @@ export default function HomeScreen() {
   const router = useRouter();
   const { t, fonts, language } = useLanguage();
   const { user, subscription } = useAuth();
-  const { onScroll: onFabScroll } = useFabScroll();
   const isAr = language === 'ar';
   const f = fonts; // shorthand
 
@@ -34,7 +31,6 @@ export default function HomeScreen() {
   const [tickets, setTickets] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
 
   const fetchAll = async () => {
     setError(false);
@@ -59,12 +55,6 @@ export default function HomeScreen() {
   };
 
   useEffect(() => { fetchAll(); }, []);
-
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await fetchAll();
-    setRefreshing(false);
-  };
 
   const rawSm = smartMeter || {};
   const sm = rawSm.body || rawSm;
@@ -96,7 +86,6 @@ export default function HomeScreen() {
 
   return (
     <View style={s.screen}>
-      <ScrollView showsVerticalScrollIndicator={false} onScroll={onFabScroll} scrollEventThrottle={32} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
         {/* ═══ HEADER ═══ */}
         <LinearGradient colors={[C.navy, C.navyMid, C.navyLight]} style={s.header}>
           <SafeAreaView edges={['top']} style={s.headerInner}>
@@ -194,9 +183,6 @@ export default function HomeScreen() {
               <Ionicons name={isAr ? 'arrow-back' : 'arrow-forward'} size={16} color={C.white} />
             </TouchableOpacity>
           </View>
-          <View style={{ paddingHorizontal: 4, marginTop: 6 }}>
-            <DataSourceBadge source={co} updatedAt={new Date()} fonts={{ regular: f.regular }} />
-          </View>
         </View>
 
         {/* ═══ SUMMARY ═══ */}
@@ -210,15 +196,7 @@ export default function HomeScreen() {
             <Text style={{ fontSize: 18, lineHeight: 22, color: C.gray800, fontFamily: f.bold }}>{tickets}</Text>
             <Text style={{ fontSize: 11, lineHeight: 14, color: C.gray400, fontFamily: f.regular }}>{t('tickets')}</Text>
           </TouchableOpacity>
-          <View style={s.summaryDiv} />
-          <TouchableOpacity style={s.summaryItem} onPress={() => router.push('/(tabs)/usage')}>
-            <Text style={{ fontSize: 18, lineHeight: 22, fontFamily: f.bold, color: tier === 1 ? C.green : tier === 2 ? C.amber : C.red }}>{tier}/3</Text>
-            <Text style={{ fontSize: 11, lineHeight: 14, color: C.gray400, fontFamily: f.regular }}>{t('tier')}</Text>
-          </TouchableOpacity>
         </View>
-
-        <View style={{ height: 90 }} />
-      </ScrollView>
     </View>
   );
 }
@@ -238,7 +216,8 @@ const s = StyleSheet.create({
   billTable: { marginTop: 18 },
   billTableRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 9, borderBottomWidth: 1, borderBottomColor: C.gray100 },
   viewBillsBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: C.navyLight, borderRadius: 10, paddingVertical: 13, marginTop: 18, gap: 8 },
-  summaryRow: { flexDirection: 'row', marginHorizontal: 16, marginTop: 14, backgroundColor: C.white, borderRadius: 12, paddingVertical: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 4, elevation: 1 },
+  // Right margin leaves room for the Diaa FAB (bottom-right) so it doesn't cover the Tickets counter.
+  summaryRow: { flexDirection: 'row', marginLeft: 16, marginRight: 210, marginTop: 14, backgroundColor: C.white, borderRadius: 12, paddingVertical: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 4, elevation: 1 },
   summaryItem: { flex: 1, alignItems: 'center', gap: 2 },
   summaryDiv: { width: 1, backgroundColor: C.gray100, marginVertical: 4 },
   errorBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 16, marginTop: -36, marginBottom: 4, backgroundColor: '#FEF2F2', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10 },

@@ -242,7 +242,7 @@ export default function UsageScreen() {
               <View style={[styles.sumCard, { padding: isAr ? 8 : 10 }]}>
                 <Text style={[styles.sumLabel, { fontFamily: fonts.medium, letterSpacing: isAr ? 0 : 0.3, textTransform: isAr ? 'none' : 'uppercase', lineHeight: isAr ? 12 : undefined }]}>{t('projectedLabel')}</Text>
                 <AnimatedCounter value={currentKwh} style={[styles.sumVal, { fontFamily: fonts.bold, marginTop: isAr ? 0 : 2, lineHeight: isAr ? 24 : undefined }]} duration={1000} />
-                <Text style={[styles.sumUnit, { fontFamily: fonts.medium, lineHeight: isAr ? 12 : undefined }]}>kWh</Text>
+                <Text style={[styles.sumUnit, { fontFamily: fonts.medium, lineHeight: isAr ? 12 : undefined }]}>{isAr ? 'كيلوواط بالساعة' : 'kWh'}</Text>
                 {daysInCycle > 0 && (
                   <Text style={[styles.sumChange, { fontFamily: fonts.semibold, color: '#6EE7B7', marginTop: isAr ? 2 : 3, lineHeight: isAr ? 12 : undefined }]}>
                     {`${daysInCycle} ${t('daysUnit')}`}
@@ -260,7 +260,7 @@ export default function UsageScreen() {
               <View style={[styles.sumCard, { padding: isAr ? 8 : 10 }]}>
                 <Text style={[styles.sumLabel, { fontFamily: fonts.medium, letterSpacing: isAr ? 0 : 0.3, textTransform: isAr ? 'none' : 'uppercase', lineHeight: isAr ? 12 : undefined }]}>{t('dailyAvgLabel')}</Text>
                 <AnimatedCounter value={dailyAvg} style={[styles.sumVal, { fontFamily: fonts.bold, marginTop: isAr ? 0 : 2, lineHeight: isAr ? 24 : undefined }]} duration={1000} />
-                <Text style={[styles.sumUnit, { fontFamily: fonts.medium, lineHeight: isAr ? 12 : undefined }]}>kWh/day</Text>
+                <Text style={[styles.sumUnit, { fontFamily: fonts.medium, lineHeight: isAr ? 12 : undefined }]}>{isAr ? 'كيلوواط/يوم' : 'kWh/day'}</Text>
               </View>
             </View>
           </SafeAreaView>
@@ -268,39 +268,6 @@ export default function UsageScreen() {
 
         <View style={styles.body}>
           <DataSourceBadge source="JEPCO" updatedAt={new Date()} fonts={{ regular: fonts.regular }} />
-
-          {/* === HOURLY CONSUMPTION (TODAY) === */}
-          {hourlyList.length > 0 && (
-            <LazyCard delay={100} style={styles.card}>
-              <Text style={[styles.cardTitle, { fontFamily: fonts.bold, fontSize: sz(13) }]}>
-                {isAr ? 'الاستهلاك بالساعة (اليوم)' : "Today's Hourly Consumption"}
-              </Text>
-              <Text style={[styles.cardSub, { fontFamily: fonts.regular, fontSize: sz(10) }]}>
-                {isAr ? 'استهلاكك كل ساعة خلال اليوم' : 'Your hourly usage pattern'}
-              </Text>
-
-              <View style={{ marginTop: 16, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', height: 100, paddingHorizontal: 4 }}>
-                {(() => {
-                  const maxHourly = Math.max(...hourlyList.map(h => h.kwh), 0.1);
-                  return hourlyList.map((h) => {
-                    const height = Math.max(2, (h.kwh / maxHourly) * 90);
-                    return (
-                      <View key={h.hour} style={{ flex: 1, alignItems: 'center', justifyContent: 'flex-end', marginHorizontal: 1 }}>
-                        <View style={{ height, width: '90%', backgroundColor: '#1B4965', borderTopLeftRadius: 2, borderTopRightRadius: 2, opacity: 0.85 }} />
-                      </View>
-                    );
-                  });
-                })()}
-              </View>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6, paddingHorizontal: 4 }}>
-                {[0, 6, 12, 18, 23].map((h) => (
-                  <Text key={h} style={{ fontSize: 9, color: '#111827', fontFamily: fonts.regular }}>
-                    {h === 0 ? '12AM' : h === 12 ? '12PM' : h < 12 ? `${h}AM` : `${h - 12}PM`}
-                  </Text>
-                ))}
-              </View>
-            </LazyCard>
-          )}
 
           {/* === DAILY CONSUMPTION TIMELINE === */}
           {dailyList.length > 0 && (() => {
@@ -324,6 +291,19 @@ export default function UsageScreen() {
                 {monthName || (isAr ? 'بيانات مباشرة من عدادك الذكي' : 'Live data from your smart meter')}
               </Text>
 
+              {/* Y-axis caption — anchored to the left side (same side as the Y-axis values) */}
+              <Text
+                style={{
+                  fontSize: 9,
+                  color: '#111827',
+                  marginTop: 12,
+                  marginBottom: 2,
+                  fontFamily: fonts.semibold,
+                  alignSelf: 'flex-start',
+                }}
+              >
+                {isAr ? 'كيلوواط بالساعة' : 'kWh'}
+              </Text>
               <View style={styles.chartWrap}>
                 <View style={styles.yAxis}>
                   {[maxVal, Math.round(maxVal * 0.5), 0].map((v, i) => (
@@ -391,9 +371,46 @@ export default function UsageScreen() {
                   );
                 })}
               </View>
+              {/* X-axis caption */}
+              <Text style={{ fontSize: 9, color: '#111827', marginTop: 4, textAlign: 'center', fontFamily: fonts.semibold }}>
+                {isAr ? 'التاريخ' : 'Date'}
+              </Text>
             </LazyCard>
             );
           })()}
+
+          {/* === HOURLY CONSUMPTION (TODAY) === */}
+          {hourlyList.length > 0 && (
+            <LazyCard delay={100} style={styles.card}>
+              <Text style={[styles.cardTitle, { fontFamily: fonts.bold, fontSize: sz(13) }]}>
+                {isAr ? 'الاستهلاك بالساعة (اليوم)' : "Today's Hourly Consumption"}
+              </Text>
+              <Text style={[styles.cardSub, { fontFamily: fonts.regular, fontSize: sz(10) }]}>
+                {isAr ? 'استهلاكك كل ساعة خلال اليوم' : 'Your hourly usage pattern'}
+              </Text>
+
+              <View style={{ marginTop: 16, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', height: 100, paddingHorizontal: 4 }}>
+                {(() => {
+                  const maxHourly = Math.max(...hourlyList.map(h => h.kwh), 0.1);
+                  return hourlyList.map((h) => {
+                    const height = Math.max(2, (h.kwh / maxHourly) * 90);
+                    return (
+                      <View key={h.hour} style={{ flex: 1, alignItems: 'center', justifyContent: 'flex-end', marginHorizontal: 1 }}>
+                        <View style={{ height, width: '90%', backgroundColor: '#1B4965', borderTopLeftRadius: 2, borderTopRightRadius: 2, opacity: 0.85 }} />
+                      </View>
+                    );
+                  });
+                })()}
+              </View>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6, paddingHorizontal: 4 }}>
+                {[0, 6, 12, 18, 23].map((h) => (
+                  <Text key={h} style={{ fontSize: 9, color: '#111827', fontFamily: fonts.regular }}>
+                    {h === 0 ? '12AM' : h === 12 ? '12PM' : h < 12 ? `${h}AM` : `${h - 12}PM`}
+                  </Text>
+                ))}
+              </View>
+            </LazyCard>
+          )}
 
           {/* === TIER POSITION === */}
           <LazyCard delay={300} style={styles.card}>
@@ -449,17 +466,17 @@ export default function UsageScreen() {
               <View style={[styles.tierInfoCard, { backgroundColor: 'rgba(5,150,105,0.06)' }]}>
                 <Text style={[styles.ticLabel, { fontFamily: fonts.medium, textTransform: isAr ? 'none' : 'uppercase' }]}>{isAr ? 'الشريحة 1' : 'Tier 1'}</Text>
                 <AnimatedCounter value={tier1Kwh} style={[styles.ticVal, { fontFamily: fonts.bold, color: '#059669' }]} duration={800} />
-                <Text style={[styles.ticSub, { fontFamily: fonts.regular }]}>kWh · {(tier1Kwh * 0.05).toFixed(1)} JD</Text>
+                <Text style={[styles.ticSub, { fontFamily: fonts.regular }]}>{isAr ? 'كيلوواط بالساعة' : 'kWh'} · {(tier1Kwh * 0.05).toFixed(1)} JD</Text>
               </View>
               <View style={[styles.tierInfoCard, { backgroundColor: 'rgba(217,119,6,0.06)' }]}>
                 <Text style={[styles.ticLabel, { fontFamily: fonts.medium, textTransform: isAr ? 'none' : 'uppercase' }]}>{isAr ? 'الشريحة 2' : 'Tier 2'}</Text>
                 <AnimatedCounter value={tier2Kwh} style={[styles.ticVal, { fontFamily: fonts.bold, color: '#D97706' }]} duration={800} />
-                <Text style={[styles.ticSub, { fontFamily: fonts.regular }]}>kWh · {(tier2Kwh * 0.1).toFixed(1)} JD</Text>
+                <Text style={[styles.ticSub, { fontFamily: fonts.regular }]}>{isAr ? 'كيلوواط بالساعة' : 'kWh'} · {(tier2Kwh * 0.1).toFixed(1)} JD</Text>
               </View>
               <View style={[styles.tierInfoCard, { backgroundColor: 'rgba(220,38,38,0.06)' }]}>
                 <Text style={[styles.ticLabel, { fontFamily: fonts.medium, textTransform: isAr ? 'none' : 'uppercase' }]}>{isAr ? 'الشريحة 3' : 'Tier 3'}</Text>
                 <AnimatedCounter value={tier3Kwh} style={[styles.ticVal, { fontFamily: fonts.bold, color: '#DC2626' }]} duration={800} />
-                <Text style={[styles.ticSub, { fontFamily: fonts.regular }]}>kWh · {(tier3Kwh * 0.2).toFixed(1)} JD</Text>
+                <Text style={[styles.ticSub, { fontFamily: fonts.regular }]}>{isAr ? 'كيلوواط بالساعة' : 'kWh'} · {(tier3Kwh * 0.2).toFixed(1)} JD</Text>
               </View>
             </View>
           </LazyCard>
@@ -494,7 +511,7 @@ export default function UsageScreen() {
                 <Text style={[styles.cmpVal, { fontFamily: fonts.bold, color: lastMonthDiff > 0 ? '#DC2626' : '#059669' }]}>
                   {lastMonthDiff > 0 ? '+' : ''}{lastMonthDiff}
                 </Text>
-                <Text style={[styles.cmpUnit, { fontFamily: fonts.regular }]}>kWh</Text>
+                <Text style={[styles.cmpUnit, { fontFamily: fonts.regular }]}>{isAr ? 'كيلوواط بالساعة' : 'kWh'}</Text>
                 <View style={[styles.cmpBadge, { backgroundColor: lastMonthDiff > 0 ? '#FEE2E2' : '#D1FAE5' }]}>
                   <Ionicons name={lastMonthDiff > 0 ? 'trending-up' : 'trending-down'} size={10} color={lastMonthDiff > 0 ? '#DC2626' : '#059669'} />
                   <Text style={[styles.cmpPct, { fontFamily: fonts.semibold, color: lastMonthDiff > 0 ? '#DC2626' : '#059669' }]}>{Math.abs(lastMonthPct)}%</Text>
@@ -505,7 +522,7 @@ export default function UsageScreen() {
                 <Text style={[styles.cmpVal, { fontFamily: fonts.bold, color: lastYearDiff > 0 ? '#DC2626' : '#059669' }]}>
                   {lastYearDiff > 0 ? '+' : ''}{lastYearDiff}
                 </Text>
-                <Text style={[styles.cmpUnit, { fontFamily: fonts.regular }]}>kWh</Text>
+                <Text style={[styles.cmpUnit, { fontFamily: fonts.regular }]}>{isAr ? 'كيلوواط بالساعة' : 'kWh'}</Text>
                 <View style={[styles.cmpBadge, { backgroundColor: lastYearDiff > 0 ? '#FEE2E2' : '#D1FAE5' }]}>
                   <Ionicons name={lastYearDiff > 0 ? 'trending-up' : 'trending-down'} size={10} color={lastYearDiff > 0 ? '#DC2626' : '#059669'} />
                   <Text style={[styles.cmpPct, { fontFamily: fonts.semibold, color: lastYearDiff > 0 ? '#DC2626' : '#059669' }]}>{Math.abs(lastYearPct)}%</Text>

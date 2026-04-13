@@ -438,7 +438,7 @@ export const translations = {
     accountFound: 'Account found!',
 
     // Usage (additional)
-    projectedLabel: 'Current',
+    projectedLabel: 'Until now',
     projectedCost: 'Current Cost',
     daysUnit: 'days',
     dailyAvgLabel: 'Daily Avg',
@@ -894,7 +894,7 @@ export const translations = {
     accountFound: 'تم العثور على حسابك!',
 
     // Usage (additional)
-    projectedLabel: 'الحالي',
+    projectedLabel: 'حتى الآن',
     projectedCost: 'التكلفة الحالية',
     daysUnit: 'يوم',
     dailyAvgLabel: 'المعدل اليومي',
