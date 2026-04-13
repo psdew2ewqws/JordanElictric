@@ -75,8 +75,10 @@ export default function UsageScreen() {
       setSmartMeter(raw?.body || raw);
       // Stagger animations after data loads
       const sm = raw?.body || raw || {};
-      const projected = parseInt(sm?.expectedElectricityConsumptionQuntity || sm?.currentElectricityConsumptionQuntity || '0');
-      const tierPct = Math.min(100, (projected / 600) * 100);
+      // Use ACTUAL current consumption (not projected) for tier bar position
+      const actual = parseInt(sm?.currentElectricityConsumptionQuntity || sm?.expectedElectricityConsumptionQuntity || '0');
+      // Bar scale is 0-800, so position indicator maps to actual/800 * 100
+      const tierPct = Math.min(100, (actual / 800) * 100);
       Animated.stagger(200, [
         // 1. Line chart draws in
         Animated.timing(chartAnim, { toValue: 1, duration: 1000, useNativeDriver: false }),
@@ -101,7 +103,8 @@ export default function UsageScreen() {
     const _sm = smartMeter || {};
     const actualKwh = parseInt(_sm.currentElectricityConsumptionQuntity || '0');
     const expectedKwh = parseInt(_sm.expectedElectricityConsumptionQuntity || '0');
-    const currentKwh = expectedKwh || actualKwh;
+    // Use ACTUAL current consumption (not projected) for tier/bill calculations
+    const currentKwh = actualKwh || expectedKwh;
     const currentBillJd = parseFloat(_sm.currentElectricityConsumptionValue || '0');
     const expectedBillJd = parseFloat(_sm.expectedElectricityEndofMonthBillAmount || '0');
     const lastReading = parseInt(_sm.lastBillReading || '0');
@@ -141,7 +144,8 @@ export default function UsageScreen() {
     const tier1Kwh = Math.min(currentKwh, 300);
     const tier2Kwh = currentKwh > 300 ? Math.min(currentKwh - 300, 300) : 0;
     const tier3Kwh = currentKwh > 600 ? currentKwh - 600 : 0;
-    const tierPct = Math.min(100, (currentKwh / Math.max(800, currentKwh + 50)) * 100);
+    // Bar is 0-800 scale, so position = actual kWh / 800
+    const tierPct = Math.min(100, (currentKwh / 800) * 100);
     const currentTier = currentKwh > 600 ? 3 : currentKwh > 300 ? 2 : 1;
 
     const actualCostJd = (tier1Kwh * 0.050) + (tier2Kwh * 0.100) + (tier3Kwh * 0.200);
