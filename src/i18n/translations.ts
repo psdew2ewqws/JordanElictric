@@ -3,7 +3,7 @@ export const translations = {
     // App
     appName: 'Diaa',
     appNameAr: 'ضياء',
-    appTagline: 'Understand your Electricity',
+    appTagline: 'Understand Your Usage',
     cpaInitiative: 'A CPA Jordan Initiative',
     cpaSub: 'Consumer Protection Association',
 
@@ -459,7 +459,7 @@ export const translations = {
     // App
     appName: 'ضياء',
     appNameAr: 'ضياء',
-    appTagline: 'افهم كهربائك',
+    appTagline: 'افهم استهلاكك',
     cpaInitiative: 'مبادرة جمعية حماية المستهلك الأردنية',
     cpaSub: 'جمعية حماية المستهلك',
 
