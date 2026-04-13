@@ -40,16 +40,16 @@ const fontMap = {
 };
 
 const LanguageContext = createContext<LanguageContextType>({
-  language: 'en',
+  language: 'ar',
   setLanguage: () => {},
   t: (key) => key,
   sz: (en) => en,
   isRTL: false,
-  fonts: fontMap.en,
+  fonts: fontMap.ar,
 });
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLang] = useState<Language>('en');
+  const [language, setLang] = useState<Language>('ar');
 
   useEffect(() => {
     // Always force LTR on startup — both languages use same layout

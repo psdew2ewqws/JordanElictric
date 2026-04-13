@@ -8,7 +8,12 @@ export const TIER3_RATE = 0.200;
 export const METER_RENT_JD = 0.200;
 export const TV_LICENSE_JD = 1.000;
 export const RURAL_FEE_PER_KWH = 0.001;
-export const MUNICIPALITY_TAX_PCT = 0.10;
+// JEPCO uses base fee + per-kWh rate (verified from real bills)
+export const MUNICIPALITY_BASE_JD = 0.666;
+export const MUNICIPALITY_PER_KWH = 0.005; // 5 fils/kWh
+// EMRC fuel clause (بند الوقود) — variable monthly, often 0 fils/kWh
+// Set to 0 since JEPCO real bills show 0.000 JD for recent months
+export const FUEL_CLAUSE_PER_KWH = 0;
 export const NATIONAL_AVG_KWH = 297;
 
 // CO2 per kWh in Jordan (grid emission factor)
@@ -48,6 +53,7 @@ export function calcTierBreakdown(kwh: number): TierBreakdown {
 
 export interface BillBreakdown {
   energyCost: number;
+  fuelClause: number;
   municipalityTax: number;
   tvLicense: number;
   meterRent: number;
@@ -58,7 +64,9 @@ export interface BillBreakdown {
 
 export function calcBillBreakdown(kwh: number): BillBreakdown {
   const tiers = calcTierBreakdown(kwh);
-  const municipalityTax = tiers.energyCost * MUNICIPALITY_TAX_PCT;
+  const fuelClause = kwh * FUEL_CLAUSE_PER_KWH;
+  // JEPCO formula: base fee + per-kWh rate (reverse-engineered from real bills)
+  const municipalityTax = kwh > 0 ? MUNICIPALITY_BASE_JD + kwh * MUNICIPALITY_PER_KWH : 0;
   const ruralFee = kwh * RURAL_FEE_PER_KWH;
 
   // Government subsidy based on consumption
@@ -67,12 +75,13 @@ export function calcBillBreakdown(kwh: number): BillBreakdown {
   else if (kwh > 200 && kwh <= 600) subsidy = 2.0;
 
   const total = Math.max(
-    tiers.energyCost + municipalityTax + TV_LICENSE_JD + METER_RENT_JD + ruralFee - subsidy,
+    tiers.energyCost + fuelClause + municipalityTax + TV_LICENSE_JD + METER_RENT_JD + ruralFee - subsidy,
     1.75 // minimum bill
   );
 
   return {
     energyCost: tiers.energyCost,
+    fuelClause,
     municipalityTax,
     tvLicense: TV_LICENSE_JD,
     meterRent: METER_RENT_JD,

@@ -39,25 +39,60 @@ export function generateSmartMeter(fileNumber: string, householdSize: number) {
 
   const dayOfMonth = new Date().getDate();
   const daysInCycle = 30;
-  const currentKwh = Math.round(dailyKwh * dayOfMonth);
-  const expectedKwh = Math.round(dailyKwh * daysInCycle);
 
-  const tiers = calcTierBreakdown(expectedKwh);
-  const bill = calcBillBreakdown(expectedKwh);
-  const currentBill = calcBillBreakdown(currentKwh);
-
-  // Generate daily consumption list for the chart
+  // Generate daily consumption list for the chart with realistic variation
   const consumptionMonthlyList: { date: string; consumptionAtDate: string }[] = [];
+  // Hourly consumption list: 24 values per day (realistic Jordanian load curve)
+  const consumptionHourlyList: { date: string; hour: number; consumptionAtHour: string }[] = [];
+  let currentKwhSum = 0;
+  const currentHour = new Date().getHours();
+
+  // Typical residential hourly load profile (as fraction of daily total, sums to 1.0)
+  // Low at night, rises morning, peak evening 5-11 PM
+  const hourlyProfile = [
+    0.025, 0.020, 0.018, 0.018, 0.020, 0.025, // 00-05 night (8%)
+    0.030, 0.040, 0.045, 0.040, 0.035, 0.035, // 06-11 morning (22.5%)
+    0.040, 0.045, 0.040, 0.035, 0.035, 0.055, // 12-17 afternoon (25%)
+    0.075, 0.085, 0.075, 0.065, 0.055, 0.040, // 18-23 evening peak (39.5%)
+  ];
+
   for (let i = dayOfMonth; i >= 1; i--) {
     const dayDate = daysAgo(dayOfMonth - i);
     const variation = 0.7 + seededRand(fileNumber, i * 100) * 0.6; // 0.7-1.3x
     const isWeekend = [0, 5, 6].includes(new Date(dayDate).getDay()); // Fri, Sat, Sun
     const weekendBoost = isWeekend ? 1.15 : 1.0;
+    const dayKwh = dailyKwh * variation * weekendBoost;
+    currentKwhSum += dayKwh;
     consumptionMonthlyList.push({
       date: dayDate,
-      consumptionAtDate: (dailyKwh * variation * weekendBoost).toFixed(1),
+      consumptionAtDate: dayKwh.toFixed(1),
     });
+
+    // Generate 24 hourly values for this day (only up to currentHour for today)
+    const isToday = i === dayOfMonth;
+    const maxHour = isToday ? currentHour : 23;
+    for (let h = 0; h <= maxHour; h++) {
+      // Add small random variation to each hour (0.85x - 1.15x) based on file+day+hour
+      const hourSeed = seededRand(fileNumber, i * 10000 + h * 100);
+      const hourVariation = 0.85 + hourSeed * 0.3;
+      const hourKwh = dayKwh * hourlyProfile[h] * hourVariation;
+      consumptionHourlyList.push({
+        date: dayDate,
+        hour: h,
+        consumptionAtHour: hourKwh.toFixed(3),
+      });
+    }
   }
+
+  // Current consumption = sum of actual daily values (matches the chart)
+  const currentKwh = Math.round(currentKwhSum);
+  // Expected = current + projection for remaining days using the same avg daily pattern
+  const avgDailySoFar = dayOfMonth > 0 ? currentKwhSum / dayOfMonth : dailyKwh;
+  const expectedKwh = Math.round(currentKwhSum + avgDailySoFar * (daysInCycle - dayOfMonth));
+
+  const tiers = calcTierBreakdown(expectedKwh);
+  const bill = calcBillBreakdown(expectedKwh);
+  const currentBill = calcBillBreakdown(currentKwh);
 
   const lastMonthKwh = Math.round(expectedKwh * rand(0.85, 1.15, fileNumber, 2));
   const lastYearKwh = Math.round(expectedKwh * rand(0.75, 1.25, fileNumber, 3));
@@ -74,6 +109,7 @@ export function generateSmartMeter(fileNumber: string, householdSize: number) {
     lastBillReadingDate: daysAgo(dayOfMonth),
     numberOfConsumptionDaysSinceLastRead: dayOfMonth.toString(),
     consumptionMonthlyList,
+    consumptionHourlyList,
     comparazinConsumption: {
       lastMonthconsumption: lastMonthKwh.toString(),
       lastYearconsumption: lastYearKwh.toString(),

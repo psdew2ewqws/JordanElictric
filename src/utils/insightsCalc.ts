@@ -17,7 +17,12 @@ const TIER3_RATE = 0.200;
 const METER_RENT_JD = 0.200;
 const TV_LICENSE_JD = 1.000;
 const RURAL_FEE_PER_KWH = 0.001;
-const MUNICIPALITY_TAX_PCT = 0.10;
+// JEPCO uses base fee + per-kWh rate (verified from real bills)
+const MUNICIPALITY_BASE_JD = 0.666;
+const MUNICIPALITY_PER_KWH = 0.005;
+// EMRC fuel clause (بند الوقود) — variable monthly, often 0 fils/kWh
+// Set to 0 since JEPCO real bills show 0.000 JD for recent months
+const FUEL_CLAUSE_PER_KWH = 0;
 
 const NATIONAL_AVG_KWH = 297;
 
@@ -60,6 +65,7 @@ export function calcTierBreakdown(kwh: number): TierBreakdown {
 
 export interface BillBreakdown {
   energyCost: number;
+  fuelClause: number;
   municipalityTax: number;
   tvLicense: number;
   meterRent: number;
@@ -76,13 +82,16 @@ export function calcBillBreakdown(kwh: number): BillBreakdown {
   if (kwh >= 201 && kwh <= 600) subsidy = 2.000;
   else if (kwh >= 51 && kwh <= 200) subsidy = 2.500;
 
-  const municipalityTax = energyCost * MUNICIPALITY_TAX_PCT;
+  const fuelClause = kwh * FUEL_CLAUSE_PER_KWH;
+  // JEPCO formula: base fee + per-kWh rate (reverse-engineered from real bills)
+  const municipalityTax = kwh > 0 ? MUNICIPALITY_BASE_JD + kwh * MUNICIPALITY_PER_KWH : 0;
   const ruralFee = kwh * RURAL_FEE_PER_KWH;
 
-  const total = energyCost + municipalityTax + TV_LICENSE_JD + METER_RENT_JD + ruralFee - subsidy;
+  const total = energyCost + fuelClause + municipalityTax + TV_LICENSE_JD + METER_RENT_JD + ruralFee - subsidy;
 
   return {
     energyCost: +energyCost.toFixed(3),
+    fuelClause: +fuelClause.toFixed(3),
     municipalityTax: +municipalityTax.toFixed(3),
     tvLicense: TV_LICENSE_JD,
     meterRent: METER_RENT_JD,

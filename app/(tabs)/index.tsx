@@ -66,9 +66,10 @@ export default function HomeScreen() {
 
   const rawSm = smartMeter || {};
   const sm = rawSm.body || rawSm;
-  const kwh = parseInt(sm.expectedElectricityConsumptionQuntity || '0');
-  const expectedJd = parseFloat(sm.expectedElectricityEndofMonthBillAmount || '0');
-  const costJd = expectedJd > 0 ? expectedJd : (Math.min(kwh, 300) * 0.050) + (kwh > 300 ? Math.min(kwh - 300, 300) * 0.100 : 0) + (kwh > 600 ? (kwh - 600) * 0.200 : 0);
+  // Show current consumption & cost up to today (not projected end-of-month)
+  const kwh = parseInt(sm.currentElectricityConsumptionQuntity || '0');
+  const currentJd = parseFloat(sm.currentElectricityConsumptionValue || '0');
+  const costJd = currentJd > 0 ? currentJd : (Math.min(kwh, 300) * 0.050) + (kwh > 300 ? Math.min(kwh - 300, 300) * 0.100 : 0) + (kwh > 600 ? (kwh - 600) * 0.200 : 0);
   const tier = kwh > 600 ? 3 : kwh > 300 ? 2 : 1;
   const subNum = subscription?.subscriberNumber || '';
   const co = subscription?.distributionCompany || 'JEPCO';

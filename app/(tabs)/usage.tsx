@@ -122,6 +122,16 @@ export default function UsageScreen() {
       kwh: parseInt(d.consumptionAtDate || '0'),
     }));
 
+    // Hourly data — today's hours only
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const hourlyList: { hour: number; kwh: number }[] = (_sm.consumptionHourlyList || [])
+      .filter((h: any) => h.date === todayStr)
+      .map((h: any) => ({
+        hour: h.hour,
+        kwh: parseFloat(h.consumptionAtHour || '0'),
+      }))
+      .sort((a: any, b: any) => a.hour - b.hour);
+
     const dailyAvg = dailyList.length > 0
       ? +(dailyList.reduce((s, d) => s + d.kwh, 0) / dailyList.length).toFixed(1)
       : +(currentKwh / Math.max(daysInCycle, 1)).toFixed(1);
@@ -159,6 +169,7 @@ export default function UsageScreen() {
       dailyList, dailyAvg, tier1Kwh, tier2Kwh, tier3Kwh, tierPct, currentTier,
       actualCostJd, dailyCostJd, isSmartMeter,
       chartData, maxVal, points, linePath, areaPath, avgY, lastMonthDailyAvg,
+      hourlyList,
     };
   }, [smartMeter]);
 
@@ -169,6 +180,7 @@ export default function UsageScreen() {
     dailyList, dailyAvg, tier1Kwh, tier2Kwh, tier3Kwh, tierPct, currentTier,
     actualCostJd, dailyCostJd, isSmartMeter,
     chartData, maxVal, points, linePath, areaPath, avgY, lastMonthDailyAvg,
+    hourlyList,
   } = derived;
 
   const onRefresh = async () => {
@@ -304,6 +316,56 @@ export default function UsageScreen() {
                     </Svg>
                   </Animated.View>
                 </Animated.View>
+              </View>
+            </LazyCard>
+          )}
+
+          {/* === HOURLY CONSUMPTION (TODAY) === */}
+          {hourlyList.length > 0 && (
+            <LazyCard delay={200} style={styles.card}>
+              <Text style={[styles.cardTitle, { fontFamily: fonts.bold, fontSize: sz(13) }]}>
+                {isAr ? 'الاستهلاك بالساعة (اليوم)' : "Today's Hourly Consumption"}
+              </Text>
+              <Text style={[styles.cardSub, { fontFamily: fonts.regular, fontSize: sz(10) }]}>
+                {isAr ? 'استهلاكك كل ساعة خلال اليوم' : 'Your hourly usage pattern'}
+              </Text>
+
+              <View style={{ marginTop: 16, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', height: 100, paddingHorizontal: 4 }}>
+                {(() => {
+                  const maxHourly = Math.max(...hourlyList.map(h => h.kwh), 0.1);
+                  return hourlyList.map((h) => {
+                    const height = Math.max(2, (h.kwh / maxHourly) * 90);
+                    const isPeak = h.hour >= 17 && h.hour < 23;
+                    const isOffPeak = h.hour >= 5 && h.hour < 14;
+                    const color = isPeak ? '#DC2626' : isOffPeak ? '#059669' : '#D97706';
+                    return (
+                      <View key={h.hour} style={{ flex: 1, alignItems: 'center', justifyContent: 'flex-end', marginHorizontal: 1 }}>
+                        <View style={{ height, width: '90%', backgroundColor: color, borderTopLeftRadius: 2, borderTopRightRadius: 2, opacity: 0.85 }} />
+                      </View>
+                    );
+                  });
+                })()}
+              </View>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6, paddingHorizontal: 4 }}>
+                {[0, 6, 12, 18, 23].map((h) => (
+                  <Text key={h} style={{ fontSize: 9, color: '#4A5E6D', fontFamily: fonts.regular }}>
+                    {h === 0 ? '12AM' : h === 12 ? '12PM' : h < 12 ? `${h}AM` : `${h - 12}PM`}
+                  </Text>
+                ))}
+              </View>
+              <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 12, marginTop: 10 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <View style={{ width: 8, height: 8, backgroundColor: '#059669', borderRadius: 2 }} />
+                  <Text style={{ fontSize: 9, color: '#4A5E6D', fontFamily: fonts.regular }}>{isAr ? 'خارج الذروة' : 'Off-peak'}</Text>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <View style={{ width: 8, height: 8, backgroundColor: '#D97706', borderRadius: 2 }} />
+                  <Text style={{ fontSize: 9, color: '#4A5E6D', fontFamily: fonts.regular }}>{isAr ? 'شبه الذروة' : 'Mid-peak'}</Text>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <View style={{ width: 8, height: 8, backgroundColor: '#DC2626', borderRadius: 2 }} />
+                  <Text style={{ fontSize: 9, color: '#4A5E6D', fontFamily: fonts.regular }}>{isAr ? 'الذروة' : 'Peak'}</Text>
+                </View>
               </View>
             </LazyCard>
           )}

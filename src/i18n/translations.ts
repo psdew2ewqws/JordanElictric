@@ -351,7 +351,7 @@ export const translations = {
     hazardSubmitted: 'Your report has been submitted. We\'ll notify the relevant authorities.',
 
     // Home screen (additional)
-    yourBillThisMonth: 'Your bill this month',
+    yourBillThisMonth: 'Your bill until now',
     tariffTier: 'Tariff tier',
     billingCycle: 'Billing cycle',
     viewBills: 'View Bills',
@@ -794,7 +794,7 @@ export const translations = {
     hazardSubmitted: 'تم إرسال بلاغك. سنُبلغ الجهات المعنية.',
 
     // Home screen (additional)
-    yourBillThisMonth: 'فاتورتك هذا الشهر',
+    yourBillThisMonth: 'فاتورتك حتى الآن',
     tariffTier: 'شريحة التعرفة',
     billingCycle: 'دورة الفوترة',
     viewBills: 'عرض الفواتير',
