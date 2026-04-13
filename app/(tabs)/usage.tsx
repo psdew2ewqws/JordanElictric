@@ -122,7 +122,7 @@ export default function UsageScreen() {
 
     const dailyList: { date: string; kwh: number }[] = (_sm.consumptionMonthlyList || []).map((d: any) => ({
       date: d.date,
-      kwh: parseInt(d.consumptionAtDate || '0'),
+      kwh: parseFloat(d.consumptionAtDate || '0'),
     }));
 
     // Hourly data — today's hours only
@@ -135,9 +135,10 @@ export default function UsageScreen() {
       }))
       .sort((a: any, b: any) => a.hour - b.hour);
 
-    const dailyAvg = dailyList.length > 0
-      ? +(dailyList.reduce((s, d) => s + d.kwh, 0) / dailyList.length).toFixed(1)
-      : +(currentKwh / Math.max(daysInCycle, 1)).toFixed(1);
+    // Daily avg = actual current kWh divided by days elapsed (consistent with total)
+    const dailyAvg = daysInCycle > 0
+      ? +(currentKwh / daysInCycle).toFixed(1)
+      : +(currentKwh).toFixed(1);
 
     const lastMonthDailyAvg = lastMonth > 0 ? +(lastMonth / 30).toFixed(1) : 0;
 
@@ -243,7 +244,7 @@ export default function UsageScreen() {
               </View>
               <View style={styles.sumCard}>
                 <Text style={[styles.sumLabel, { fontFamily: fonts.medium, letterSpacing: isAr ? 0 : 0.3 }]}>{t('projectedCost')}</Text>
-                <AnimatedCounter value={expectedBillJd > 0 ? expectedBillJd : actualCostJd} decimals={2} style={[styles.sumVal, { fontFamily: fonts.bold }]} duration={1200} />
+                <AnimatedCounter value={actualCostJd} decimals={2} style={[styles.sumVal, { fontFamily: fonts.bold }]} duration={1200} />
                 <Text style={[styles.sumUnit, { fontFamily: fonts.medium }]}>JD</Text>
                 <Text style={[styles.sumChange, { fontFamily: fonts.semibold, color: '#6EE7B7' }]}>
                   {`${t('tier')} ${currentTier}`}
