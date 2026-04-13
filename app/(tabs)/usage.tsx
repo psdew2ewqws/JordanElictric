@@ -368,13 +368,20 @@ export default function UsageScreen() {
               <TouchableOpacity
                 onPress={() => setTiersModalOpen(true)}
                 hitSlop={10}
-                style={styles.tierInfoBtn}
-                activeOpacity={0.7}
+                activeOpacity={0.85}
+                style={styles.tierInfoBtnWrap}
               >
-                <Ionicons name="help-circle-outline" size={14} color="#1B4965" />
-                <Text style={[styles.tierInfoBtnText, { fontFamily: fonts.medium }]}>
-                  {t('whatAreTiers')}
-                </Text>
+                <LinearGradient
+                  colors={['#1B4965', '#2A6F8E']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={[styles.tierInfoBtn, { flexDirection: isAr ? 'row-reverse' : 'row' }]}
+                >
+                  <Ionicons name="help-circle" size={16} color="#fff" />
+                  <Text style={[styles.tierInfoBtnText, { fontFamily: fonts.bold }]}>
+                    {t('whatAreTiers')}
+                  </Text>
+                </LinearGradient>
               </TouchableOpacity>
             </View>
             <Text style={[styles.cardSub, { fontFamily: fonts.regular, fontSize: sz(10) }]}>
@@ -670,8 +677,9 @@ const styles = StyleSheet.create({
   tierLabel: { fontSize: 7, color: '#4A5E6D' },
   tierInfo: { flexDirection: 'row', gap: 6, marginTop: 10 },
   tierInfoCard: { flex: 1, borderRadius: 8, padding: 8, alignItems: 'center' },
-  tierInfoBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(27,73,101,0.08)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12 },
-  tierInfoBtnText: { fontSize: 10, color: '#1B4965' },
+  tierInfoBtnWrap: { borderRadius: 18, shadowColor: '#1B4965', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.28, shadowRadius: 5, elevation: 4 },
+  tierInfoBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 11, paddingVertical: 7, borderRadius: 18 },
+  tierInfoBtnText: { fontSize: 11, color: '#fff', letterSpacing: 0.2 },
 
   modalBackdrop: { flex: 1, backgroundColor: 'rgba(12,30,45,0.55)', justifyContent: 'center', alignItems: 'center', padding: 20 },
   modalCard: { width: '100%', maxWidth: 420, backgroundColor: '#fff', borderRadius: 16, padding: 18 },
