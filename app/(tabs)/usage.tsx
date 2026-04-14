@@ -13,6 +13,7 @@ import { LanguageToggle } from '../../src/components/LanguageToggle';
 import { AnimatedCounter } from '../../src/components/AnimatedCounter';
 import { LazyCard } from '../../src/components/LazyCard';
 import { useFabScroll } from '../../src/components/DiaaFab';
+import { calcBillBreakdown } from '../../src/utils/insightsCalc';
 
 const { width: SW } = Dimensions.get('window');
 const CHART_W = SW - 72;
@@ -117,10 +118,18 @@ export default function UsageScreen() {
     const comp = _sm.comparazinConsumption || {};
     const lastMonth = parseInt(comp.lastMonthconsumption || '0');
     const lastYear = parseInt(comp.lastYearconsumption || '0');
-    const lastMonthDiff = currentKwh - lastMonth;
-    const lastMonthPct = lastMonth > 0 ? +((lastMonthDiff / lastMonth) * 100).toFixed(1) : 0;
-    const lastYearDiff = currentKwh - lastYear;
-    const lastYearPct = lastYear > 0 ? +((lastYearDiff / lastYear) * 100).toFixed(1) : 0;
+    // Compare projected end-of-month bill against full prior-cycle bills so
+    // the card is meaningful early in the billing cycle. Convert each kWh
+    // total to JD via the full tiered-bill calculator so the diff reflects
+    // real money, not just raw kWh (which is misleading because of tier
+    // pricing).
+    const thisMonthBillJd = expectedKwh > 0 ? calcBillBreakdown(expectedKwh).total : 0;
+    const lastMonthBillJd = lastMonth > 0 ? calcBillBreakdown(lastMonth).total : 0;
+    const lastYearBillJd = lastYear > 0 ? calcBillBreakdown(lastYear).total : 0;
+    const lastMonthDiff = +(thisMonthBillJd - lastMonthBillJd).toFixed(2);
+    const lastMonthPct = lastMonthBillJd > 0 ? +((lastMonthDiff / lastMonthBillJd) * 100).toFixed(1) : 0;
+    const lastYearDiff = +(thisMonthBillJd - lastYearBillJd).toFixed(2);
+    const lastYearPct = lastYearBillJd > 0 ? +((lastYearDiff / lastYearBillJd) * 100).toFixed(1) : 0;
 
     const dailyList: { date: string; kwh: number }[] = (_sm.consumptionMonthlyList || [])
       .map((d: any) => ({
@@ -460,55 +469,38 @@ export default function UsageScreen() {
             </View>
           </LazyCard>
 
-          {/* === EXPECTED BILL === */}
+          {/* === EXPECTED BILL + MONTH COMPARISON (single card) === */}
           <LinearGradient colors={['#1B4965', '#2A6F8E']} style={styles.billCard}>
             <Text style={[styles.billLabel, { fontFamily: fonts.medium }]}>{isAr ? 'الفاتورة المتوقعة لهذا الشهر' : 'Expected Bill This Month'}</Text>
-            <View style={styles.billRow}>
-              <Text style={[styles.billVal, { fontFamily: fonts.bold }]}>~{expectedBillJd.toFixed(1)} <Text style={styles.billJd}>JD</Text></Text>
-              <View style={styles.billBadge}>
-                <Ionicons name="bar-chart-outline" size={10} color="rgba(255,255,255,0.7)" />
-                <Text style={[styles.billBadgeText, { fontFamily: fonts.medium }]}>{isAr ? 'تقدير JEPCO' : 'JEPCO estimate'}</Text>
-              </View>
-            </View>
-            <Text style={[styles.billSub, { fontFamily: fonts.regular }]}>
-              {expectedKwh <= 300
-                ? (isAr ? `✓ ضمن الشريحة 1 — أرخص سعر (0.050 د/ك.و.س)` : `✓ Staying in Tier 1 — cheapest rate (0.050 JD/kWh)`)
-                : expectedKwh <= 600
-                  ? (isAr ? `⚠ تجاوزت إلى الشريحة 2 — ${tier2Kwh} ك.و.س بسعر 0.100 د/ك.و.س` : `⚠ Crossed into Tier 2 — ${tier2Kwh} kWh at 0.100 JD/kWh`)
-                  : (isAr ? `⚠ في الشريحة 3 — ${tier3Kwh} ك.و.س بسعر 0.200 د/ك.و.س` : `⚠ In Tier 3 — ${tier3Kwh} kWh at 0.200 JD/kWh`)}
-            </Text>
-          </LinearGradient>
+            <Text style={[styles.billVal, { fontFamily: fonts.bold }]}>~{expectedBillJd.toFixed(1)} <Text style={styles.billJd}>JD</Text></Text>
 
-          {/* === MONTH COMPARISON === */}
-          <View style={styles.card}>
-            <Text style={[styles.cardTitle, { fontFamily: fonts.bold, fontSize: sz(13) }]}>
-              {t('thisMonthVsLast')}
-            </Text>
+            <View style={styles.billDivider} />
+
             <View style={styles.cmpGrid}>
               <View style={styles.cmpItem}>
-                <Text style={[styles.cmpLabel, { fontFamily: fonts.medium }]}>{isAr ? 'مقارنة بالشهر الماضي' : 'vs Last Month'}</Text>
-                <Text style={[styles.cmpVal, { fontFamily: fonts.bold, color: lastMonthDiff > 0 ? '#DC2626' : '#059669' }]}>
-                  {lastMonthDiff > 0 ? '+' : ''}{lastMonthDiff}
+                <Text style={[styles.cmpVal, { fontFamily: fonts.bold, color: lastMonthDiff > 0 ? '#FCA5A5' : '#86EFAC' }]}>
+                  {lastMonthDiff > 0 ? '+' : ''}{lastMonthDiff.toFixed(2)}
                 </Text>
-                <Text style={[styles.cmpUnit, { fontFamily: fonts.regular }]}>{isAr ? 'كيلوواط بالساعة' : 'kWh'}</Text>
-                <View style={[styles.cmpBadge, { backgroundColor: lastMonthDiff > 0 ? '#FEE2E2' : '#D1FAE5' }]}>
-                  <Ionicons name={lastMonthDiff > 0 ? 'trending-up' : 'trending-down'} size={10} color={lastMonthDiff > 0 ? '#DC2626' : '#059669'} />
-                  <Text style={[styles.cmpPct, { fontFamily: fonts.semibold, color: lastMonthDiff > 0 ? '#DC2626' : '#059669' }]}>{Math.abs(lastMonthPct)}%</Text>
+                <Text style={[styles.cmpUnitLight, { fontFamily: fonts.regular }]}>JD</Text>
+                <Text style={[styles.cmpLabelLight, { fontFamily: fonts.medium, marginTop: 6, marginBottom: 0 }]}>{isAr ? 'مقارنة بالشهر الماضي' : 'vs Last Month'}</Text>
+                <View style={[styles.cmpBadge, { backgroundColor: lastMonthDiff > 0 ? 'rgba(252,165,165,0.18)' : 'rgba(134,239,172,0.18)' }]}>
+                  <Ionicons name={lastMonthDiff > 0 ? 'trending-up' : 'trending-down'} size={10} color={lastMonthDiff > 0 ? '#FCA5A5' : '#86EFAC'} />
+                  <Text style={[styles.cmpPct, { fontFamily: fonts.semibold, color: lastMonthDiff > 0 ? '#FCA5A5' : '#86EFAC' }]}>{Math.abs(lastMonthPct)}%</Text>
                 </View>
               </View>
               <View style={styles.cmpItem}>
-                <Text style={[styles.cmpLabel, { fontFamily: fonts.medium }]}>{isAr ? 'مقارنة بالسنة الماضية' : 'vs Last Year'}</Text>
-                <Text style={[styles.cmpVal, { fontFamily: fonts.bold, color: lastYearDiff > 0 ? '#DC2626' : '#059669' }]}>
-                  {lastYearDiff > 0 ? '+' : ''}{lastYearDiff}
+                <Text style={[styles.cmpVal, { fontFamily: fonts.bold, color: lastYearDiff > 0 ? '#FCA5A5' : '#86EFAC' }]}>
+                  {lastYearDiff > 0 ? '+' : ''}{lastYearDiff.toFixed(2)}
                 </Text>
-                <Text style={[styles.cmpUnit, { fontFamily: fonts.regular }]}>{isAr ? 'كيلوواط بالساعة' : 'kWh'}</Text>
-                <View style={[styles.cmpBadge, { backgroundColor: lastYearDiff > 0 ? '#FEE2E2' : '#D1FAE5' }]}>
-                  <Ionicons name={lastYearDiff > 0 ? 'trending-up' : 'trending-down'} size={10} color={lastYearDiff > 0 ? '#DC2626' : '#059669'} />
-                  <Text style={[styles.cmpPct, { fontFamily: fonts.semibold, color: lastYearDiff > 0 ? '#DC2626' : '#059669' }]}>{Math.abs(lastYearPct)}%</Text>
+                <Text style={[styles.cmpUnitLight, { fontFamily: fonts.regular }]}>JD</Text>
+                <Text style={[styles.cmpLabelLight, { fontFamily: fonts.medium, marginTop: 6, marginBottom: 0, textAlign: 'center' }]}>{isAr ? 'مقارنة بالشهر نفسه من السنة الماضية' : 'vs Last Year\n(same month)'}</Text>
+                <View style={[styles.cmpBadge, { backgroundColor: lastYearDiff > 0 ? 'rgba(252,165,165,0.18)' : 'rgba(134,239,172,0.18)' }]}>
+                  <Ionicons name={lastYearDiff > 0 ? 'trending-up' : 'trending-down'} size={10} color={lastYearDiff > 0 ? '#FCA5A5' : '#86EFAC'} />
+                  <Text style={[styles.cmpPct, { fontFamily: fonts.semibold, color: lastYearDiff > 0 ? '#FCA5A5' : '#86EFAC' }]}>{Math.abs(lastYearPct)}%</Text>
                 </View>
               </View>
             </View>
-          </View>
+          </LinearGradient>
 
           {/* === AVERAGE COST PER DAY (matches mockup) === */}
           <View style={styles.card}>
@@ -735,8 +727,10 @@ const styles = StyleSheet.create({
   ticVal: { fontSize: 20, lineHeight: 24, marginTop: 4 },
   ticSub: { fontSize: 10, lineHeight: 13, color: '#111827', marginTop: 2 },
 
-  billCard: { borderRadius: 14, padding: 14, marginBottom: 10 },
-  billLabel: { fontSize: 10, color: 'rgba(255,255,255,0.6)' },
+  billCard: { borderRadius: 14, padding: 16, marginBottom: 10 },
+  billLabel: { fontSize: 11, color: 'rgba(255,255,255,0.65)' },
+  billDivider: { height: 1, backgroundColor: 'rgba(255,255,255,0.12)', marginTop: 16, marginBottom: 14 },
+  billCmpTitle: { fontSize: 13, color: '#fff' },
   billRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
   billVal: { fontSize: 26, color: '#fff', letterSpacing: -0.5 },
   billJd: { fontSize: 11 },
@@ -744,11 +738,13 @@ const styles = StyleSheet.create({
   billBadgeText: { fontSize: 9, color: 'rgba(255,255,255,0.7)' },
   billSub: { fontSize: 9, color: 'rgba(255,255,255,0.6)', marginTop: 6 },
 
-  cmpGrid: { flexDirection: 'row', gap: 10, marginTop: 12 },
+  cmpGrid: { flexDirection: 'row', gap: 10, marginTop: 10 },
   cmpItem: { flex: 1, alignItems: 'center' },
   cmpLabel: { fontSize: 9, color: '#111827', marginBottom: 6 },
-  cmpVal: { fontSize: 20, letterSpacing: -0.5 },
+  cmpLabelLight: { fontSize: 10, color: 'rgba(255,255,255,0.7)', marginBottom: 6 },
+  cmpVal: { fontSize: 22, letterSpacing: -0.5 },
   cmpUnit: { fontSize: 8, color: '#111827', marginTop: 1 },
+  cmpUnitLight: { fontSize: 9, color: 'rgba(255,255,255,0.6)', marginTop: 2 },
   cmpBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, marginTop: 4 },
   cmpPct: { fontSize: 9 },
 
