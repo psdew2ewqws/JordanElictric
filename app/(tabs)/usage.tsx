@@ -14,6 +14,7 @@ import { AnimatedCounter } from '../../src/components/AnimatedCounter';
 import { LazyCard } from '../../src/components/LazyCard';
 import { useFabScroll } from '../../src/components/DiaaFab';
 import { calcBillBreakdown } from '../../src/utils/insightsCalc';
+import { TierExplainerModal } from '../../src/components/TierExplainerModal';
 
 const { width: SW } = Dimensions.get('window');
 const CHART_W = SW - 72;
@@ -476,8 +477,9 @@ export default function UsageScreen() {
 
           {/* === EXPECTED BILL + MONTH COMPARISON (single card) === */}
           <LinearGradient colors={['#1B4965', '#2A6F8E']} style={styles.billCard}>
-            <Text style={[styles.billLabel, { fontFamily: fonts.medium }]}>{isAr ? 'الفاتورة المتوقعة لهذا الشهر' : 'Expected Bill This Month'}</Text>
-            <Text style={[styles.billVal, { fontFamily: fonts.bold }]}>~{expectedBillJd.toFixed(1)} <Text style={styles.billJd}>JD</Text></Text>
+            <Text style={[styles.billLabel, { fontFamily: fonts.medium, textAlign: isAr ? 'right' : 'left' }]}>{isAr ? 'الفاتورة المتوقعة لهذا الشهر' : 'Expected Bill This Month'}</Text>
+            <Text style={[styles.billVal, { fontFamily: fonts.bold, textAlign: isAr ? 'right' : 'left' }]}>~{expectedBillJd.toFixed(1)} <Text style={styles.billJd}>JD</Text></Text>
+            <Text style={[styles.billKwh, { fontFamily: fonts.regular, textAlign: isAr ? 'right' : 'left' }]}>({expectedKwh} {isAr ? 'ك.و.س' : 'kWh'})</Text>
 
             <View style={styles.billDivider} />
 
@@ -490,10 +492,6 @@ export default function UsageScreen() {
                   ({lastMonthKwhDiff > 0 ? '+' : ''}{lastMonthKwhDiff} {isAr ? 'ك.و.س' : 'kWh'})
                 </Text>
                 <Text style={[styles.cmpLabelLight, { fontFamily: fonts.medium, marginTop: 6, marginBottom: 0 }]}>{isAr ? 'مقارنة بالشهر الماضي' : 'vs Last Month'}</Text>
-                <View style={[styles.cmpBadge, { backgroundColor: lastMonthDiff > 0 ? 'rgba(252,165,165,0.18)' : 'rgba(134,239,172,0.18)' }]}>
-                  <Ionicons name={lastMonthDiff > 0 ? 'trending-up' : 'trending-down'} size={10} color={lastMonthDiff > 0 ? '#FCA5A5' : '#86EFAC'} />
-                  <Text style={[styles.cmpPct, { fontFamily: fonts.semibold, color: lastMonthDiff > 0 ? '#FCA5A5' : '#86EFAC' }]}>{Math.abs(lastMonthPct)}%</Text>
-                </View>
               </View>
               <View style={styles.cmpItem}>
                 <Text style={[styles.cmpVal, { fontFamily: fonts.bold, color: lastYearDiff > 0 ? '#FCA5A5' : '#86EFAC' }]}>
@@ -503,10 +501,6 @@ export default function UsageScreen() {
                   ({lastYearKwhDiff > 0 ? '+' : ''}{lastYearKwhDiff} {isAr ? 'ك.و.س' : 'kWh'})
                 </Text>
                 <Text style={[styles.cmpLabelLight, { fontFamily: fonts.medium, marginTop: 6, marginBottom: 0, textAlign: 'center' }]}>{isAr ? 'مقارنة بالشهر نفسه من السنة الماضية' : 'vs Last Year\n(same month)'}</Text>
-                <View style={[styles.cmpBadge, { backgroundColor: lastYearDiff > 0 ? 'rgba(252,165,165,0.18)' : 'rgba(134,239,172,0.18)' }]}>
-                  <Ionicons name={lastYearDiff > 0 ? 'trending-up' : 'trending-down'} size={10} color={lastYearDiff > 0 ? '#FCA5A5' : '#86EFAC'} />
-                  <Text style={[styles.cmpPct, { fontFamily: fonts.semibold, color: lastYearDiff > 0 ? '#FCA5A5' : '#86EFAC' }]}>{Math.abs(lastYearPct)}%</Text>
-                </View>
               </View>
             </View>
           </LinearGradient>
@@ -585,93 +579,7 @@ export default function UsageScreen() {
         </View>
       </ScrollView>
 
-      {/* ═══ TIER EXPLAINER MODAL ═══ */}
-      <Modal
-        visible={tiersModalOpen}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setTiersModalOpen(false)}
-      >
-        <Pressable style={styles.modalBackdrop} onPress={() => setTiersModalOpen(false)}>
-          <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
-            <View style={{ flexDirection: isAr ? 'row-reverse' : 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <Text style={[styles.modalTitle, { fontFamily: fonts.bold, textAlign: isAr ? 'right' : 'left', flex: 1 }]}>
-                {t('tiersExplainTitle')}
-              </Text>
-              <TouchableOpacity onPress={() => setTiersModalOpen(false)} hitSlop={10}>
-                <Ionicons name="close" size={22} color="#111827" />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 460 }}>
-              <Text style={[styles.modalIntro, { fontFamily: fonts.regular, textAlign: isAr ? 'right' : 'left', writingDirection: isAr ? 'rtl' : 'ltr' }]}>
-                {t('tiersExplainIntro')}
-              </Text>
-
-              {/* Tier 1 */}
-              <View style={[styles.modalTierRow, { backgroundColor: 'rgba(5,150,105,0.08)', borderLeftColor: '#059669', flexDirection: isAr ? 'row-reverse' : 'row' }]}>
-                <View style={[styles.modalTierDot, { backgroundColor: '#059669' }]} />
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.modalTierTitle, { fontFamily: fonts.bold, color: '#059669', textAlign: isAr ? 'right' : 'left' }]}>
-                    {t('tiersExplainT1Title')}
-                  </Text>
-                  <Text style={[styles.modalTierDesc, { fontFamily: fonts.regular, textAlign: isAr ? 'right' : 'left', writingDirection: isAr ? 'rtl' : 'ltr' }]}>
-                    {t('tiersExplainT1Desc')}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Tier 2 */}
-              <View style={[styles.modalTierRow, { backgroundColor: 'rgba(217,119,6,0.08)', borderLeftColor: '#D97706', flexDirection: isAr ? 'row-reverse' : 'row' }]}>
-                <View style={[styles.modalTierDot, { backgroundColor: '#D97706' }]} />
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.modalTierTitle, { fontFamily: fonts.bold, color: '#D97706', textAlign: isAr ? 'right' : 'left' }]}>
-                    {t('tiersExplainT2Title')}
-                  </Text>
-                  <Text style={[styles.modalTierDesc, { fontFamily: fonts.regular, textAlign: isAr ? 'right' : 'left', writingDirection: isAr ? 'rtl' : 'ltr' }]}>
-                    {t('tiersExplainT2Desc')}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Tier 3 */}
-              <View style={[styles.modalTierRow, { backgroundColor: 'rgba(220,38,38,0.08)', borderLeftColor: '#DC2626', flexDirection: isAr ? 'row-reverse' : 'row' }]}>
-                <View style={[styles.modalTierDot, { backgroundColor: '#DC2626' }]} />
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.modalTierTitle, { fontFamily: fonts.bold, color: '#DC2626', textAlign: isAr ? 'right' : 'left' }]}>
-                    {t('tiersExplainT3Title')}
-                  </Text>
-                  <Text style={[styles.modalTierDesc, { fontFamily: fonts.regular, textAlign: isAr ? 'right' : 'left', writingDirection: isAr ? 'rtl' : 'ltr' }]}>
-                    {t('tiersExplainT3Desc')}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Example */}
-              <View style={styles.modalExample}>
-                <Text style={[styles.modalExampleTitle, { fontFamily: fonts.bold, textAlign: isAr ? 'right' : 'left' }]}>
-                  {t('tiersExplainExampleTitle')}
-                </Text>
-                <Text style={[styles.modalExampleBody, { fontFamily: fonts.regular, textAlign: isAr ? 'right' : 'left', writingDirection: isAr ? 'rtl' : 'ltr' }]}>
-                  {t('tiersExplainExampleBody')}
-                </Text>
-              </View>
-
-              {/* Tip */}
-              <View style={[styles.modalTip, { flexDirection: isAr ? 'row-reverse' : 'row' }]}>
-                <Ionicons name="bulb-outline" size={16} color="#1B4965" />
-                <Text style={[styles.modalTipText, { fontFamily: fonts.medium, textAlign: isAr ? 'right' : 'left', writingDirection: isAr ? 'rtl' : 'ltr' }]}>
-                  {t('tiersExplainTip')}
-                </Text>
-              </View>
-            </ScrollView>
-
-            <TouchableOpacity style={styles.modalBtn} onPress={() => setTiersModalOpen(false)} activeOpacity={0.85}>
-              <Text style={[styles.modalBtnText, { fontFamily: fonts.bold }]}>{t('gotIt')}</Text>
-            </TouchableOpacity>
-          </Pressable>
-        </Pressable>
-      </Modal>
+      <TierExplainerModal visible={tiersModalOpen} onClose={() => setTiersModalOpen(false)} />
     </View>
   );
 }
@@ -743,6 +651,7 @@ const styles = StyleSheet.create({
   billRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
   billVal: { fontSize: 26, color: '#fff', letterSpacing: -0.5 },
   billJd: { fontSize: 11 },
+  billKwh: { fontSize: 12, color: 'rgba(255,255,255,0.75)', marginTop: 2 },
   billBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
   billBadgeText: { fontSize: 9, color: 'rgba(255,255,255,0.7)' },
   billSub: { fontSize: 9, color: 'rgba(255,255,255,0.6)', marginTop: 6 },

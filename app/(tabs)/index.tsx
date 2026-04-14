@@ -10,6 +10,7 @@ import { LanguageToggle } from '../../src/components/LanguageToggle';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { jepcoApi, notificationApi, billApi, complaintApi } from '../../src/services/api';
 import { getFallbackSmartMeter } from '../../src/utils/mockData';
+import { TierExplainerModal } from '../../src/components/TierExplainerModal';
 
 const C = {
   navy: '#0C1F2E', navyMid: '#14354D', navyLight: '#1B4965',
@@ -26,6 +27,7 @@ export default function HomeScreen() {
   const f = fonts; // shorthand
 
   const [smartMeter, setSmartMeter] = useState<any>(null);
+  const [tiersModalOpen, setTiersModalOpen] = useState(false);
   const [unread, setUnread] = useState(0);
   const [bills, setBills] = useState(0);
   const [tickets, setTickets] = useState(0);
@@ -157,9 +159,14 @@ export default function HomeScreen() {
                 </Text>
               </View>
               <View style={[s.billTableRow, { flexDirection: isAr ? 'row-reverse' : 'row' }]}>
-                <Text style={{ fontSize: 13, lineHeight: 16, color: C.gray400, fontFamily: f.regular }}>
-                  {t('tariffTier')}
-                </Text>
+                <View style={{ flexDirection: isAr ? 'row-reverse' : 'row', alignItems: 'center', gap: 6 }}>
+                  <Text style={{ fontSize: 13, lineHeight: 16, color: C.gray400, fontFamily: f.regular }}>
+                    {t('tariffTier')}
+                  </Text>
+                  <TouchableOpacity onPress={() => setTiersModalOpen(true)} hitSlop={10} style={s.tierHelpBtn}>
+                    <Ionicons name="help" size={14} color="#fff" />
+                  </TouchableOpacity>
+                </View>
                 <Text style={{ fontSize: 13, lineHeight: 16, fontFamily: f.bold, color: tier === 1 ? C.green : tier === 2 ? C.amber : C.red }}>
                   {`${t('tier')} ${tier}`}
                 </Text>
@@ -197,6 +204,8 @@ export default function HomeScreen() {
             <Text style={{ fontSize: 11, lineHeight: 14, color: C.gray400, fontFamily: f.regular }}>{t('tickets')}</Text>
           </TouchableOpacity>
         </View>
+
+      <TierExplainerModal visible={tiersModalOpen} onClose={() => setTiersModalOpen(false)} />
     </View>
   );
 }
@@ -221,4 +230,5 @@ const s = StyleSheet.create({
   summaryItem: { flex: 1, alignItems: 'center', gap: 2 },
   summaryDiv: { width: 1, backgroundColor: C.gray100, marginVertical: 4 },
   errorBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 16, marginTop: -36, marginBottom: 4, backgroundColor: '#FEF2F2', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10 },
+  tierHelpBtn: { width: 24, height: 24, borderRadius: 12, backgroundColor: C.navyLight, alignItems: 'center', justifyContent: 'center' },
 });
