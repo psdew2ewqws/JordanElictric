@@ -130,15 +130,20 @@ export default function UsageScreen() {
       // Oldest on the left, newest on the right
       .sort((a: { date: string }, b: { date: string }) => a.date.localeCompare(b.date));
 
-    // Hourly data — today's hours only
+    // Hourly data — always show today's 24 hour slots. Hours that don't have
+    // data yet render as empty bars so the chart gradually fills as the day
+    // progresses (midnight → latest hour reported).
     const todayStr = new Date().toISOString().slice(0, 10);
-    const hourlyList: { hour: number; kwh: number }[] = (_sm.consumptionHourlyList || [])
-      .filter((h: any) => h.date === todayStr)
-      .map((h: any) => ({
-        hour: h.hour,
-        kwh: parseFloat(h.consumptionAtHour || '0'),
-      }))
-      .sort((a: any, b: any) => a.hour - b.hour);
+    const todayByHour = new Map<number, number>();
+    for (const h of (_sm.consumptionHourlyList || [])) {
+      if (h.date === todayStr) {
+        todayByHour.set(h.hour, parseFloat(h.consumptionAtHour || '0'));
+      }
+    }
+    const hourlyList: { hour: number; kwh: number }[] = Array.from({ length: 24 }, (_, h) => ({
+      hour: h,
+      kwh: todayByHour.get(h) ?? 0,
+    }));
 
     // Daily avg = actual current kWh divided by days elapsed (consistent with total)
     const dailyAvg = daysInCycle > 0
