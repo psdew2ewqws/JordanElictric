@@ -130,21 +130,6 @@ export default function UsageScreen() {
       // Oldest on the left, newest on the right
       .sort((a: { date: string }, b: { date: string }) => a.date.localeCompare(b.date));
 
-    // Hourly data — always show today's 24 hour slots. Hours that don't have
-    // data yet render as empty bars so the chart gradually fills as the day
-    // progresses (midnight → latest hour reported).
-    const todayStr = new Date().toISOString().slice(0, 10);
-    const todayByHour = new Map<number, number>();
-    for (const h of (_sm.consumptionHourlyList || [])) {
-      if (h.date === todayStr) {
-        todayByHour.set(h.hour, parseFloat(h.consumptionAtHour || '0'));
-      }
-    }
-    const hourlyList: { hour: number; kwh: number }[] = Array.from({ length: 24 }, (_, h) => ({
-      hour: h,
-      kwh: todayByHour.get(h) ?? 0,
-    }));
-
     // Daily avg = actual current kWh divided by days elapsed (consistent with total)
     const dailyAvg = daysInCycle > 0
       ? +(currentKwh / daysInCycle).toFixed(1)
@@ -185,7 +170,6 @@ export default function UsageScreen() {
       dailyList, dailyAvg, tier1Kwh, tier2Kwh, tier3Kwh, tierPct, currentTier,
       actualCostJd, dailyCostJd, isSmartMeter,
       chartData, maxVal, points, linePath, areaPath, avgY, lastMonthDailyAvg,
-      hourlyList,
     };
   }, [smartMeter]);
 
@@ -196,7 +180,6 @@ export default function UsageScreen() {
     dailyList, dailyAvg, tier1Kwh, tier2Kwh, tier3Kwh, tierPct, currentTier,
     actualCostJd, dailyCostJd, isSmartMeter,
     chartData, maxVal, points, linePath, areaPath, avgY, lastMonthDailyAvg,
-    hourlyList,
   } = derived;
 
   const onRefresh = async () => {
@@ -393,39 +376,6 @@ export default function UsageScreen() {
             </LazyCard>
             );
           })()}
-
-          {/* === HOURLY CONSUMPTION (TODAY) === */}
-          {hourlyList.length > 0 && (
-            <LazyCard delay={100} style={styles.card}>
-              <Text style={[styles.cardTitle, { fontFamily: fonts.bold, fontSize: sz(13) }]}>
-                {isAr ? 'الاستهلاك بالساعة (اليوم)' : "Today's Hourly Consumption"}
-              </Text>
-              <Text style={[styles.cardSub, { fontFamily: fonts.regular, fontSize: sz(10) }]}>
-                {isAr ? 'استهلاكك كل ساعة خلال اليوم' : 'Your hourly usage pattern'}
-              </Text>
-
-              <View style={{ marginTop: 16, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', height: 100, paddingHorizontal: 4 }}>
-                {(() => {
-                  const maxHourly = Math.max(...hourlyList.map(h => h.kwh), 0.1);
-                  return hourlyList.map((h) => {
-                    const height = Math.max(2, (h.kwh / maxHourly) * 90);
-                    return (
-                      <View key={h.hour} style={{ flex: 1, alignItems: 'center', justifyContent: 'flex-end', marginHorizontal: 1 }}>
-                        <View style={{ height, width: '90%', backgroundColor: '#1B4965', borderTopLeftRadius: 2, borderTopRightRadius: 2, opacity: 0.85 }} />
-                      </View>
-                    );
-                  });
-                })()}
-              </View>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6, paddingHorizontal: 4 }}>
-                {[0, 6, 12, 18, 23].map((h) => (
-                  <Text key={h} style={{ fontSize: 9, color: '#111827', fontFamily: fonts.regular }}>
-                    {h === 0 ? '12AM' : h === 12 ? '12PM' : h < 12 ? `${h}AM` : `${h - 12}PM`}
-                  </Text>
-                ))}
-              </View>
-            </LazyCard>
-          )}
 
           {/* === TIER POSITION === */}
           <LazyCard delay={300} style={styles.card}>

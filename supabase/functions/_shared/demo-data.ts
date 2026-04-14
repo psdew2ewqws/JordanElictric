@@ -42,19 +42,7 @@ export function generateSmartMeter(fileNumber: string, householdSize: number) {
 
   // Generate daily consumption list for the chart with realistic variation
   const consumptionMonthlyList: { date: string; consumptionAtDate: string }[] = [];
-  // Hourly consumption list: 24 values per day (realistic Jordanian load curve)
-  const consumptionHourlyList: { date: string; hour: number; consumptionAtHour: string }[] = [];
   let currentKwhSum = 0;
-  const currentHour = new Date().getHours();
-
-  // Typical residential hourly load profile (as fraction of daily total, sums to 1.0)
-  // Low at night, rises morning, peak evening 5-11 PM
-  const hourlyProfile = [
-    0.025, 0.020, 0.018, 0.018, 0.020, 0.025, // 00-05 night (8%)
-    0.030, 0.040, 0.045, 0.040, 0.035, 0.035, // 06-11 morning (22.5%)
-    0.040, 0.045, 0.040, 0.035, 0.035, 0.055, // 12-17 afternoon (25%)
-    0.075, 0.085, 0.075, 0.065, 0.055, 0.040, // 18-23 evening peak (39.5%)
-  ];
 
   for (let i = dayOfMonth; i >= 1; i--) {
     const dayDate = daysAgo(dayOfMonth - i);
@@ -67,21 +55,6 @@ export function generateSmartMeter(fileNumber: string, householdSize: number) {
       date: dayDate,
       consumptionAtDate: dayKwh.toFixed(1),
     });
-
-    // Generate 24 hourly values for this day (only up to currentHour for today)
-    const isToday = i === dayOfMonth;
-    const maxHour = isToday ? currentHour : 23;
-    for (let h = 0; h <= maxHour; h++) {
-      // Add small random variation to each hour (0.85x - 1.15x) based on file+day+hour
-      const hourSeed = seededRand(fileNumber, i * 10000 + h * 100);
-      const hourVariation = 0.85 + hourSeed * 0.3;
-      const hourKwh = dayKwh * hourlyProfile[h] * hourVariation;
-      consumptionHourlyList.push({
-        date: dayDate,
-        hour: h,
-        consumptionAtHour: hourKwh.toFixed(3),
-      });
-    }
   }
 
   // Current consumption = sum of actual daily values (matches the chart)
@@ -109,7 +82,6 @@ export function generateSmartMeter(fileNumber: string, householdSize: number) {
     lastBillReadingDate: daysAgo(dayOfMonth),
     numberOfConsumptionDaysSinceLastRead: dayOfMonth.toString(),
     consumptionMonthlyList,
-    consumptionHourlyList,
     comparazinConsumption: {
       lastMonthconsumption: lastMonthKwh.toString(),
       lastYearconsumption: lastYearKwh.toString(),

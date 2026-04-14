@@ -38,18 +38,6 @@ export const TOOL_DEFINITIONS: ToolDef[] = [
     input_schema: { type: "object", properties: {}, required: [] },
   },
   {
-    name: "get_hourly_usage",
-    description:
-      "Get the user's hourly electricity consumption for today and yesterday, plus automatic spike detection. " +
-      "Returns: today's hourly breakdown (up to the current hour), yesterday's full 24-hour breakdown, " +
-      "peak hour of yesterday, and any spike hours (hours consuming >=1.5x the day's hourly average). " +
-      "Use proactively when the bill seems high, when the user asks why their usage increased, or when " +
-      "they ask about their usage pattern. When spikes are detected, ask the user what they were doing " +
-      "during those hours (e.g. 'I see your usage jumped between 7-9 PM yesterday — were you using the AC " +
-      "or oven?') to help them understand their consumption drivers.",
-    input_schema: { type: "object", properties: {}, required: [] },
-  },
-  {
     name: "get_bill_history",
     description:
       "Get the user's billing history (last 6 months). " +
@@ -142,8 +130,6 @@ export async function executeTool(
   switch (toolName) {
     case "get_current_usage":
       return execGetCurrentUsage(ctx);
-    case "get_hourly_usage":
-      return execGetHourlyUsage(ctx);
     case "get_bill_history":
       return execGetBillHistory(ctx);
     case "get_account_info":
@@ -263,73 +249,6 @@ async function execGetCurrentUsage(ctx: ToolContext): Promise<string> {
     last_reading: sm.lastBillReading,
     current_reading: sm.currentReading,
   });
-}
-
-async function execGetHourlyUsage(ctx: ToolContext): Promise<string> {
-  if (!ctx.subscriptionId) return JSON.stringify({ error: "No subscription linked. Ask the user to link their JEPCO number in Settings." });
-
-  const sm = await getOrFetchCache(ctx, "smart_meter");
-  if (!sm) return JSON.stringify({ error: "Could not retrieve smart meter data. The JEPCO service may be temporarily unavailable." });
-
-  const raw = (sm.consumptionHourlyList || []) as Array<{ date: string; hour: number; consumptionAtHour: string }>;
-  if (!Array.isArray(raw) || raw.length === 0) {
-    return JSON.stringify({ error: "Hourly consumption data is not available for this meter." });
-  }
-
-  const todayStr = new Date().toISOString().slice(0, 10);
-  const yesterdayStr = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-
-  const byDay = (ds: string) => raw
-    .filter((h) => h.date === ds)
-    .map((h) => ({ hour: h.hour, kwh: +parseFloat(h.consumptionAtHour || "0").toFixed(3) }))
-    .sort((a, b) => a.hour - b.hour);
-
-  const today = byDay(todayStr);
-  const yesterday = byDay(yesterdayStr);
-
-  // Spike detection on the fullest day available — prefer yesterday (24 hrs)
-  const source = yesterday.length >= today.length ? yesterday : today;
-  const sourceDate = yesterday.length >= today.length ? yesterdayStr : todayStr;
-  const avgKwh = source.length > 0
-    ? source.reduce((acc, h) => acc + h.kwh, 0) / source.length
-    : 0;
-  const spikeThreshold = avgKwh * 1.5;
-  const spikes = source
-    .filter((h) => avgKwh > 0.01 && h.kwh >= spikeThreshold)
-    .sort((a, b) => b.kwh - a.kwh)
-    .slice(0, 5)
-    .map((h) => ({
-      hour: h.hour,
-      hour_label: hourLabel(h.hour),
-      kwh: h.kwh,
-      times_avg: +(h.kwh / avgKwh).toFixed(2),
-    }));
-  const peak = source.reduce(
-    (acc, h) => (h.kwh > acc.kwh ? h : acc),
-    { hour: -1, kwh: -1 },
-  );
-
-  console.log(`[chat-tool] get_hourly_usage: today=${today.length}h, yesterday=${yesterday.length}h, spikes=${spikes.length}`);
-
-  return JSON.stringify({
-    today: { date: todayStr, hours: today, total_kwh: +today.reduce((a, h) => a + h.kwh, 0).toFixed(2) },
-    yesterday: { date: yesterdayStr, hours: yesterday, total_kwh: +yesterday.reduce((a, h) => a + h.kwh, 0).toFixed(2) },
-    spike_analysis_date: sourceDate,
-    avg_hourly_kwh: +avgKwh.toFixed(3),
-    peak: peak.hour >= 0 ? { hour: peak.hour, hour_label: hourLabel(peak.hour), kwh: peak.kwh } : null,
-    spikes,
-    // Ranges for quick Claude interpretation
-    evening_peak_kwh: +source.filter((h) => h.hour >= 17 && h.hour <= 23).reduce((a, h) => a + h.kwh, 0).toFixed(2),
-    night_kwh: +source.filter((h) => h.hour >= 0 && h.hour <= 5).reduce((a, h) => a + h.kwh, 0).toFixed(2),
-    morning_kwh: +source.filter((h) => h.hour >= 6 && h.hour <= 11).reduce((a, h) => a + h.kwh, 0).toFixed(2),
-    afternoon_kwh: +source.filter((h) => h.hour >= 12 && h.hour <= 16).reduce((a, h) => a + h.kwh, 0).toFixed(2),
-  });
-}
-
-function hourLabel(h: number): string {
-  if (h === 0) return "12 AM";
-  if (h === 12) return "12 PM";
-  return h < 12 ? `${h} AM` : `${h - 12} PM`;
 }
 
 async function execGetBillHistory(ctx: ToolContext): Promise<string> {
