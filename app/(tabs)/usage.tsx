@@ -158,7 +158,16 @@ export default function UsageScreen() {
     const currentTier = currentKwh > 600 ? 3 : currentKwh > 300 ? 2 : 1;
 
     const actualCostJd = (tier1Kwh * 0.050) + (tier2Kwh * 0.100) + (tier3Kwh * 0.200);
-    const dailyCostJd = daysInCycle > 0 ? actualCostJd / daysInCycle : actualCostJd;
+
+    // Cheapest / most-expensive day this cycle — priced via the blended rate
+    // across the current tier mix (actualCostJd / currentKwh).
+    const blendedRate = currentKwh > 0 ? actualCostJd / currentKwh : 0.05;
+    const perDay = dailyList
+      .filter((d) => d.date && d.kwh > 0)
+      .map((d) => ({ ...d, jd: +(d.kwh * blendedRate).toFixed(2) }));
+    const sortedByJd = [...perDay].sort((a, b) => a.jd - b.jd);
+    const cheapestDay = sortedByJd[0] || null;
+    const mostExpensiveDay = sortedByJd[sortedByJd.length - 1] || null;
 
     const isSmartMeter = _sm.showSmartMeterFeature === true;
 
@@ -182,8 +191,9 @@ export default function UsageScreen() {
       lastMonth, lastYear, lastMonthDiff, lastMonthPct, lastYearDiff, lastYearPct,
       lastMonthKwhDiff, lastYearKwhDiff,
       dailyList, dailyAvg, tier1Kwh, tier2Kwh, tier3Kwh, tierPct, currentTier,
-      actualCostJd, dailyCostJd, isSmartMeter,
+      actualCostJd, isSmartMeter,
       chartData, maxVal, points, linePath, areaPath, avgY, lastMonthDailyAvg,
+      cheapestDay, mostExpensiveDay,
     };
   }, [smartMeter]);
 
@@ -193,8 +203,9 @@ export default function UsageScreen() {
     lastMonth, lastYear, lastMonthDiff, lastMonthPct, lastYearDiff, lastYearPct,
     lastMonthKwhDiff, lastYearKwhDiff,
     dailyList, dailyAvg, tier1Kwh, tier2Kwh, tier3Kwh, tierPct, currentTier,
-    actualCostJd, dailyCostJd, isSmartMeter,
+    actualCostJd, isSmartMeter,
     chartData, maxVal, points, linePath, areaPath, avgY, lastMonthDailyAvg,
+    cheapestDay, mostExpensiveDay,
   } = derived;
 
   const onRefresh = async () => {
@@ -392,6 +403,37 @@ export default function UsageScreen() {
             );
           })()}
 
+          {/* === CHEAPEST / MOST EXPENSIVE DAY === */}
+          <View style={styles.card}>
+            <Text style={[styles.cardTitle, { fontFamily: fonts.bold, fontSize: sz(13) }]}>
+              {isAr ? 'أرخص وأغلى يوم' : 'Cheapest & Most Expensive Day'}
+            </Text>
+            <Text style={[styles.cardSub, { fontFamily: fonts.regular, fontSize: sz(10) }]}>
+              {isAr ? 'اليومين اللي كلفوك الأقل والأكثر هذا الشهر' : 'Your lowest- and highest-cost days this cycle'}
+            </Text>
+
+            <View style={styles.dcChips}>
+              <View style={[styles.dcChip, { backgroundColor: '#F2F5F7' }]}>
+                <Text style={[styles.dcChipLabel, { fontFamily: fonts.medium, letterSpacing: isAr ? 0 : 0.3, textTransform: isAr ? 'none' : 'uppercase' }]}>{isAr ? 'أرخص يوم' : 'Cheapest day'}</Text>
+                <Text style={[styles.dcChipVal, { fontFamily: fonts.bold, color: '#0C1E2D' }]}>
+                  {cheapestDay ? `${cheapestDay.jd.toFixed(2)} JD` : '—'}
+                </Text>
+                <Text style={[styles.dcChipDate, { fontFamily: fonts.regular }]}>
+                  {cheapestDay ? new Date(cheapestDay.date).toLocaleDateString(isAr ? 'ar-EG' : 'en', { month: 'short', day: 'numeric', weekday: 'short' }) : '—'}
+                </Text>
+              </View>
+              <View style={[styles.dcChip, { backgroundColor: '#F2F5F7' }]}>
+                <Text style={[styles.dcChipLabel, { fontFamily: fonts.medium, letterSpacing: isAr ? 0 : 0.3, textTransform: isAr ? 'none' : 'uppercase' }]}>{isAr ? 'الأغلى' : 'Most expensive'}</Text>
+                <Text style={[styles.dcChipVal, { fontFamily: fonts.bold, color: '#0C1E2D' }]}>
+                  {mostExpensiveDay ? `${mostExpensiveDay.jd.toFixed(2)} JD` : '—'}
+                </Text>
+                <Text style={[styles.dcChipDate, { fontFamily: fonts.regular }]}>
+                  {mostExpensiveDay ? new Date(mostExpensiveDay.date).toLocaleDateString(isAr ? 'ar-EG' : 'en', { month: 'short', day: 'numeric', weekday: 'short' }) : '—'}
+                </Text>
+              </View>
+            </View>
+          </View>
+
           {/* === TIER POSITION === */}
           <LazyCard delay={300} style={styles.card}>
             <View style={{ flexDirection: isAr ? 'row-reverse' : 'row', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -473,6 +515,46 @@ export default function UsageScreen() {
                 <Text style={[styles.ticSub, { fontFamily: fonts.regular }]}>{isAr ? 'كيلوواط بالساعة' : 'kWh'} · {(tier3Kwh * 0.2).toFixed(1)} JD</Text>
               </View>
             </View>
+
+            {/* ═══ TIER CROSSING PROJECTION ═══ */}
+            {(() => {
+              if (dailyAvg <= 0) return null;
+              const nextBoundary = currentKwh < 300 ? 300 : currentKwh < 600 ? 600 : null;
+              if (!nextBoundary) {
+                return (
+                  <View style={styles.tcPillRed}>
+                    <Ionicons name="warning" size={14} color="#DC2626" />
+                    <Text style={[styles.tcPillText, { fontFamily: fonts.medium, color: '#7F1D1D' }]}>
+                      {isAr ? 'أنت في الشريحة 3 — كل كيلوواط إضافي بـ 0.200 دينار' : 'You\'re in Tier 3 — every extra kWh costs 0.200 JD'}
+                    </Text>
+                  </View>
+                );
+              }
+              const kwhToGo = nextBoundary - currentKwh;
+              const daysToCross = kwhToGo / dailyAvg;
+              const crossingDate = new Date(Date.now() + Math.ceil(daysToCross) * 86400000);
+              // Cycle end date
+              const cycleEnd = sm.nextElectricityReadDate ? new Date(sm.nextElectricityReadDate) : null;
+              const crossesBeforeCycleEnds = !cycleEnd || crossingDate <= cycleEnd;
+              const dateLabel = crossingDate.toLocaleDateString(isAr ? 'ar-EG' : 'en', { month: 'long', day: 'numeric' });
+              const nextTierLabel = nextBoundary === 300
+                ? (isAr ? 'الشريحة 2' : 'Tier 2')
+                : (isAr ? 'الشريحة 3' : 'Tier 3');
+              return (
+                <View style={crossesBeforeCycleEnds ? styles.tcPillAmber : styles.tcPillGreen}>
+                  <Ionicons name={crossesBeforeCycleEnds ? 'trending-up' : 'checkmark-circle'} size={14} color={crossesBeforeCycleEnds ? '#92680A' : '#065F46'} />
+                  <Text style={[styles.tcPillText, { fontFamily: fonts.medium, color: crossesBeforeCycleEnds ? '#7C4A03' : '#064E3B' }]}>
+                    {crossesBeforeCycleEnds
+                      ? (isAr
+                          ? `بهذا المعدل، رح تدخل ${nextTierLabel} يوم ${dateLabel}`
+                          : `At this pace, you'll enter ${nextTierLabel} on ${dateLabel}`)
+                      : (isAr
+                          ? `بهذا المعدل، رح تضل بالشريحة الحالية لنهاية الدورة`
+                          : `At this pace, you'll stay in the current tier through the cycle`)}
+                  </Text>
+                </View>
+              );
+            })()}
           </LazyCard>
 
           {/* === EXPECTED BILL + MONTH COMPARISON (single card) === */}
@@ -505,77 +587,14 @@ export default function UsageScreen() {
             </View>
           </LinearGradient>
 
-          {/* === AVERAGE COST PER DAY (matches mockup) === */}
-          <View style={styles.card}>
-            <Text style={[styles.cardTitle, { fontFamily: fonts.bold, fontSize: sz(13) }]}>
-              {isAr ? 'متوسط التكلفة اليومية' : 'Average Cost Per Day'}
-            </Text>
-            <Text style={[styles.cardSub, { fontFamily: fonts.regular, fontSize: sz(10) }]}>
-              {isAr ? 'كم تكلفك الكهرباء يومياً' : 'How much your electricity costs you daily'}
-            </Text>
-
-            <View style={styles.dcRow}>
-              <View style={styles.dcMain}>
-                <Text style={[styles.dcVal, { fontFamily: fonts.bold }]}>
-                  {dailyCostJd.toFixed(2)}
-                </Text>
-                <Text style={[styles.dcUnit, { fontFamily: fonts.regular }]}>{isAr ? 'د/يوم' : 'JD / day'}</Text>
-              </View>
-              <View style={styles.dcSep} />
-              <View style={styles.dcBreakdown}>
-                {/* Weekdays */}
-                <View style={styles.dcLine}>
-                  <Text style={[styles.dcLineLabel, { fontFamily: fonts.regular }]}>{isAr ? 'أيام الأسبوع' : 'Weekdays'}</Text>
-                  <Text style={[styles.dcLineVal, { fontFamily: fonts.bold }]}>
-                    {(dailyCostJd * 0.9).toFixed(2)} JD
-                  </Text>
-                </View>
-                <View style={styles.dcBar}>
-                  <View style={[styles.dcBarFill, { width: '72%', backgroundColor: '#1B4965' }]} />
-                </View>
-                {/* Weekends */}
-                <View style={[styles.dcLine, { marginTop: 8 }]}>
-                  <Text style={[styles.dcLineLabel, { fontFamily: fonts.regular }]}>{isAr ? 'عطلة نهاية الأسبوع' : 'Weekends'}</Text>
-                  <Text style={[styles.dcLineVal, { fontFamily: fonts.bold, color: '#D97706' }]}>
-                    {(dailyCostJd * 1.25).toFixed(2)} JD
-                  </Text>
-                </View>
-                <View style={styles.dcBar}>
-                  <View style={[styles.dcBarFill, { width: '95%', backgroundColor: '#D97706' }]} />
-                </View>
-              </View>
-            </View>
-
-            {/* Cheapest / Most Expensive chips */}
-            <View style={styles.dcChips}>
-              <View style={[styles.dcChip, { backgroundColor: 'rgba(5,150,105,0.05)' }]}>
-                <Text style={[styles.dcChipLabel, { fontFamily: fonts.medium, letterSpacing: isAr ? 0 : 0.3, textTransform: isAr ? 'none' : 'uppercase' }]}>{isAr ? 'أرخص يوم' : 'Cheapest day'}</Text>
-                <Text style={[styles.dcChipVal, { fontFamily: fonts.bold, color: '#059669' }]}>
-                  {(dailyCostJd * 0.6).toFixed(2)} JD
-                </Text>
-                <Text style={[styles.dcChipDate, { fontFamily: fonts.regular }]}>
-                  {sm.lastBillReadingDate ? `${new Date(sm.lastBillReadingDate).toLocaleDateString(isAr ? 'ar-EG' : 'en', { month: 'short', day: 'numeric', weekday: 'short' })}` : '—'}
-                </Text>
-              </View>
-              <View style={[styles.dcChip, { backgroundColor: 'rgba(220,38,38,0.05)' }]}>
-                <Text style={[styles.dcChipLabel, { fontFamily: fonts.medium, letterSpacing: isAr ? 0 : 0.3, textTransform: isAr ? 'none' : 'uppercase' }]}>{isAr ? 'الأغلى' : 'Most expensive'}</Text>
-                <Text style={[styles.dcChipVal, { fontFamily: fonts.bold, color: '#DC2626' }]}>
-                  {(dailyCostJd * 1.65).toFixed(2)} JD
-                </Text>
-                <Text style={[styles.dcChipDate, { fontFamily: fonts.regular }]}>
-                  {sm.consumptionDate ? `${new Date(new Date(sm.consumptionDate).getTime() - 12 * 86400000).toLocaleDateString(isAr ? 'ar-EG' : 'en', { month: 'short', day: 'numeric', weekday: 'short' })}` : '—'}
-                </Text>
-              </View>
-            </View>
-          </View>
-
           {error && (
             <TouchableOpacity style={styles.retryBtn} onPress={loadData}>
               <Text style={[styles.retryText, { fontFamily: fonts.medium }]}>{isAr ? '⟳ أعد تحميل البيانات' : '⟳ Retry loading data'}</Text>
             </TouchableOpacity>
           )}
 
-          <View style={{ height: 30 }} />
+          {/* Tail spacer so the Diaa FAB (bottom-right) doesn't cover the last card */}
+          <View style={{ height: 110 }} />
         </View>
       </ScrollView>
 
@@ -644,14 +663,19 @@ const styles = StyleSheet.create({
   ticVal: { fontSize: 20, lineHeight: 24, marginTop: 4 },
   ticSub: { fontSize: 10, lineHeight: 13, color: '#111827', marginTop: 2 },
 
+  tcPillAmber: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12, paddingVertical: 10, paddingHorizontal: 12, backgroundColor: 'rgba(217,119,6,0.12)', borderRadius: 10 },
+  tcPillGreen: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12, paddingVertical: 10, paddingHorizontal: 12, backgroundColor: 'rgba(5,150,105,0.12)', borderRadius: 10 },
+  tcPillRed:   { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12, paddingVertical: 10, paddingHorizontal: 12, backgroundColor: 'rgba(220,38,38,0.10)', borderRadius: 10 },
+  tcPillText: { flex: 1, fontSize: 12, lineHeight: 16 },
+
   billCard: { borderRadius: 14, padding: 16, marginBottom: 10 },
-  billLabel: { fontSize: 11, color: 'rgba(255,255,255,0.65)' },
-  billDivider: { height: 1, backgroundColor: 'rgba(255,255,255,0.12)', marginTop: 16, marginBottom: 14 },
+  billLabel: { fontSize: 12, lineHeight: 16, color: 'rgba(255,255,255,0.85)' },
+  billDivider: { height: 1, backgroundColor: 'rgba(255,255,255,0.12)', marginTop: 14, marginBottom: 12 },
   billCmpTitle: { fontSize: 13, color: '#fff' },
   billRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
-  billVal: { fontSize: 26, color: '#fff', letterSpacing: -0.5 },
-  billJd: { fontSize: 11 },
-  billKwh: { fontSize: 12, color: 'rgba(255,255,255,0.75)', marginTop: 2 },
+  billVal: { fontSize: 28, lineHeight: 34, color: '#fff', letterSpacing: -0.5, marginTop: 2 },
+  billJd: { fontSize: 13 },
+  billKwh: { fontSize: 12, lineHeight: 16, color: 'rgba(255,255,255,0.85)', marginTop: 2 },
   billBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
   billBadgeText: { fontSize: 9, color: 'rgba(255,255,255,0.7)' },
   billSub: { fontSize: 9, color: 'rgba(255,255,255,0.6)', marginTop: 6 },
@@ -672,22 +696,11 @@ const styles = StyleSheet.create({
   meterVal: { fontSize: 15, color: '#0C1E2D', marginTop: 2, letterSpacing: 0.5 },
   meterDate: { fontSize: 7, color: '#111827', marginTop: 2 },
 
-  dcRow: { flexDirection: 'row', alignItems: 'center', gap: 16, marginTop: 4 },
-  dcMain: { flex: 1, alignItems: 'center' },
-  dcVal: { fontSize: 30, color: '#1B4965', letterSpacing: -1 },
-  dcUnit: { fontSize: 9, color: '#111827', marginTop: 2 },
-  dcSep: { width: 1, height: 44, backgroundColor: '#E8ECF0' },
-  dcBreakdown: { flex: 1.5 },
-  dcLine: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  dcLineLabel: { fontSize: 10, color: '#111827' },
-  dcLineVal: { fontSize: 12, color: '#0C1E2D' },
-  dcBar: { height: 4, backgroundColor: '#F2F5F7', borderRadius: 2, overflow: 'hidden' },
-  dcBarFill: { height: '100%', borderRadius: 2 },
   dcChips: { flexDirection: 'row', gap: 8, marginTop: 14 },
-  dcChip: { flex: 1, borderRadius: 10, padding: 10, alignItems: 'center' },
-  dcChipLabel: { fontSize: 7, color: '#111827', textTransform: 'uppercase' },
-  dcChipVal: { fontSize: 14, marginTop: 3 },
-  dcChipDate: { fontSize: 8, color: '#111827', marginTop: 2 },
+  dcChip: { flex: 1, borderRadius: 10, padding: 14, alignItems: 'center' },
+  dcChipLabel: { fontSize: 11, lineHeight: 14, color: '#000', textTransform: 'uppercase' },
+  dcChipVal: { fontSize: 22, lineHeight: 26, marginTop: 6 },
+  dcChipDate: { fontSize: 12, lineHeight: 15, color: '#000', marginTop: 4 },
 
   retryBtn: { alignItems: 'center', padding: 12, marginTop: 8 },
   retryText: { fontSize: 13, color: '#1B4965' },

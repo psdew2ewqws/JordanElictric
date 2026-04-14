@@ -164,7 +164,7 @@ export default function ProfileScreen() {
         </TouchableOpacity>
 
         <Text style={[s.ver, { fontFamily: fonts.regular }]}>{t('version')}</Text>
-        <View style={{ height: 32 }} />
+        <View style={{ height: 110 }} />
       </ScrollView>
 
       {/* Modals — lazy: only mount when open */}

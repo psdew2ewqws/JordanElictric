@@ -84,7 +84,7 @@ export default function ServicesScreen() {
           </View>
         )}
 
-        <View style={{ height: 24 }} />
+        <View style={{ height: 110 }} />
       </ScrollView>
     </SafeAreaView>
   );

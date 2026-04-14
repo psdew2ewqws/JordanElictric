@@ -261,7 +261,7 @@ export default function InsightsScreen() {
             </LazyCard>
           )}
 
-          <View style={{ height: 30 }} />
+          <View style={{ height: 110 }} />
         </View>
       </ScrollView>
     </View>
