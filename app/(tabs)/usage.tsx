@@ -130,6 +130,9 @@ export default function UsageScreen() {
     const lastMonthPct = lastMonthBillJd > 0 ? +((lastMonthDiff / lastMonthBillJd) * 100).toFixed(1) : 0;
     const lastYearDiff = +(thisMonthBillJd - lastYearBillJd).toFixed(2);
     const lastYearPct = lastYearBillJd > 0 ? +((lastYearDiff / lastYearBillJd) * 100).toFixed(1) : 0;
+    // kWh deltas — shown in brackets next to the JD number
+    const lastMonthKwhDiff = expectedKwh - lastMonth;
+    const lastYearKwhDiff = expectedKwh - lastYear;
 
     const dailyList: { date: string; kwh: number }[] = (_sm.consumptionMonthlyList || [])
       .map((d: any) => ({
@@ -176,6 +179,7 @@ export default function UsageScreen() {
       sm: _sm, currentKwh, currentBillJd, expectedBillJd, expectedKwh,
       lastReading, currentReading, lastReadingDate, daysInCycle,
       lastMonth, lastYear, lastMonthDiff, lastMonthPct, lastYearDiff, lastYearPct,
+      lastMonthKwhDiff, lastYearKwhDiff,
       dailyList, dailyAvg, tier1Kwh, tier2Kwh, tier3Kwh, tierPct, currentTier,
       actualCostJd, dailyCostJd, isSmartMeter,
       chartData, maxVal, points, linePath, areaPath, avgY, lastMonthDailyAvg,
@@ -186,6 +190,7 @@ export default function UsageScreen() {
     sm, currentKwh, currentBillJd, expectedBillJd, expectedKwh,
     lastReading, currentReading, lastReadingDate, daysInCycle,
     lastMonth, lastYear, lastMonthDiff, lastMonthPct, lastYearDiff, lastYearPct,
+    lastMonthKwhDiff, lastYearKwhDiff,
     dailyList, dailyAvg, tier1Kwh, tier2Kwh, tier3Kwh, tierPct, currentTier,
     actualCostJd, dailyCostJd, isSmartMeter,
     chartData, maxVal, points, linePath, areaPath, avgY, lastMonthDailyAvg,
@@ -479,9 +484,11 @@ export default function UsageScreen() {
             <View style={styles.cmpGrid}>
               <View style={styles.cmpItem}>
                 <Text style={[styles.cmpVal, { fontFamily: fonts.bold, color: lastMonthDiff > 0 ? '#FCA5A5' : '#86EFAC' }]}>
-                  {lastMonthDiff > 0 ? '+' : ''}{lastMonthDiff.toFixed(2)}
+                  {lastMonthDiff > 0 ? '+' : ''}{lastMonthDiff.toFixed(2)}<Text style={{ fontSize: 13 }}> JD</Text>
                 </Text>
-                <Text style={[styles.cmpUnitLight, { fontFamily: fonts.regular }]}>JD</Text>
+                <Text style={[styles.cmpUnitLight, { fontFamily: fonts.regular }]}>
+                  ({lastMonthKwhDiff > 0 ? '+' : ''}{lastMonthKwhDiff} {isAr ? 'ك.و.س' : 'kWh'})
+                </Text>
                 <Text style={[styles.cmpLabelLight, { fontFamily: fonts.medium, marginTop: 6, marginBottom: 0 }]}>{isAr ? 'مقارنة بالشهر الماضي' : 'vs Last Month'}</Text>
                 <View style={[styles.cmpBadge, { backgroundColor: lastMonthDiff > 0 ? 'rgba(252,165,165,0.18)' : 'rgba(134,239,172,0.18)' }]}>
                   <Ionicons name={lastMonthDiff > 0 ? 'trending-up' : 'trending-down'} size={10} color={lastMonthDiff > 0 ? '#FCA5A5' : '#86EFAC'} />
@@ -490,9 +497,11 @@ export default function UsageScreen() {
               </View>
               <View style={styles.cmpItem}>
                 <Text style={[styles.cmpVal, { fontFamily: fonts.bold, color: lastYearDiff > 0 ? '#FCA5A5' : '#86EFAC' }]}>
-                  {lastYearDiff > 0 ? '+' : ''}{lastYearDiff.toFixed(2)}
+                  {lastYearDiff > 0 ? '+' : ''}{lastYearDiff.toFixed(2)}<Text style={{ fontSize: 13 }}> JD</Text>
                 </Text>
-                <Text style={[styles.cmpUnitLight, { fontFamily: fonts.regular }]}>JD</Text>
+                <Text style={[styles.cmpUnitLight, { fontFamily: fonts.regular }]}>
+                  ({lastYearKwhDiff > 0 ? '+' : ''}{lastYearKwhDiff} {isAr ? 'ك.و.س' : 'kWh'})
+                </Text>
                 <Text style={[styles.cmpLabelLight, { fontFamily: fonts.medium, marginTop: 6, marginBottom: 0, textAlign: 'center' }]}>{isAr ? 'مقارنة بالشهر نفسه من السنة الماضية' : 'vs Last Year\n(same month)'}</Text>
                 <View style={[styles.cmpBadge, { backgroundColor: lastYearDiff > 0 ? 'rgba(252,165,165,0.18)' : 'rgba(134,239,172,0.18)' }]}>
                   <Ionicons name={lastYearDiff > 0 ? 'trending-up' : 'trending-down'} size={10} color={lastYearDiff > 0 ? '#FCA5A5' : '#86EFAC'} />
@@ -741,10 +750,10 @@ const styles = StyleSheet.create({
   cmpGrid: { flexDirection: 'row', gap: 10, marginTop: 10 },
   cmpItem: { flex: 1, alignItems: 'center' },
   cmpLabel: { fontSize: 9, color: '#111827', marginBottom: 6 },
-  cmpLabelLight: { fontSize: 10, color: 'rgba(255,255,255,0.7)', marginBottom: 6 },
+  cmpLabelLight: { fontSize: 12, lineHeight: 15, color: '#fff', marginBottom: 6 },
   cmpVal: { fontSize: 22, letterSpacing: -0.5 },
   cmpUnit: { fontSize: 8, color: '#111827', marginTop: 1 },
-  cmpUnitLight: { fontSize: 9, color: 'rgba(255,255,255,0.6)', marginTop: 2 },
+  cmpUnitLight: { fontSize: 11, lineHeight: 14, color: 'rgba(255,255,255,0.92)', marginTop: 4 },
   cmpBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, marginTop: 4 },
   cmpPct: { fontSize: 9 },
 
