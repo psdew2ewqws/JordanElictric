@@ -10,7 +10,6 @@ import Svg, { Path, Line, Circle, Defs, LinearGradient as SvgGrad, Stop, Text as
 import { jepcoApi } from '../../src/services/api';
 import { useLanguage } from '../../src/i18n/LanguageContext';
 import { LanguageToggle } from '../../src/components/LanguageToggle';
-import { DataSourceBadge } from '../../src/components/DataSourceBadge';
 import { AnimatedCounter } from '../../src/components/AnimatedCounter';
 import { LazyCard } from '../../src/components/LazyCard';
 import { useFabScroll } from '../../src/components/DiaaFab';
@@ -267,7 +266,6 @@ export default function UsageScreen() {
         </LinearGradient>
 
         <View style={styles.body}>
-          <DataSourceBadge source="JEPCO" updatedAt={new Date()} fonts={{ regular: fonts.regular }} />
 
           {/* === DAILY CONSUMPTION TIMELINE === */}
           {dailyList.length > 0 && (() => {
@@ -306,8 +304,20 @@ export default function UsageScreen() {
               </Text>
               <View style={styles.chartWrap}>
                 <View style={styles.yAxis}>
-                  {[maxVal, Math.round(maxVal * 0.5), 0].map((v, i) => (
-                    <Text key={i} style={[styles.yLabel, { fontFamily: fonts.regular }]}>{v}</Text>
+                  {[maxVal, Math.round(maxVal * 0.5), 0].map((v, i, arr) => (
+                    <Text
+                      key={i}
+                      style={[
+                        styles.yLabel,
+                        { fontFamily: fonts.regular },
+                        // Shift first label up and last down by half its line-height so the
+                        // text CENTERS (not edges) align with the chart gridlines.
+                        i === 0 ? { marginTop: -7 } : null,
+                        i === arr.length - 1 ? { marginBottom: -7 } : null,
+                      ]}
+                    >
+                      {v}
+                    </Text>
                   ))}
                 </View>
                 <Animated.View style={[styles.chartSvg, { overflow: 'hidden' }]}>
@@ -355,7 +365,7 @@ export default function UsageScreen() {
                 </Animated.View>
               </View>
               {/* X-axis: day ticks — force LTR flow so ticks align with the SVG chart, which is always LTR. */}
-              <View style={{ flexDirection: 'row', marginLeft: 28, marginTop: 4, paddingRight: 4, direction: 'ltr' as any }}>
+              <View style={{ flexDirection: 'row', marginLeft: 34, marginTop: 4, paddingRight: 4, direction: 'ltr' as any }}>
                 {tickIndices.map((idx, i) => {
                   const p = points[idx];
                   if (!p?.date) return <View key={i} style={{ flex: 1 }} />;
@@ -364,7 +374,7 @@ export default function UsageScreen() {
                     i === 0 ? 'flex-start' : i === tickIndices.length - 1 ? 'flex-end' : 'center';
                   return (
                     <View key={i} style={{ flex: 1, alignItems: align }}>
-                      <Text style={{ fontSize: 9, lineHeight: 11, color: '#111827', fontFamily: fonts.regular }}>
+                      <Text style={{ fontSize: 11, lineHeight: 14, color: '#000', fontFamily: fonts.medium }}>
                         {d.toLocaleDateString(isAr ? 'ar-EG' : 'en', { day: 'numeric', month: 'short' })}
                       </Text>
                     </View>
@@ -455,11 +465,25 @@ export default function UsageScreen() {
               </View>
               <Animated.View style={[styles.tierNeedle, { left: tierBarAnim.interpolate({ inputRange: [0, 100], outputRange: ['0%', '96%'], extrapolate: 'clamp' }) }]} />
             </View>
-            <View style={styles.tierLabels}>
-              <Text style={[styles.tierLabel, { fontFamily: fonts.regular }]}>0</Text>
-              <Text style={[styles.tierLabel, { fontFamily: fonts.regular }]}>300</Text>
-              <Text style={[styles.tierLabel, { fontFamily: fonts.regular }]}>600</Text>
-              <Text style={[styles.tierLabel, { fontFamily: fonts.regular }]}>800+</Text>
+            {/*
+              Tier boundary labels. Each container's flex weight matches
+              its corresponding track segment so its right edge sits at
+              the T1/T2, T2/T3, and end boundaries. Inside each container
+              the label hugs the right edge, then translateX shifts it
+              right by half its text width so its visual CENTER lands on
+              the boundary line. "0" sits at the left edge of T1.
+            */}
+            <View style={[styles.tierLabels, { direction: 'ltr' as any }]}>
+              <View style={{ flex: 300, flexDirection: 'row', justifyContent: 'space-between' }}>
+                <Text style={[styles.tierLabel, { fontFamily: fonts.regular }]}>0</Text>
+                <Text style={[styles.tierLabel, { fontFamily: fonts.regular, transform: [{ translateX: 10 }] }]}>300</Text>
+              </View>
+              <View style={{ flex: 300, flexDirection: 'row', justifyContent: 'flex-end' }}>
+                <Text style={[styles.tierLabel, { fontFamily: fonts.regular, transform: [{ translateX: 10 }] }]}>600</Text>
+              </View>
+              <View style={{ flex: 200, flexDirection: 'row', justifyContent: 'flex-end' }}>
+                <Text style={[styles.tierLabel, { fontFamily: fonts.regular }]}>800+</Text>
+              </View>
             </View>
 
             <View style={styles.tierInfo}>
@@ -721,16 +745,16 @@ const styles = StyleSheet.create({
   cardSub: { color: '#111827', marginBottom: 10, lineHeight: 14 },
 
   chartWrap: { flexDirection: 'row', marginTop: 8 },
-  yAxis: { width: 28, justifyContent: 'space-between', paddingRight: 4 },
-  yLabel: { fontSize: 7, color: '#111827', textAlign: 'right' },
+  yAxis: { width: 34, justifyContent: 'space-between', paddingRight: 4 },
+  yLabel: { fontSize: 11, lineHeight: 13, color: '#000', textAlign: 'right', fontWeight: '600' as any },
   chartSvg: { flex: 1 },
 
-  tierTrack: { height: 22, borderRadius: 11, flexDirection: 'row', overflow: 'hidden', position: 'relative', marginTop: 10 },
+  tierTrack: { height: 28, borderRadius: 14, flexDirection: 'row', overflow: 'hidden', position: 'relative', marginTop: 10 },
   tierSeg: { alignItems: 'center', justifyContent: 'center' },
-  tierSegLabel: { fontSize: 7, color: '#fff' },
-  tierNeedle: { position: 'absolute', top: -3, width: 2, height: 28, backgroundColor: '#0C1E2D', borderRadius: 1 },
+  tierSegLabel: { fontSize: 10, lineHeight: 12, color: '#fff' },
+  tierNeedle: { position: 'absolute', top: -3, width: 2, height: 34, backgroundColor: '#0C1E2D', borderRadius: 1 },
   tierLabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 3 },
-  tierLabel: { fontSize: 7, color: '#111827' },
+  tierLabel: { fontSize: 10, lineHeight: 12, color: '#111827' },
   tierInfo: { flexDirection: 'row', gap: 6, marginTop: 10 },
   tierInfoCard: { flex: 1, borderRadius: 8, padding: 8, alignItems: 'center' },
   tierInfoBtnWrap: { borderRadius: 18, shadowColor: '#1B4965', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.28, shadowRadius: 5, elevation: 4 },
@@ -752,9 +776,9 @@ const styles = StyleSheet.create({
   modalTipText: { flex: 1, fontSize: 12, color: '#000', lineHeight: 18 },
   modalBtn: { backgroundColor: '#1B4965', borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginTop: 14 },
   modalBtnText: { color: '#fff', fontSize: 14 },
-  ticLabel: { fontSize: 7, color: '#111827', textTransform: 'uppercase' },
-  ticVal: { fontSize: 14, marginTop: 2 },
-  ticSub: { fontSize: 7, color: '#111827', marginTop: 1 },
+  ticLabel: { fontSize: 11, lineHeight: 14, color: '#111827', textTransform: 'uppercase' },
+  ticVal: { fontSize: 20, lineHeight: 24, marginTop: 4 },
+  ticSub: { fontSize: 10, lineHeight: 13, color: '#111827', marginTop: 2 },
 
   billCard: { borderRadius: 14, padding: 14, marginBottom: 10 },
   billLabel: { fontSize: 10, color: 'rgba(255,255,255,0.6)' },

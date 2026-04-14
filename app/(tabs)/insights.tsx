@@ -9,7 +9,6 @@ import { Shimmer } from '../../src/components/Shimmer';
 import { jepcoApi } from '../../src/services/api';
 import { useLanguage } from '../../src/i18n/LanguageContext';
 import { LanguageToggle } from '../../src/components/LanguageToggle';
-import { DataSourceBadge } from '../../src/components/DataSourceBadge';
 import { AnimatedCounter } from '../../src/components/AnimatedCounter';
 import { LazyCard } from '../../src/components/LazyCard';
 import {
@@ -132,7 +131,6 @@ export default function InsightsScreen() {
         </LinearGradient>
 
         <View style={styles.body}>
-          <DataSourceBadge source="JEPCO" updatedAt={new Date()} fonts={{ regular: fonts.regular }} />
 
           {/* ═══ CARD 1: UNDERSTAND YOUR TARIFF ═══ */}
           <LazyCard delay={100} style={styles.card}>
