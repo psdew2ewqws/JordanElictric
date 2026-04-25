@@ -156,19 +156,19 @@ export default function InsightsScreen() {
               <View key={tr.n} style={[styles.tierRow, { opacity: tr.active ? 1 : 0.35, flexDirection: isAr ? 'row-reverse' : 'row' }]}>
                 <View style={[styles.tierDot, { backgroundColor: tr.color }]} />
                 <View style={{ flex: 1 }}>
-                  <Text style={[{ fontSize: sz(12), color: '#0C1E2D', fontFamily: fonts.semibold, textAlign: isAr ? 'right' : 'left' }]}>
+                  <Text style={[{ fontSize: sz(12), lineHeight: 16, color: '#0C1E2D', fontFamily: fonts.semibold, textAlign: isAr ? 'right' : 'left' }]}>
                     {tr.range} {isAr ? 'ك.و.س' : 'kWh'}
                   </Text>
-                  <Text style={[{ fontSize: sz(9), color: '#111827', fontFamily: fonts.regular, textAlign: isAr ? 'right' : 'left' }]}>
+                  <Text style={[{ fontSize: sz(9), lineHeight: 12, color: '#111827', fontFamily: fonts.regular, textAlign: isAr ? 'right' : 'left' }]}>
                     {tr.rate} {isAr ? `د/${t('kwhUnit')}` : `JD/${t('kwhUnit')}`}
                   </Text>
                 </View>
                 {tr.active && tr.kwh > 0 && (
                   <View style={{ alignItems: isAr ? 'flex-start' : 'flex-end' }}>
-                    <Text style={[{ fontSize: sz(13), color: '#0C1E2D', fontFamily: fonts.bold }]}>
+                    <Text style={[{ fontSize: sz(13), lineHeight: 17, color: '#0C1E2D', fontFamily: fonts.bold }]}>
                       {tr.kwh} {isAr ? 'ك.و.س' : 'kWh'}
                     </Text>
-                    <Text style={[{ fontSize: sz(9), color: '#111827', fontFamily: fonts.regular }]}>
+                    <Text style={[{ fontSize: sz(9), lineHeight: 12, color: '#111827', fontFamily: fonts.regular }]}>
                       {tr.cost.toFixed(2)} JD
                     </Text>
                   </View>
@@ -180,7 +180,7 @@ export default function InsightsScreen() {
             <View style={[styles.tierBadge, { backgroundColor: tiers.currentTier === 1 ? '#ECFDF5' : tiers.currentTier === 2 ? '#FFFBEB' : '#FEF2F2', flexDirection: isAr ? 'row-reverse' : 'row' }]}>
               <Ionicons name="information-circle" size={14}
                 color={tiers.currentTier === 1 ? '#059669' : tiers.currentTier === 2 ? '#D97706' : '#DC2626'} />
-              <Text style={[{ fontSize: sz(10), fontFamily: fonts.medium, textAlign: isAr ? 'right' : 'left', flex: 1,
+              <Text style={[{ fontSize: sz(10), lineHeight: 14, fontFamily: fonts.medium, textAlign: isAr ? 'right' : 'left', flex: 1,
                 color: tiers.currentTier === 1 ? '#059669' : tiers.currentTier === 2 ? '#92400E' : '#991B1B' }]}>
                 {isAr
                   ? `أنت في الشريحة ${tiers.currentTier} — كل كيلوواط يكلفك ${tiers.currentTier === 1 ? '0.050' : tiers.currentTier === 2 ? '0.100' : '0.200'} دينار`
@@ -347,8 +347,8 @@ const styles = StyleSheet.create({
   // Footprint — 2x2 grid
   fpRow: { flexDirection: 'row' },
   fpItem: { flex: 1, alignItems: 'center', gap: 4 },
-  fpVal: { fontSize: 22, color: '#fff', letterSpacing: -0.5 },
-  fpUnit: { color: 'rgba(255,255,255,0.6)', textAlign: 'center', writingDirection: 'ltr' },
+  fpVal: { fontSize: 22, lineHeight: 26, color: '#fff', letterSpacing: -0.5 },
+  fpUnit: { lineHeight: 12, color: 'rgba(255,255,255,0.6)', textAlign: 'center' },
 
   // Bill
   billTotal: {
