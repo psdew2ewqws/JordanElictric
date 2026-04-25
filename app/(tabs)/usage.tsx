@@ -439,8 +439,11 @@ export default function UsageScreen() {
 
           {/* === TIER POSITION === */}
           <LazyCard delay={300} style={styles.card}>
-            <View style={{ flexDirection: isAr ? 'row-reverse' : 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={[styles.cardTitle, { fontFamily: fonts.bold, fontSize: sz(13), flex: 1 }]}>
+            <View style={{ flexDirection: isAr ? 'row-reverse' : 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+              <Text
+                style={[styles.cardTitle, { fontFamily: fonts.bold, fontSize: sz(13), flex: 1, textAlign: isAr ? 'right' : 'left' }]}
+                numberOfLines={1}
+              >
                 {t('tierBreakdown')}
               </Text>
               <TouchableOpacity

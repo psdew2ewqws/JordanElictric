@@ -228,21 +228,21 @@ export default function InsightsScreen() {
 
           {/* ═══ CARD 3: WHERE MONEY GOES ═══ */}
           <LazyCard delay={400} style={styles.card}>
-            <Text style={[styles.title, { fontFamily: fonts.bold, fontSize: sz(14), marginBottom: 8 }]}>
+            <Text style={[styles.title, { fontFamily: fonts.bold, fontSize: sz(14), marginBottom: 8, textAlign: isAr ? 'right' : 'left' }]}>
               {t('whereMoneyGoes')}
             </Text>
 
-            <BillLine label={`${t('tier')} 1 · 0-300`} val={currentTiers.tier1Cost} color="#10B981" fonts={fonts} sz={sz} />
-            {currentTiers.tier2Kwh > 0 && <BillLine label={`${t('tier')} 2 · 301-600`} val={currentTiers.tier2Cost} color="#F59E0B" fonts={fonts} sz={sz} />}
-            {currentTiers.tier3Kwh > 0 && <BillLine label={`${t('tier')} 3 · 600+`} val={currentTiers.tier3Cost} color="#EF4444" fonts={fonts} sz={sz} />}
-            <BillLine label={t('municipalityTax')} val={currentBill.municipalityTax} color="#94A9B8" fonts={fonts} sz={sz} />
-            <BillLine label={`${t('tvLicense')} + ${t('meterRent')}`} val={currentBill.tvLicense + currentBill.meterRent} color="#94A9B8" fonts={fonts} sz={sz} />
-            {currentBill.ruralFee > 0 && <BillLine label={t('ruralFee')} val={currentBill.ruralFee} color="#94A9B8" fonts={fonts} sz={sz} />}
-            {currentBill.fuelClause > 0 && <BillLine label={t('fuelClause')} val={currentBill.fuelClause} color="#94A9B8" fonts={fonts} sz={sz} />}
-            {currentBill.subsidy > 0 && <BillLine label={t('subsidyDeduction')} val={-currentBill.subsidy} color="#10B981" fonts={fonts} sz={sz} />}
+            <BillLine label={`${t('tier')} 1 · 0-300`} val={currentTiers.tier1Cost} color="#10B981" fonts={fonts} sz={sz} isAr={isAr} />
+            {currentTiers.tier2Kwh > 0 && <BillLine label={`${t('tier')} 2 · 301-600`} val={currentTiers.tier2Cost} color="#F59E0B" fonts={fonts} sz={sz} isAr={isAr} />}
+            {currentTiers.tier3Kwh > 0 && <BillLine label={`${t('tier')} 3 · 600+`} val={currentTiers.tier3Cost} color="#EF4444" fonts={fonts} sz={sz} isAr={isAr} />}
+            <BillLine label={t('municipalityTax')} val={currentBill.municipalityTax} color="#94A9B8" fonts={fonts} sz={sz} isAr={isAr} />
+            <BillLine label={`${t('tvLicense')} + ${t('meterRent')}`} val={currentBill.tvLicense + currentBill.meterRent} color="#94A9B8" fonts={fonts} sz={sz} isAr={isAr} />
+            {currentBill.ruralFee > 0 && <BillLine label={t('ruralFee')} val={currentBill.ruralFee} color="#94A9B8" fonts={fonts} sz={sz} isAr={isAr} />}
+            {currentBill.fuelClause > 0 && <BillLine label={t('fuelClause')} val={currentBill.fuelClause} color="#94A9B8" fonts={fonts} sz={sz} isAr={isAr} />}
+            {currentBill.subsidy > 0 && <BillLine label={t('subsidyDeduction')} val={-currentBill.subsidy} color="#10B981" fonts={fonts} sz={sz} isAr={isAr} />}
 
-            <View style={styles.billTotal}>
-              <Text style={[{ fontFamily: fonts.bold, fontSize: sz(13), color: '#0C1E2D', writingDirection: 'ltr' as const, textAlign: 'left' as const }]}>
+            <View style={[styles.billTotal, { flexDirection: isAr ? 'row-reverse' : 'row' }]}>
+              <Text style={[{ fontFamily: fonts.bold, fontSize: sz(13), color: '#0C1E2D', textAlign: isAr ? 'right' : 'left' }]}>
                 {t('totalEstimated')}
               </Text>
               <AnimatedCounter value={currentBill.total} decimals={2} suffix=" JD" duration={1000}
@@ -253,17 +253,17 @@ export default function InsightsScreen() {
           {/* ═══ CARD 4: DID YOU KNOW ═══ */}
           {tips.length > 0 && (
             <LazyCard delay={550} style={styles.card}>
-              <Text style={[styles.title, { fontFamily: fonts.bold, fontSize: sz(14), marginBottom: 10 }]}>
+              <Text style={[styles.title, { fontFamily: fonts.bold, fontSize: sz(14), marginBottom: 10, textAlign: isAr ? 'right' : 'left' }]}>
                 {t('didYouKnow')}
               </Text>
               {tips.map((tip, i) => (
-                <View key={i} style={[styles.tipRow, i > 0 && { borderTopWidth: 1, borderTopColor: '#F1F5F9', paddingTop: 12 }]}>
+                <View key={i} style={[styles.tipRow, { flexDirection: isAr ? 'row-reverse' : 'row' }, i > 0 && { borderTopWidth: 1, borderTopColor: '#F1F5F9', paddingTop: 12 }]}>
                   <Ionicons name={tip.icon as any} size={18} color="#1B4965" />
                   <View style={{ flex: 1 }}>
-                    <Text style={[{ fontSize: sz(12), color: '#0C1E2D', fontFamily: fonts.semibold, writingDirection: 'ltr' as const, textAlign: 'left' as const }]}>
+                    <Text style={[{ fontSize: sz(12), lineHeight: 16, color: '#0C1E2D', fontFamily: fonts.semibold, textAlign: isAr ? 'right' : 'left', writingDirection: isAr ? 'rtl' : 'ltr' }]}>
                       {isAr ? tip.titleAr : tip.titleEn}
                     </Text>
-                    <Text style={[{ fontSize: sz(10), color: '#111827', fontFamily: fonts.regular, marginTop: 2, writingDirection: 'ltr' as const, textAlign: 'left' as const }]}>
+                    <Text style={[{ fontSize: sz(10), lineHeight: 14, color: '#111827', fontFamily: fonts.regular, marginTop: 2, textAlign: isAr ? 'right' : 'left', writingDirection: isAr ? 'rtl' : 'ltr' }]}>
                       {isAr ? tip.descAr : tip.descEn}
                     </Text>
                   </View>
@@ -281,12 +281,12 @@ export default function InsightsScreen() {
 
 // ─── Sub-components ───────────────────────────────────────
 
-function BillLine({ label, val, color, fonts, sz }: any) {
+function BillLine({ label, val, color, fonts, sz, isAr }: any) {
   const isNeg = val < 0;
   return (
-    <View style={blStyles.row}>
+    <View style={[blStyles.row, { flexDirection: isAr ? 'row-reverse' : 'row' }]}>
       <View style={[blStyles.dot, { backgroundColor: color }]} />
-      <Text style={[blStyles.label, { fontFamily: fonts.regular, fontSize: sz(11) }]}>{label}</Text>
+      <Text style={[blStyles.label, { fontFamily: fonts.regular, fontSize: sz(11), textAlign: isAr ? 'right' : 'left' }]}>{label}</Text>
       <Text style={[blStyles.val, { fontFamily: fonts.medium, fontSize: sz(11), color: isNeg ? '#10B981' : '#111827' }]}>
         {isNeg ? '-' : ''}{Math.abs(val).toFixed(3)} JD
       </Text>
@@ -295,10 +295,10 @@ function BillLine({ label, val, color, fonts, sz }: any) {
 }
 
 const blStyles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 7, gap: 8 },
+  row: { alignItems: 'center', paddingVertical: 7, gap: 8 },
   dot: { width: 9, height: 9, borderRadius: 5 },
-  label: { flex: 1, color: '#111827', writingDirection: 'ltr', textAlign: 'left' },
-  val: { writingDirection: 'ltr', textAlign: 'right' },
+  label: { flex: 1, color: '#111827' },
+  val: {},
 });
 
 // ─── STYLES ─────────────────────────────────────────────────

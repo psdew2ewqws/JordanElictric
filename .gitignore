@@ -55,3 +55,4 @@ supabase/.temp/
 
 # Next.js build output
 .next/
+assets/*.bak

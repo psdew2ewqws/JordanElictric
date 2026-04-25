@@ -20,30 +20,31 @@ interface LanguageContextType {
   };
 }
 
-// Inter for English, Noto Sans Arabic for Arabic (Inter has no Arabic glyphs)
-// Layout stays LTR for both — only text content and font family changes
-// On web, comma-separated font stacks let the browser pick Inter for Latin
-// glyphs and fall back to Noto Sans Arabic for Arabic glyphs — so numbers,
-// units (kWh, JD, AM/PM) stay visually identical across language toggles.
-// On native RN, fontFamily is a single name, so we fall back to language-
-// specific single fonts (Arabic weight is shifted up one step because
-// Noto Sans Arabic has thinner strokes than Inter at the same weight).
+// On web: comma-separated font stack lets the browser pick Inter for Latin
+// glyphs and fall back to Noto Sans Arabic for Arabic ones, so numbers /
+// units stay visually identical across the language toggle.
+// On native: we point ALL weights at the Inter face (which has no Arabic
+// glyphs). iOS / Android then auto-substitutes the system Arabic font for
+// Arabic codepoints — system Arabic shapes correctly on iOS, where the
+// bundled Noto Sans Arabic .ttf files render broken / cut-off in Expo Go.
+// Inter still drives the digits, JD, kWh and other Latin parts so they
+// match the English layout.
 const isWeb = Platform.OS === 'web';
 
 const fontMap = {
   en: {
-    regular: isWeb ? 'Inter-Regular, NotoSansArabic-Medium' : 'Inter-Regular',
-    medium: isWeb ? 'Inter-Medium, NotoSansArabic-SemiBold' : 'Inter-Medium',
-    semibold: isWeb ? 'Inter-SemiBold, NotoSansArabic-Bold' : 'Inter-SemiBold',
+    regular: isWeb ? 'Inter-Regular, NotoSansArabic-Regular' : 'Inter-Regular',
+    medium: isWeb ? 'Inter-Medium, NotoSansArabic-Medium' : 'Inter-Medium',
+    semibold: isWeb ? 'Inter-SemiBold, NotoSansArabic-SemiBold' : 'Inter-SemiBold',
     bold: isWeb ? 'Inter-Bold, NotoSansArabic-Bold' : 'Inter-Bold',
     extrabold: isWeb ? 'Inter-ExtraBold, NotoSansArabic-Bold' : 'Inter-ExtraBold',
   },
   ar: {
-    regular: isWeb ? 'Inter-Regular, NotoSansArabic-Medium' : 'NotoSansArabic-Medium',
-    medium: isWeb ? 'Inter-Medium, NotoSansArabic-SemiBold' : 'NotoSansArabic-SemiBold',
-    semibold: isWeb ? 'Inter-SemiBold, NotoSansArabic-Bold' : 'NotoSansArabic-Bold',
-    bold: isWeb ? 'Inter-Bold, NotoSansArabic-Bold' : 'NotoSansArabic-Bold',
-    extrabold: isWeb ? 'Inter-ExtraBold, NotoSansArabic-Bold' : 'NotoSansArabic-Bold',
+    regular: isWeb ? 'Inter-Regular, NotoSansArabic-Regular' : 'Inter-Regular',
+    medium: isWeb ? 'Inter-Medium, NotoSansArabic-Medium' : 'Inter-Medium',
+    semibold: isWeb ? 'Inter-SemiBold, NotoSansArabic-SemiBold' : 'Inter-SemiBold',
+    bold: isWeb ? 'Inter-Bold, NotoSansArabic-Bold' : 'Inter-Bold',
+    extrabold: isWeb ? 'Inter-ExtraBold, NotoSansArabic-Bold' : 'Inter-ExtraBold',
   },
 };
 
