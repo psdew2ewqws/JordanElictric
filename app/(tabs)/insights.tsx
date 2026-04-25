@@ -143,7 +143,7 @@ export default function InsightsScreen() {
 
           {/* ═══ CARD 1: UNDERSTAND YOUR TARIFF ═══ */}
           <LazyCard delay={100} style={styles.card}>
-            <Text style={[styles.title, { fontFamily: fonts.bold, fontSize: sz(14), marginBottom: 12 }]}>
+            <Text style={[styles.title, { fontFamily: fonts.bold, fontSize: sz(14), marginBottom: 12, textAlign: isAr ? 'right' : 'left' }]}>
               {t('understandTariff')}
             </Text>
 
@@ -153,20 +153,20 @@ export default function InsightsScreen() {
               { n: 2, range: '301 – 600', rate: '0.100', kwh: tiers.tier2Kwh, cost: tiers.tier2Cost, color: '#F59E0B', active: tiers.currentTier >= 2 },
               { n: 3, range: '600+', rate: '0.200', kwh: tiers.tier3Kwh, cost: tiers.tier3Cost, color: '#EF4444', active: tiers.currentTier >= 3 },
             ].map((tr) => (
-              <View key={tr.n} style={[styles.tierRow, { opacity: tr.active ? 1 : 0.35 }]}>
+              <View key={tr.n} style={[styles.tierRow, { opacity: tr.active ? 1 : 0.35, flexDirection: isAr ? 'row-reverse' : 'row' }]}>
                 <View style={[styles.tierDot, { backgroundColor: tr.color }]} />
                 <View style={{ flex: 1 }}>
-                  <Text style={[{ fontSize: sz(12), color: '#0C1E2D', fontFamily: fonts.semibold, writingDirection: 'ltr' as const, textAlign: 'left' as const }]}>
-                    {tr.range} kWh
+                  <Text style={[{ fontSize: sz(12), color: '#0C1E2D', fontFamily: fonts.semibold, textAlign: isAr ? 'right' : 'left' }]}>
+                    {tr.range} {isAr ? 'ك.و.س' : 'kWh'}
                   </Text>
-                  <Text style={[{ fontSize: sz(9), color: '#111827', fontFamily: fonts.regular, writingDirection: 'ltr' as const, textAlign: 'left' as const }]}>
-                    {tr.rate} JD/{t('kwhUnit')}
+                  <Text style={[{ fontSize: sz(9), color: '#111827', fontFamily: fonts.regular, textAlign: isAr ? 'right' : 'left' }]}>
+                    {tr.rate} {isAr ? `د/${t('kwhUnit')}` : `JD/${t('kwhUnit')}`}
                   </Text>
                 </View>
                 {tr.active && tr.kwh > 0 && (
-                  <View style={{ alignItems: 'flex-end' }}>
+                  <View style={{ alignItems: isAr ? 'flex-start' : 'flex-end' }}>
                     <Text style={[{ fontSize: sz(13), color: '#0C1E2D', fontFamily: fonts.bold }]}>
-                      {tr.kwh} kWh
+                      {tr.kwh} {isAr ? 'ك.و.س' : 'kWh'}
                     </Text>
                     <Text style={[{ fontSize: sz(9), color: '#111827', fontFamily: fonts.regular }]}>
                       {tr.cost.toFixed(2)} JD
@@ -177,10 +177,10 @@ export default function InsightsScreen() {
             ))}
 
             {/* Your tier badge */}
-            <View style={[styles.tierBadge, { backgroundColor: tiers.currentTier === 1 ? '#ECFDF5' : tiers.currentTier === 2 ? '#FFFBEB' : '#FEF2F2' }]}>
+            <View style={[styles.tierBadge, { backgroundColor: tiers.currentTier === 1 ? '#ECFDF5' : tiers.currentTier === 2 ? '#FFFBEB' : '#FEF2F2', flexDirection: isAr ? 'row-reverse' : 'row' }]}>
               <Ionicons name="information-circle" size={14}
                 color={tiers.currentTier === 1 ? '#059669' : tiers.currentTier === 2 ? '#D97706' : '#DC2626'} />
-              <Text style={[{ fontSize: sz(10), fontFamily: fonts.medium, writingDirection: 'ltr' as const, textAlign: 'left' as const, flex: 1,
+              <Text style={[{ fontSize: sz(10), fontFamily: fonts.medium, textAlign: isAr ? 'right' : 'left', flex: 1,
                 color: tiers.currentTier === 1 ? '#059669' : tiers.currentTier === 2 ? '#92400E' : '#991B1B' }]}>
                 {isAr
                   ? `أنت في الشريحة ${tiers.currentTier} — كل كيلوواط يكلفك ${tiers.currentTier === 1 ? '0.050' : tiers.currentTier === 2 ? '0.100' : '0.200'} دينار`
@@ -191,16 +191,16 @@ export default function InsightsScreen() {
 
           {/* ═══ CARD 2: YOUR FOOTPRINT — 2x2 grid ═══ */}
           <LazyCard delay={250} style={styles.cardDark}>
-            <Text style={[styles.darkTitle, { fontFamily: fonts.bold, fontSize: sz(14) }]}>
+            <Text style={[styles.darkTitle, { fontFamily: fonts.bold, fontSize: sz(14), textAlign: isAr ? 'right' : 'left' }]}>
               {t('environmentalFootprint')}
             </Text>
             {/* Row 1 */}
-            <View style={styles.fpRow}>
+            <View style={[styles.fpRow, { flexDirection: isAr ? 'row-reverse' : 'row' }]}>
               <View style={styles.fpItem}>
                 <MaterialCommunityIcons name="molecule-co2" size={20} color="#B8C8D4" />
                 <AnimatedCounter value={env.co2Kg} decimals={0} duration={900}
                   style={[styles.fpVal, { fontFamily: fonts.bold }]} />
-                <Text style={[styles.fpUnit, { fontFamily: fonts.regular, fontSize: sz(9) }]}>kg CO₂</Text>
+                <Text style={[styles.fpUnit, { fontFamily: fonts.regular, fontSize: sz(9) }]}>{isAr ? 'كغ ثاني أكسيد الكربون' : 'kg CO₂'}</Text>
               </View>
               <View style={styles.fpItem}>
                 <MaterialCommunityIcons name="car" size={20} color="#B8C8D4" />
@@ -210,7 +210,7 @@ export default function InsightsScreen() {
               </View>
             </View>
             {/* Row 2 */}
-            <View style={[styles.fpRow, { marginTop: 16 }]}>
+            <View style={[styles.fpRow, { marginTop: 16, flexDirection: isAr ? 'row-reverse' : 'row' }]}>
               <View style={styles.fpItem}>
                 <MaterialCommunityIcons name="fire" size={20} color="#F59E0B" />
                 <AnimatedCounter value={env.coalSavedKg} decimals={1} duration={900}
@@ -324,9 +324,9 @@ const styles = StyleSheet.create({
   cardDark: {
     backgroundColor: '#0F2440', borderRadius: 16, padding: 18, marginBottom: 10,
   },
-  title: { color: '#0C1E2D', writingDirection: 'ltr', textAlign: 'left' },
+  title: { color: '#0C1E2D' },
   sub: { color: '#111827', marginTop: 2, writingDirection: 'ltr', textAlign: 'left' },
-  darkTitle: { color: '#fff', marginBottom: 14, writingDirection: 'ltr', textAlign: 'left' },
+  darkTitle: { color: '#fff', marginBottom: 14 },
 
   // Tier card
   tierRow: {
