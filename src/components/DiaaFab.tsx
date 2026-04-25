@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useRef, useState, useCallback, useEffect } from 'react';
-import { TouchableOpacity, Text, View, StyleSheet, Animated } from 'react-native';
+import { TouchableOpacity, Text, View, StyleSheet, Animated, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, usePathname } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -60,6 +61,12 @@ export function DiaaFab() {
   const pathname = usePathname();
   const isAr = language === 'ar';
   const { isScrolling } = useFabScroll();
+  const insets = useSafeAreaInsets();
+  // Tab bar height (matches app/(tabs)/_layout.tsx) + a 14px margin so the
+  // FAB sits cleanly above the tab labels with a breath of space.
+  const TAB_BAR_HEIGHT = 56;
+  const tabBarBottomPad = Platform.OS === 'ios' ? insets.bottom : 8;
+  const fabBottom = TAB_BAR_HEIGHT + tabBarBottomPad + 14;
 
   const opacity = useRef(new Animated.Value(1)).current;
 
@@ -75,7 +82,7 @@ export function DiaaFab() {
   if (pathname?.startsWith('/chat')) return null;
 
   return (
-    <Animated.View style={[styles.wrap, { opacity }]} pointerEvents="box-none">
+    <Animated.View style={[styles.wrap, { opacity, bottom: fabBottom }]} pointerEvents="box-none">
       <TouchableOpacity onPress={() => router.push('/chat/')} activeOpacity={0.88}>
         <LinearGradient
           colors={[NAVY_MID, NAVY_LIGHT]}
@@ -103,7 +110,6 @@ export function DiaaFab() {
 const styles = StyleSheet.create({
   wrap: {
     position: 'absolute',
-    bottom: 76,
     right: 16,
     borderRadius: 28,
     shadowColor: NAVY,
