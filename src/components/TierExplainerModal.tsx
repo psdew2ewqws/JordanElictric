@@ -19,8 +19,10 @@ export function TierExplainerModal({ visible, onClose }: Props) {
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable style={s.backdrop} onPress={onClose}>
-        <Pressable style={s.card} onPress={(e) => e.stopPropagation()}>
+      <View style={s.backdrop}>
+        {/* Tap-out-to-close: a transparent layer behind the card */}
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+        <View style={s.card}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <Text style={[s.title, { fontFamily: fonts.bold, textAlign: isAr ? 'right' : 'left', flex: 1 }]}>
               {t('tiersExplainTitle')}
@@ -30,7 +32,13 @@ export function TierExplainerModal({ visible, onClose }: Props) {
             </TouchableOpacity>
           </View>
 
-          <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 460 }}>
+          <ScrollView
+            style={{ maxHeight: 460 }}
+            contentContainerStyle={{ paddingBottom: 4 }}
+            showsVerticalScrollIndicator={true}
+            keyboardShouldPersistTaps="handled"
+            nestedScrollEnabled
+          >
             <Text style={[s.intro, { fontFamily: fonts.regular, textAlign: isAr ? 'right' : 'left', writingDirection: isAr ? 'rtl' : 'ltr' }]}>
               {t('tiersExplainIntro')}
             </Text>
@@ -96,8 +104,8 @@ export function TierExplainerModal({ visible, onClose }: Props) {
           <TouchableOpacity style={s.btn} onPress={onClose} activeOpacity={0.85}>
             <Text style={[s.btnText, { fontFamily: fonts.bold }]}>{t('gotIt')}</Text>
           </TouchableOpacity>
-        </Pressable>
-      </Pressable>
+        </View>
+      </View>
     </Modal>
   );
 }
