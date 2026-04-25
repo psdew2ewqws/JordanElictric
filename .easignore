@@ -1,0 +1,27 @@
+# Sub-projects not needed for the mobile EAS build
+backend/
+admin-portal/
+
+# Local build outputs
+build/
+dist/
+android/build/
+android/app/build/
+android/app/.cxx/
+android/.gradle/
+android/.kotlin/
+ios/build/
+ios/Pods/
+ios/DerivedData/
+
+# Caches & misc
+.expo/
+.expo-shared/
+*.log
+*.apk
+*.aab
+.superpowers/
+docs/
+research-*.md
+
+# Video assets larger than needed for build (kept in repo, fine)
