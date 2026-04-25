@@ -25,23 +25,25 @@ interface LanguageContextType {
 // On web, comma-separated font stacks let the browser pick Inter for Latin
 // glyphs and fall back to Noto Sans Arabic for Arabic glyphs — so numbers,
 // units (kWh, JD, AM/PM) stay visually identical across language toggles.
-// On native RN, fontFamily is a single name, so we fall back to language-
-// specific single fonts (Arabic weight is shifted up one step because
-// Noto Sans Arabic has thinner strokes than Inter at the same weight).
+// On native RN, fontFamily takes a single name, so we map each weight to
+// the matching face. The earlier visual-density 'shift up one weight' for
+// Arabic was reverted on native because mixing Inter weights with shifted
+// Noto Sans Arabic weights caused glyph corruption on iOS (numbers and
+// shaped Arabic words rendered broken / cut off in Expo Go).
 const isWeb = Platform.OS === 'web';
 
 const fontMap = {
   en: {
-    regular: isWeb ? 'Inter-Regular, NotoSansArabic-Medium' : 'Inter-Regular',
-    medium: isWeb ? 'Inter-Medium, NotoSansArabic-SemiBold' : 'Inter-Medium',
-    semibold: isWeb ? 'Inter-SemiBold, NotoSansArabic-Bold' : 'Inter-SemiBold',
+    regular: isWeb ? 'Inter-Regular, NotoSansArabic-Regular' : 'Inter-Regular',
+    medium: isWeb ? 'Inter-Medium, NotoSansArabic-Medium' : 'Inter-Medium',
+    semibold: isWeb ? 'Inter-SemiBold, NotoSansArabic-SemiBold' : 'Inter-SemiBold',
     bold: isWeb ? 'Inter-Bold, NotoSansArabic-Bold' : 'Inter-Bold',
     extrabold: isWeb ? 'Inter-ExtraBold, NotoSansArabic-Bold' : 'Inter-ExtraBold',
   },
   ar: {
-    regular: isWeb ? 'Inter-Regular, NotoSansArabic-Medium' : 'NotoSansArabic-Medium',
-    medium: isWeb ? 'Inter-Medium, NotoSansArabic-SemiBold' : 'NotoSansArabic-SemiBold',
-    semibold: isWeb ? 'Inter-SemiBold, NotoSansArabic-Bold' : 'NotoSansArabic-Bold',
+    regular: isWeb ? 'Inter-Regular, NotoSansArabic-Regular' : 'NotoSansArabic-Regular',
+    medium: isWeb ? 'Inter-Medium, NotoSansArabic-Medium' : 'NotoSansArabic-Medium',
+    semibold: isWeb ? 'Inter-SemiBold, NotoSansArabic-SemiBold' : 'NotoSansArabic-SemiBold',
     bold: isWeb ? 'Inter-Bold, NotoSansArabic-Bold' : 'NotoSansArabic-Bold',
     extrabold: isWeb ? 'Inter-ExtraBold, NotoSansArabic-Bold' : 'NotoSansArabic-Bold',
   },
