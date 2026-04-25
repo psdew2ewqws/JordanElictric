@@ -46,17 +46,7 @@ export default function TabLayout() {
             <Ionicons name={focused ? 'home' : 'home-outline'} size={22} color={color} />
           ),
         }}
-        
-      />
-      <Tabs.Screen
-        name="usage"
-        options={{
-          title: t('usage'),
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'bar-chart' : 'bar-chart-outline'} size={22} color={color} />
-          ),
-        }}
-        
+
       />
       <Tabs.Screen
         name="insights"
@@ -66,7 +56,17 @@ export default function TabLayout() {
             <Ionicons name={focused ? 'bulb' : 'bulb-outline'} size={22} color={color} />
           ),
         }}
-        
+
+      />
+      <Tabs.Screen
+        name="usage"
+        options={{
+          title: t('usage'),
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'bar-chart' : 'bar-chart-outline'} size={22} color={color} />
+          ),
+        }}
+
       />
       <Tabs.Screen
         name="services"
@@ -76,7 +76,7 @@ export default function TabLayout() {
             <Ionicons name={focused ? 'grid' : 'grid-outline'} size={22} color={color} />
           ),
         }}
-        
+
       />
       <Tabs.Screen
         name="profile"
@@ -86,7 +86,7 @@ export default function TabLayout() {
             <Ionicons name={focused ? 'person' : 'person-outline'} size={22} color={color} />
           ),
         }}
-        
+
       />
     </Tabs>
     <DiaaFab />

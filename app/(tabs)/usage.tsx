@@ -157,11 +157,14 @@ export default function UsageScreen() {
     const tierPct = Math.min(100, (currentKwh / 800) * 100);
     const currentTier = currentKwh > 600 ? 3 : currentKwh > 300 ? 2 : 1;
 
-    const actualCostJd = (tier1Kwh * 0.050) + (tier2Kwh * 0.100) + (tier3Kwh * 0.200);
+    // Match Home's 'Your bill until now' — prefer the JEPCO-provided amount,
+    // fall back to the full bill (energy + fees − subsidy) so both pages agree.
+    const energyOnly = (tier1Kwh * 0.050) + (tier2Kwh * 0.100) + (tier3Kwh * 0.200);
+    const actualCostJd = currentBillJd > 0 ? currentBillJd : calcBillBreakdown(currentKwh).total;
 
     // Cheapest / most-expensive day this cycle — priced via the blended rate
-    // across the current tier mix (actualCostJd / currentKwh).
-    const blendedRate = currentKwh > 0 ? actualCostJd / currentKwh : 0.05;
+    // across the current tier mix (energy-only JD per kWh, excludes fixed fees).
+    const blendedRate = currentKwh > 0 ? energyOnly / currentKwh : 0.05;
     const perDay = dailyList
       .filter((d) => d.date && d.kwh > 0)
       .map((d) => ({ ...d, jd: +(d.kwh * blendedRate).toFixed(2) }));

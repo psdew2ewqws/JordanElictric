@@ -59,7 +59,7 @@ export default function InsightsScreen() {
   };
 
   // ─── Data ───────────────────────────────────────────────
-  const { tiers, bill, savings, env, pace, tips } = useMemo(() => {
+  const { tiers, bill, currentTiers, currentBill, savings, env, pace, tips } = useMemo(() => {
     const sm = smartMeter || {};
     const currentKwh = parseInt(sm.currentElectricityConsumptionQuntity || '0');
     const expectedKwh = parseInt(sm.expectedElectricityConsumptionQuntity || '0');
@@ -67,14 +67,23 @@ export default function InsightsScreen() {
     const comp = sm.comparazinConsumption || {};
     const lastMonthKwh = parseInt(comp.lastMonthconsumption || '0');
 
+    // Projected end-of-cycle math — used by 'Understand Your Tariff' and the
+    // environmental footprint, both of which want the full-cycle picture.
     const projKwh = expectedKwh || currentKwh;
     const _tiers = calcTierBreakdown(projKwh);
     const _bill = calcBillBreakdown(projKwh);
+
+    // Actual-to-date math — used by 'Where Your Money Goes', which is about
+    // money you have already spent this cycle so it must mirror the Home and
+    // Usage 'bill / cost until now' figures.
+    const _currentTiers = calcTierBreakdown(currentKwh);
+    const _currentBill = calcBillBreakdown(currentKwh);
+
     const _savings = calcSavingsOpportunity(projKwh);
     const _env = calcEnvironmentalImpact(projKwh, lastMonthKwh);
     const _pace = calcDailyPace(currentKwh, daysInCycle);
     const _tips = getRecommendations(projKwh, _pace.dailyAvg).slice(0, 2);
-    return { tiers: _tiers, bill: _bill, savings: _savings, env: _env, pace: _pace, tips: _tips };
+    return { tiers: _tiers, bill: _bill, currentTiers: _currentTiers, currentBill: _currentBill, savings: _savings, env: _env, pace: _pace, tips: _tips };
   }, [smartMeter]);
 
   if (loading) {
@@ -118,10 +127,10 @@ export default function InsightsScreen() {
           <SafeAreaView edges={['top']} style={styles.headerPad}>
             <View style={styles.topRow}>
               <View>
-                <Text style={[styles.headerTitle, { fontFamily: fonts.bold, fontSize: sz(22), letterSpacing: isAr ? 0 : -0.3 }]}>
+                <Text style={[styles.headerTitle, { fontFamily: fonts.bold, fontSize: sz(22), lineHeight: isAr ? 26 : undefined, letterSpacing: isAr ? 0 : -0.3 }]}>
                   {t('insightsTitle')}
                 </Text>
-                <Text style={[styles.headerSub, { fontFamily: fonts.regular, fontSize: sz(11) }]}>
+                <Text style={[styles.headerSub, { fontFamily: fonts.regular, fontSize: sz(11), lineHeight: isAr ? 14 : undefined, marginTop: isAr ? 0 : 2 }]}>
                   {t('insightsSubtitle')}
                 </Text>
               </View>
@@ -223,18 +232,20 @@ export default function InsightsScreen() {
               {t('whereMoneyGoes')}
             </Text>
 
-            <BillLine label={`${t('tier')} 1 · 0-300`} val={tiers.tier1Cost} color="#10B981" fonts={fonts} sz={sz} />
-            {tiers.tier2Kwh > 0 && <BillLine label={`${t('tier')} 2 · 301-600`} val={tiers.tier2Cost} color="#F59E0B" fonts={fonts} sz={sz} />}
-            {tiers.tier3Kwh > 0 && <BillLine label={`${t('tier')} 3 · 600+`} val={tiers.tier3Cost} color="#EF4444" fonts={fonts} sz={sz} />}
-            <BillLine label={t('municipalityTax')} val={bill.municipalityTax} color="#94A9B8" fonts={fonts} sz={sz} />
-            <BillLine label={`${t('tvLicense')} + ${t('meterRent')}`} val={bill.tvLicense + bill.meterRent} color="#94A9B8" fonts={fonts} sz={sz} />
-            {bill.subsidy > 0 && <BillLine label={t('subsidyDeduction')} val={-bill.subsidy} color="#10B981" fonts={fonts} sz={sz} />}
+            <BillLine label={`${t('tier')} 1 · 0-300`} val={currentTiers.tier1Cost} color="#10B981" fonts={fonts} sz={sz} />
+            {currentTiers.tier2Kwh > 0 && <BillLine label={`${t('tier')} 2 · 301-600`} val={currentTiers.tier2Cost} color="#F59E0B" fonts={fonts} sz={sz} />}
+            {currentTiers.tier3Kwh > 0 && <BillLine label={`${t('tier')} 3 · 600+`} val={currentTiers.tier3Cost} color="#EF4444" fonts={fonts} sz={sz} />}
+            <BillLine label={t('municipalityTax')} val={currentBill.municipalityTax} color="#94A9B8" fonts={fonts} sz={sz} />
+            <BillLine label={`${t('tvLicense')} + ${t('meterRent')}`} val={currentBill.tvLicense + currentBill.meterRent} color="#94A9B8" fonts={fonts} sz={sz} />
+            {currentBill.ruralFee > 0 && <BillLine label={t('ruralFee')} val={currentBill.ruralFee} color="#94A9B8" fonts={fonts} sz={sz} />}
+            {currentBill.fuelClause > 0 && <BillLine label={t('fuelClause')} val={currentBill.fuelClause} color="#94A9B8" fonts={fonts} sz={sz} />}
+            {currentBill.subsidy > 0 && <BillLine label={t('subsidyDeduction')} val={-currentBill.subsidy} color="#10B981" fonts={fonts} sz={sz} />}
 
             <View style={styles.billTotal}>
               <Text style={[{ fontFamily: fonts.bold, fontSize: sz(13), color: '#0C1E2D', writingDirection: 'ltr' as const, textAlign: 'left' as const }]}>
                 {t('totalEstimated')}
               </Text>
-              <AnimatedCounter value={bill.total} decimals={2} suffix=" JD" duration={1000}
+              <AnimatedCounter value={currentBill.total} decimals={2} suffix=" JD" duration={1000}
                 style={[{ fontSize: 18, color: '#0C1E2D', fontFamily: fonts.bold }]} />
             </View>
           </LazyCard>
@@ -298,7 +309,7 @@ const styles = StyleSheet.create({
   // Header
   header: { borderBottomLeftRadius: 24, borderBottomRightRadius: 24 },
   headerPad: { paddingHorizontal: 22, paddingBottom: 22 },
-  topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingTop: 8 },
+  topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingTop: 28 },
   headerTitle: { color: '#fff', writingDirection: 'ltr', textAlign: 'left' },
   headerSub: { color: 'rgba(255,255,255,0.6)', marginTop: 2, writingDirection: 'ltr', textAlign: 'left' },
 

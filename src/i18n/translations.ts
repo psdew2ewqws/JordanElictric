@@ -75,7 +75,7 @@ export const translations = {
     // Tabs
     home: 'Home',
     usage: 'Usage',
-    insights: 'Insights',
+    insights: 'Costs',
     profile: 'Profile',
 
     // Usage Screen
@@ -114,8 +114,8 @@ export const translations = {
     avgCost: 'Avg Cost',
 
     // Insights Screen
-    insightsTitle: 'Insights',
-    insightsSubtitle: 'Understand your electricity like a pro',
+    insightsTitle: 'Costs',
+    insightsSubtitle: 'Where your money goes and how to save',
     expectedBill: 'Expected Bill',
     projectedKwh: 'Projected kWh',
     yourTier: 'Your Tier',
@@ -175,10 +175,11 @@ export const translations = {
     // Card 7: Bill Breakdown
     whereMoneyGoes: 'Where Your Money Goes',
     energyCharges: 'Energy Charges',
-    municipalityTax: 'Municipality Tax (10%)',
+    municipalityTax: 'Municipality Tax',
     tvLicense: 'TV License',
     meterRent: 'Meter Rent',
     ruralFee: 'Rural Development Fee',
+    fuelClause: 'Fuel Clause',
     subsidyDeduction: 'Subsidy Deduction',
     totalEstimated: 'Total (Estimated)',
     basedOnProjection: 'Based on JEPCO projection',
@@ -531,7 +532,7 @@ export const translations = {
     // Tabs
     home: 'الرئيسية',
     usage: 'الاستهلاك',
-    insights: 'رؤى',
+    insights: 'التكاليف',
     profile: 'الملف',
 
     // Usage Screen
@@ -570,8 +571,8 @@ export const translations = {
     avgCost: 'متوسط التكلفة',
 
     // Insights Screen
-    insightsTitle: 'رؤى',
-    insightsSubtitle: 'افهم كهربائك كالمحترفين',
+    insightsTitle: 'التكاليف',
+    insightsSubtitle: 'وين بتروح فلوسك وكيف توفر',
     expectedBill: 'الفاتورة المتوقعة',
     projectedKwh: 'الاستهلاك المتوقع',
     yourTier: 'شريحتك',
@@ -631,10 +632,11 @@ export const translations = {
     // Card 7: Bill Breakdown
     whereMoneyGoes: 'أين تذهب فلوسك',
     energyCharges: 'رسوم الطاقة',
-    municipalityTax: 'ضريبة البلدية (10%)',
+    municipalityTax: 'ضريبة البلدية',
     tvLicense: 'رخصة التلفزيون',
     meterRent: 'إيجار العداد',
     ruralFee: 'رسم الكهربة الريفية',
+    fuelClause: 'بند الوقود',
     subsidyDeduction: 'خصم الدعم',
     totalEstimated: 'الإجمالي (تقديري)',
     basedOnProjection: 'بناءً على توقعات JEPCO',

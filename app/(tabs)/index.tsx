@@ -11,6 +11,7 @@ import { useAuth } from '../../src/contexts/AuthContext';
 import { jepcoApi, notificationApi, billApi, complaintApi } from '../../src/services/api';
 import { getFallbackSmartMeter } from '../../src/utils/mockData';
 import { TierExplainerModal } from '../../src/components/TierExplainerModal';
+import { calcBillBreakdown } from '../../src/utils/insightsCalc';
 
 const C = {
   navy: '#0C1F2E', navyMid: '#14354D', navyLight: '#1B4965',
@@ -63,7 +64,10 @@ export default function HomeScreen() {
   // Show current consumption & cost up to today (not projected end-of-month)
   const kwh = parseInt(sm.currentElectricityConsumptionQuntity || '0');
   const currentJd = parseFloat(sm.currentElectricityConsumptionValue || '0');
-  const costJd = currentJd > 0 ? currentJd : (Math.min(kwh, 300) * 0.050) + (kwh > 300 ? Math.min(kwh - 300, 300) * 0.100 : 0) + (kwh > 600 ? (kwh - 600) * 0.200 : 0);
+  // Prefer the JEPCO-reported amount; fall back to the full bill calc (energy
+  // + fees − subsidy). Same logic lives in the Usage page summary so the two
+  // screens always show the same 'bill until now' / 'cost until now' value.
+  const costJd = currentJd > 0 ? currentJd : calcBillBreakdown(kwh).total;
   const tier = kwh > 600 ? 3 : kwh > 300 ? 2 : 1;
   const subNum = subscription?.subscriberNumber || '';
   const co = subscription?.distributionCompany || 'JEPCO';
